@@ -1,6 +1,7 @@
 package com.shatteredcitadels.boss;
 
 import com.shatteredcitadels.ShatteredCitadelsMod;
+import com.shatteredcitadels.config.BuiltInModBosses;
 import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.config.MobTiers;
 import com.shatteredcitadels.structure.CitadelInstance;
@@ -28,8 +29,6 @@ import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraftforge.fml.common.registry.EntityEntry;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
-import java.util.ArrayList;
-import java.util.Collections;
 import java.util.List;
 import java.util.Random;
 import java.util.UUID;
@@ -49,7 +48,9 @@ public final class BossFactory {
     /** Bosses start this many times tougher than the mob they are made from, before floor scaling. */
     private static final double BASE_HEALTH_FACTOR = 4.0D;
     private static final double BASE_DAMAGE_FACTOR = 1.5D;
-    private static final int MAX_CANDIDATES = 4;
+    private static final int MAX_CANDIDATES = 6;
+    /** Mobs at or above this base health are bosses in their own right and skip the base factors. */
+    static final double NATIVE_BOSS_HEALTH = 100.0D;
 
     private BossFactory() {
     }
@@ -68,8 +69,9 @@ public final class BossFactory {
             return null;
         }
         int tier = bossTier(citadel);
-        List<ResourceLocation> candidates = new ArrayList<>(ConfigCache.get().getBossCandidates(tier));
-        Collections.shuffle(candidates, random);
+        ConfigCache.Snapshot config = ConfigCache.get();
+        List<ResourceLocation> candidates = BuiltInModBosses.orderForSpawn(config.getBossCandidates(tier),
+                config.isPreferModdedBosses(), random);
         for (int i = 0; i < candidates.size() && i < MAX_CANDIDATES; i++) {
             EntityLiving boss = create(world, candidates.get(i));
             if (boss != null && place(world, boss, arena, altarPos, random)) {
@@ -139,8 +141,12 @@ public final class BossFactory {
         ConfigCache.Snapshot config = ConfigCache.get();
         int floors = Math.max(1, citadel.getSurfaceFloorCount());
         boolean uber = citadel.isSkyCitadel();
-        modify(boss, SharedMonsterAttributes.MAX_HEALTH, HEALTH, BASE_HEALTH_FACTOR * config.bossHealthScale(floors, uber) - 1.0D, 2);
-        modify(boss, SharedMonsterAttributes.ATTACK_DAMAGE, DAMAGE, BASE_DAMAGE_FACTOR * config.bossDamageScale(floors, uber) - 1.0D, 2);
+        // Frostmaw, Pharaoh & co. already have boss-grade stats: only floor scaling applies to them.
+        boolean nativeBoss = isNativeBoss(boss);
+        double healthFactor = nativeBoss ? 1.0D : BASE_HEALTH_FACTOR;
+        double damageFactor = nativeBoss ? 1.0D : BASE_DAMAGE_FACTOR;
+        modify(boss, SharedMonsterAttributes.MAX_HEALTH, HEALTH, healthFactor * config.bossHealthScale(floors, uber) - 1.0D, 2);
+        modify(boss, SharedMonsterAttributes.ATTACK_DAMAGE, DAMAGE, damageFactor * config.bossDamageScale(floors, uber) - 1.0D, 2);
         modify(boss, SharedMonsterAttributes.ARMOR, ARMOR, 2.0D * tier + (uber ? 10.0D : 0.0D), 0);
         modify(boss, SharedMonsterAttributes.KNOCKBACK_RESISTANCE, KNOCKBACK, 0.7D, 0);
         modify(boss, SharedMonsterAttributes.FOLLOW_RANGE, FOLLOW, 24.0D, 0);
@@ -154,6 +160,14 @@ public final class BossFactory {
         ShatteredCitadelsMod.LOGGER.info("Boss {} summoned for citadel {} (tier {}, {} HP{})", typeOf(boss),
                 citadel.getCitadelId(), tier, Math.round(boss.getMaxHealth()), uber ? ", uber" : "");
         return boss;
+    }
+
+    private static boolean isNativeBoss(EntityLiving boss) {
+        if (!boss.isNonBoss()) {
+            return true;
+        }
+        IAttributeInstance health = boss.getEntityAttribute(SharedMonsterAttributes.MAX_HEALTH);
+        return health != null && health.getBaseValue() >= NATIVE_BOSS_HEALTH;
     }
 
     private static void equipFallback(EntityLiving boss, int tier, Random random) {

@@ -240,6 +240,20 @@ public final class ModConfig {
                 "5=minecraft:wither_skeleton,minecraft:evocation_illager"
         };
 
+        @Config.Name("useBuiltInModBosses")
+        @Config.LangKey("config.shatteredcitadels.boss_settings.useBuiltInModBosses")
+        @Config.Comment({
+                "Add the bosses of installed mob mods to the pool above: Mowzie's Mobs (Frostmaw,",
+                "Ferrous Wroughtnaut, Barako), Atum (Pharaoh, Bandit Warlord, Stonewarden) and",
+                "Thermal Foundation elementals. Missing mods are skipped."
+        })
+        public boolean useBuiltInModBosses = true;
+
+        @Config.Name("preferModdedBosses")
+        @Config.LangKey("config.shatteredcitadels.boss_settings.preferModdedBosses")
+        @Config.Comment("Try modded bosses of a tier before vanilla ones; vanilla mobs remain the fallback if no modded boss fits the arena.")
+        public boolean preferModdedBosses = true;
+
         @Config.Name("bossHealthMultiplierPerFloor")
         @Config.LangKey("config.shatteredcitadels.boss_settings.bossHealthMultiplierPerFloor")
         @Config.Comment("Compounding health multiplier per floor: health = base * value^(floor - 1).")

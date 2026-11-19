@@ -1,7 +1,7 @@
 # Citadels of the Shattered Crown
 
 Мод подземелий для Minecraft 1.12.2 (Forge 14.23.5.2860, Java 8, MixinBooter).
-modid: `shatteredcitadels`, версия 1.0.0.
+modid: `shatteredcitadels`, версия 1.1.0.
 
 ## Что добавляет мод
 - Многоэтажные цитадели пяти архетипов (Цитадель Хранителей, Обсидиановая Бастилия, Техно-арканный Шпиль,
@@ -9,11 +9,12 @@ modid: `shatteredcitadels`, версия 1.0.0.
 - Интеграция с Castle Dungeons (через миксины, только если мод установлен): фильтр дистанции, свои спавнеры в замках.
 - Этажи с HUD и баннерами, волны мобов из испытательных спавнеров (тиры мобов собираются из всех модов сборки).
 - Алтарь босса, кат-сцена появления, 5 способностей босса, защита арены от гриферства.
+- Боссы из модов сборки (Mowzie's Mobs: Фростмо, Железный Вротнаут, Барако; Atum: Фараон, Главарь бандитов, Каменный страж; элементали Thermal Foundation) — добавляются автоматически, если мод установлен (`useBuiltInModBosses`), и выбираются раньше ванильных (`preferModdedBosses`).
 - Лут по этажам (совместим с Lootr), 4 реликвии (слоты Baubles, если установлен), 7 глав книг лора,
   12 достижений и квестлайн BetterQuesting.
 
 ## Установка в сборку
-1. Положите `shatteredcitadels-1.0.0.jar` и MixinBooter (8.0 или новее) в папку `mods`.
+1. Положите `shatteredcitadels-1.1.0.jar` и MixinBooter (8.0 или новее) в папку `mods`.
    Forge 14.23.5.2847+ (рекомендуется 2860). Остальные интеграции (Castle Dungeons, Lootr, Baubles,
    Apotheosis, BetterQuesting) необязательны и подхватываются автоматически.
 2. Первый запуск создаст конфиг `config/shatteredcitadels/shatteredcitadels.cfg`
@@ -34,5 +35,5 @@ modid: `shatteredcitadels`, версия 1.0.0.
 - `/shatteredcitadels` (`/scitadels`) — расширенная диагностика: list, info, status, spawners, boss, relics, lore и др.
 
 ## Сборка из исходников
-`./gradlew build` → `build/libs/shatteredcitadels-1.0.0.jar` (refmap миксинов включён в jar).
+`./gradlew build` → `build/libs/shatteredcitadels-1.1.0.jar` (refmap миксинов включён в jar).
 Для тестов с Castle Dungeons/Baubles: `./gradlew runServer -PwithCastleDungeons -PwithBaubles`.

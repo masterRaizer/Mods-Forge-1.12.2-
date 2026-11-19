@@ -92,6 +92,8 @@ public final class ConfigCache {
         next.manualMobTierOverrides = parseTierOverrides(waves.manualMobTierOverrides);
 
         next.bossPoolByTier = parseBossPool(boss.bossPoolByTier);
+        next.useBuiltInModBosses = boss.useBuiltInModBosses;
+        next.preferModdedBosses = boss.preferModdedBosses;
         next.bossHealthMultiplierPerFloor = clamp(boss.bossHealthMultiplierPerFloor, 1.0D, 3.0D);
         next.bossDamageMultiplierPerFloor = clamp(boss.bossDamageMultiplierPerFloor, 1.0D, 3.0D);
         next.skyCitadelBossMultiplier = clamp(boss.skyCitadelBossMultiplier, 1.0D, 20.0D);
@@ -139,7 +141,10 @@ public final class ConfigCache {
         Snapshot snapshot = current;
         Map<Integer, List<ResourceLocation>> resolved = new TreeMap<>();
         int skipped = 0;
-        for (Map.Entry<Integer, List<ResourceLocation>> entry : snapshot.bossPoolByTier.entrySet()) {
+        Map<Integer, List<ResourceLocation>> pool = snapshot.useBuiltInModBosses
+                ? BuiltInModBosses.merge(snapshot.bossPoolByTier, BuiltInModBosses.byTier())
+                : snapshot.bossPoolByTier;
+        for (Map.Entry<Integer, List<ResourceLocation>> entry : pool.entrySet()) {
             List<ResourceLocation> valid = new ArrayList<>();
             for (ResourceLocation id : entry.getValue()) {
                 EntityEntry registered = ForgeRegistries.ENTITIES.getValue(id);
@@ -162,7 +167,11 @@ public final class ConfigCache {
         Snapshot next = snapshot.copy();
         next.resolvedBossPoolByTier = Collections.unmodifiableMap(resolved);
         current = next;
-        ShatteredCitadelsMod.LOGGER.info("Boss pool resolved: {} tiers, {} candidates skipped", resolved.size(), skipped);
+        ShatteredCitadelsMod.LOGGER.info("Boss pool resolved: {} tiers, {} candidates skipped (built-in mod bosses {}, modded first {})",
+                resolved.size(), skipped, snapshot.useBuiltInModBosses ? "on" : "off", snapshot.preferModdedBosses ? "on" : "off");
+        for (Map.Entry<Integer, List<ResourceLocation>> entry : resolved.entrySet()) {
+            ShatteredCitadelsMod.LOGGER.info("  boss tier {}: {}", entry.getKey(), entry.getValue());
+        }
     }
 
     // ------------------------------------------------------------------ parsing
@@ -332,6 +341,8 @@ public final class ConfigCache {
 
         Map<Integer, List<ResourceLocation>> bossPoolByTier = Collections.emptyMap();
         Map<Integer, List<ResourceLocation>> resolvedBossPoolByTier = Collections.emptyMap();
+        boolean useBuiltInModBosses = true;
+        boolean preferModdedBosses = true;
         double bossHealthMultiplierPerFloor = 1.15D;
         double bossDamageMultiplierPerFloor = 1.10D;
         double skyCitadelBossMultiplier = 3.0D;
@@ -385,6 +396,8 @@ public final class ConfigCache {
             c.manualMobTierOverrides = manualMobTierOverrides;
             c.bossPoolByTier = bossPoolByTier;
             c.resolvedBossPoolByTier = resolvedBossPoolByTier;
+            c.useBuiltInModBosses = useBuiltInModBosses;
+            c.preferModdedBosses = preferModdedBosses;
             c.bossHealthMultiplierPerFloor = bossHealthMultiplierPerFloor;
             c.bossDamageMultiplierPerFloor = bossDamageMultiplierPerFloor;
             c.skyCitadelBossMultiplier = skyCitadelBossMultiplier;
@@ -487,6 +500,8 @@ public final class ConfigCache {
             return Collections.emptyList();
         }
 
+        public boolean isUseBuiltInModBosses() { return useBuiltInModBosses; }
+        public boolean isPreferModdedBosses() { return preferModdedBosses; }
         public double getBossHealthMultiplierPerFloor() { return bossHealthMultiplierPerFloor; }
         public double getBossDamageMultiplierPerFloor() { return bossDamageMultiplierPerFloor; }
         public double getSkyCitadelBossMultiplier() { return skyCitadelBossMultiplier; }
