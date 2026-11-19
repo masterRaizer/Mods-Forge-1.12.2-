@@ -1,5 +1,8 @@
 package com.shatteredcitadels.command;
 
+import com.shatteredcitadels.boss.ArenaSpots;
+import com.shatteredcitadels.boss.BossCutsceneHandler;
+import com.shatteredcitadels.boss.BossTags;
 import com.shatteredcitadels.compat.castledungeons.CastleDungeonsIntegration;
 import com.shatteredcitadels.config.MobTiers;
 import com.shatteredcitadels.floor.FloorTrackerHandler;
@@ -7,6 +10,7 @@ import com.shatteredcitadels.mob.MobEntry;
 import com.shatteredcitadels.mob.MobTierRegistry;
 import com.shatteredcitadels.palette.CitadelArchetype;
 import com.shatteredcitadels.spawner.WaveMobFactory;
+import com.shatteredcitadels.tile.TileEntityBossAltar;
 import com.shatteredcitadels.tile.TileEntityTrialSpawner;
 import com.shatteredcitadels.palette.ModPaletteRegistry;
 import com.shatteredcitadels.proxy.CommonProxy;
@@ -16,11 +20,15 @@ import com.shatteredcitadels.structure.CitadelWorldSavedData;
 import com.shatteredcitadels.structure.FloorData;
 import com.shatteredcitadels.worldgen.BlockWriter;
 import com.shatteredcitadels.worldgen.CitadelPlan;
+import net.minecraft.block.material.Material;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
+import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
@@ -29,6 +37,7 @@ import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 
 import java.util.ArrayList;
@@ -43,7 +52,7 @@ import java.util.Random;
  */
 public final class CommandShatteredCitadels extends CommandBase {
 
-    private static final String[] SUBCOMMANDS = {"list", "info", "palettes", "status", "generate", "floorstate", "mobs", "spawners"};
+    private static final String[] SUBCOMMANDS = {"list", "info", "palettes", "status", "generate", "floorstate", "mobs", "spawners", "boss"};
 
     @Override
     public String getName() {
@@ -118,6 +127,9 @@ public final class CommandShatteredCitadels extends CommandBase {
                 break;
             case "spawners":
                 listSpawners(server, sender, args);
+                break;
+            case "boss":
+                bossInfo(server, sender, args);
                 break;
             default:
                 throw new WrongUsageException(getUsage(sender));
@@ -225,6 +237,64 @@ public final class CommandShatteredCitadels extends CommandBase {
         }
     }
 
+    /** boss <player>: altar, cutscene, boss and minion state of the structure the player is in. */
+    private void bossInfo(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+        if (args.length < 2) {
+            throw new WrongUsageException(getUsage(sender));
+        }
+        EntityPlayerMP player = getPlayer(server, sender, args[1]);
+        CitadelInstance citadel = CitadelWorldSavedData.get(player.world).getCitadelAt(new BlockPos(player));
+        if (citadel == null || citadel.getBossArenaBounds() == null || citadel.getBossAltarPos() == null) {
+            throw new CommandException("Player " + player.getName() + " is not in a structure with a boss arena");
+        }
+        StructureBoundingBox arena = citadel.getBossArenaBounds();
+        BlockPos altarPos = citadel.getBossAltarPos().down();
+        TileEntity tile = player.world.getTileEntity(altarPos);
+        FloorData bossFloor = citadel.getBossFloor();
+        send(sender, "Arena [" + arena.minX + "," + arena.minY + "," + arena.minZ + " -> " + arena.maxX + "," + arena.maxY + ","
+                + arena.maxZ + "], altar " + altarPos.getX() + "," + altarPos.getY() + "," + altarPos.getZ()
+                + ", bossDefeated " + (bossFloor != null && bossFloor.isBossDefeated()));
+        if (!(tile instanceof TileEntityBossAltar)) {
+            send(sender, "  altar block missing");
+            return;
+        }
+        TileEntityBossAltar altar = (TileEntityBossAltar) tile;
+        send(sender, "  state " + altar.getState() + ", cutscene running " + BossCutsceneHandler.hasActiveCutscene(citadel.getCitadelId())
+                + ", seen by " + player.getName() + " " + BossCutsceneHandler.hasSeen(player, citadel.getCitadelId())
+                + ", boss bar " + altar.hasBossBar());
+        Entity boss = altar.getBossUuid() == null ? null : ((WorldServer) player.world).getEntityFromUuid(altar.getBossUuid());
+        if (boss instanceof EntityLivingBase) {
+            EntityLivingBase living = (EntityLivingBase) boss;
+            send(sender, "  boss " + EntityList.getKey(boss) + " hp " + Math.round(living.getHealth()) + "/"
+                    + Math.round(living.getMaxHealth()) + ", phase " + boss.getEntityData().getInteger(BossTags.PHASE)
+                    + ", pos " + Math.round(boss.posX * 10) / 10.0 + "," + Math.round(boss.posY * 10) / 10.0 + ","
+                    + Math.round(boss.posZ * 10) / 10.0 + ", inside arena " + ArenaSpots.isInside(arena, boss)
+                    + ", in wall " + boss.isEntityInsideOpaqueBlock());
+        } else {
+            send(sender, "  boss entity: none");
+        }
+        int inside = 0;
+        int total = 0;
+        for (EntityLiving minion : player.world.getEntities(EntityLiving.class, e -> e != null && e.isEntityAlive() && BossTags.isMinion(e))) {
+            total++;
+            if (ArenaSpots.isInside(arena, minion) && !minion.isEntityInsideOpaqueBlock()) {
+                inside++;
+            }
+        }
+        send(sender, "  minions alive " + total + " (inside arena, not in walls: " + inside + ")");
+        int solid = 0;
+        int fire = 0;
+        for (BlockPos p : BlockPos.getAllInBoxMutable(arena.minX, arena.minY, arena.minZ, arena.maxX, arena.maxY, arena.maxZ)) {
+            Material material = player.world.getBlockState(p).getMaterial();
+            if (material == Material.FIRE) {
+                fire++;
+            } else if (material.blocksMovement()) {
+                solid++;
+            }
+        }
+        send(sender, "  arena integrity: solid blocks " + solid + ", fire " + fire);
+    }
+
     private static void listMobs(ICommandSender sender) {
         MobTierRegistry registry = MobTierRegistry.get();
         send(sender, "Mob pools (scanned: " + registry.isScanned() + ", " + registry.size() + " entries):");
@@ -265,7 +335,7 @@ public final class CommandShatteredCitadels extends CommandBase {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args, SUBCOMMANDS);
         }
-        if (args.length == 2 && ("floorstate".equals(args[0]) || "spawners".equals(args[0]))) {
+        if (args.length == 2 && ("floorstate".equals(args[0]) || "spawners".equals(args[0]) || "boss".equals(args[0]))) {
             return getListOfStringsMatchingLastWord(args, server.getOnlinePlayerNames());
         }
         if (args.length == 2 && "generate".equals(args[0])) {

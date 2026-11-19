@@ -7,6 +7,7 @@ import com.shatteredcitadels.structure.CitadelWorldSavedData;
 import com.shatteredcitadels.tile.TileEntityBossAltar;
 import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
@@ -20,6 +21,7 @@ import net.minecraftforge.event.entity.living.LivingDeathEvent;
 import net.minecraftforge.event.entity.living.LivingDestroyBlockEvent;
 import net.minecraftforge.event.entity.living.LivingFallEvent;
 import net.minecraftforge.event.entity.living.LivingHurtEvent;
+import net.minecraftforge.event.entity.living.LivingSetAttackTargetEvent;
 import net.minecraftforge.event.world.BlockEvent;
 import net.minecraftforge.event.world.ExplosionEvent;
 import net.minecraftforge.event.world.WorldEvent;
@@ -158,9 +160,30 @@ public final class BossArenaProtectionHandler {
         }
     }
 
+    /** Minions never fight their boss (stray arrows, revenge targeting) and vice versa. */
+    @SubscribeEvent
+    public static void onSetTarget(LivingSetAttackTargetEvent event) {
+        EntityLivingBase entity = event.getEntityLiving();
+        EntityLivingBase target = event.getTarget();
+        if (target == null || entity.world.isRemote || !(entity instanceof EntityLiving)) {
+            return;
+        }
+        boolean entitySide = BossTags.isBoss(entity) || BossTags.isMinion(entity);
+        boolean targetSide = BossTags.isBoss(target) || BossTags.isMinion(target);
+        if (entitySide && targetSide) {
+            ((EntityLiving) entity).setAttackTarget(null);
+        }
+    }
+
     @SubscribeEvent
     public static void onAttack(LivingAttackEvent event) {
         EntityLivingBase entity = event.getEntityLiving();
+        Entity source = event.getSource().getTrueSource();
+        if (!entity.world.isRemote && (BossTags.isBoss(entity) || BossTags.isMinion(entity))
+                && (BossTags.isBoss(source) || BossTags.isMinion(source)) && source != entity) {
+            event.setCanceled(true);
+            return;
+        }
         if (!entity.world.isRemote && BossTags.isBoss(entity)
                 && (event.getSource() == DamageSource.IN_WALL || event.getSource() == DamageSource.FALL
                 || event.getSource() == DamageSource.CRAMMING || event.getSource() == DamageSource.DROWN)) {

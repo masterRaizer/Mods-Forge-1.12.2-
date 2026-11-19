@@ -1,5 +1,6 @@
 package com.shatteredcitadels.boss;
 
+import com.shatteredcitadels.ShatteredCitadelsMod;
 import com.shatteredcitadels.config.MobTiers;
 import com.shatteredcitadels.mob.MobEntry;
 import com.shatteredcitadels.mob.MobTierRegistry;
@@ -155,6 +156,7 @@ public final class BossAbilityController {
 
     private void execute(WorldServer world, EntityLiving boss, StructureBoundingBox arena, BlockPos altar,
                          List<EntityPlayerMP> players, int tier, boolean sky, Ability ability) {
+        ShatteredCitadelsMod.LOGGER.debug("Boss ability {} (phase {}) at {}", ability, phase, boss.getPosition());
         switch (ability) {
             case SHOCKWAVE:
                 shockwave(world, boss, players, tier);
@@ -286,7 +288,7 @@ public final class BossAbilityController {
     /** 4) Arcane Shield: damage reduction + reflection (see the protection handler) and effect-only lightning. */
     private void shield(WorldServer world, EntityLiving boss, StructureBoundingBox arena, List<EntityPlayerMP> players, int tier) {
         boss.getEntityData().setLong(SHIELD_UNTIL, world.getTotalWorldTime() + SHIELD_TICKS);
-        world.playSound(null, boss.posX, boss.posY, boss.posZ, SoundEvents.BLOCK_END_PORTAL_FRAME_FILL, SoundCategory.HOSTILE, 1.5F, 1.2F);
+        world.playSound(null, boss.posX, boss.posY, boss.posZ, ModSounds.BOSS_SHIELD_ACTIVATE, SoundCategory.HOSTILE, 1.5F, 1.0F);
         world.spawnParticle(EnumParticleTypes.END_ROD, boss.posX, boss.posY + 1.0D, boss.posZ, 60, 1.0D, 1.2D, 1.0D, 0.05D);
         int bolts = 2 + world.rand.nextInt(2);
         for (int i = 0; i < bolts; i++) {
@@ -401,7 +403,7 @@ public final class BossAbilityController {
             case SUMMON:
                 return SoundEvents.EVOCATION_ILLAGER_PREPARE_SUMMON;
             case SHIELD:
-                return SoundEvents.EVOCATION_ILLAGER_CAST_SPELL;
+                return ModSounds.BOSS_SHIELD_CHARGE;
             case GRAVITY_STORM:
             default:
                 return SoundEvents.ENTITY_ELDER_GUARDIAN_CURSE;

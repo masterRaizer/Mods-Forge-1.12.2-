@@ -48,7 +48,7 @@ public final class ClientFloorHudOverlay {
             return;
         }
         Minecraft mc = Minecraft.getMinecraft();
-        if (mc.player == null || mc.gameSettings.hideGUI) {
+        if (mc.player == null || mc.gameSettings.hideGUI || ClientCutsceneOverlay.isActive()) {
             return;
         }
         ConfigCache.Snapshot config = ConfigCache.get();
@@ -174,6 +174,9 @@ public final class ClientFloorHudOverlay {
         if (state.isBossFloor() && state.isBossDefeated()) {
             return CitadelTextFormatter.translate("shatteredcitadels.hud.plaque.boss_defeated");
         }
+        if (state.isBossFloor()) {
+            return CitadelTextFormatter.translate("shatteredcitadels.hud.plaque.boss_alive");
+        }
         if (state.isCleared()) {
             return CitadelTextFormatter.translate("shatteredcitadels.hud.plaque.cleared");
         }
@@ -191,6 +194,6 @@ public final class ClientFloorHudOverlay {
         if (state.isCleared() || (state.isBossFloor() && state.isBossDefeated())) {
             return COLOR_CLEARED;
         }
-        return state.getActiveWave() > 0 ? COLOR_WAVE : COLOR_IDLE;
+        return state.getActiveWave() > 0 || state.isBossFloor() ? COLOR_WAVE : COLOR_IDLE;
     }
 }
