@@ -50,9 +50,16 @@ public final class FloorCombatState {
                 remaining += spawner.getRemainingMobs();
             }
         }
+        if (floor.isCleared()) {
+            // A cleared floor stays cleared; its spawners are gone, keep the final wave count.
+            floor.setRemainingMobs(0);
+            CitadelWorldSavedData.get(world).markDirty();
+            FloorTrackerHandler.resyncCitadel(world, citadel.getCitadelId());
+            return;
+        }
         floor.setActiveWave(maxWave);
         floor.setRemainingMobs(remaining);
-        if (anyPoint && !anyActive && !floor.isCleared()) {
+        if (anyPoint && !anyActive) {
             floor.setCleared(true);
             floor.setActiveWave(Math.max(maxWave, floor.getTotalWaves()));
             floor.setRemainingMobs(0);

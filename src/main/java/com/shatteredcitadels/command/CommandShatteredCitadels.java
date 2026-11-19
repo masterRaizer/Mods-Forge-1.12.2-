@@ -6,6 +6,8 @@ import com.shatteredcitadels.floor.FloorTrackerHandler;
 import com.shatteredcitadels.mob.MobEntry;
 import com.shatteredcitadels.mob.MobTierRegistry;
 import com.shatteredcitadels.palette.CitadelArchetype;
+import com.shatteredcitadels.spawner.WaveMobFactory;
+import com.shatteredcitadels.tile.TileEntityTrialSpawner;
 import com.shatteredcitadels.palette.ModPaletteRegistry;
 import com.shatteredcitadels.proxy.CommonProxy;
 import com.shatteredcitadels.structure.CitadelInstance;
@@ -18,8 +20,10 @@ import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
+import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
+import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.util.text.ITextComponent;
@@ -39,7 +43,7 @@ import java.util.Random;
  */
 public final class CommandShatteredCitadels extends CommandBase {
 
-    private static final String[] SUBCOMMANDS = {"list", "info", "palettes", "status", "generate", "floorstate", "mobs"};
+    private static final String[] SUBCOMMANDS = {"list", "info", "palettes", "status", "generate", "floorstate", "mobs", "spawners"};
 
     @Override
     public String getName() {
@@ -112,6 +116,9 @@ public final class CommandShatteredCitadels extends CommandBase {
             case "mobs":
                 listMobs(sender);
                 break;
+            case "spawners":
+                listSpawners(server, sender, args);
+                break;
             default:
                 throw new WrongUsageException(getUsage(sender));
         }
@@ -180,6 +187,44 @@ public final class CommandShatteredCitadels extends CommandBase {
                 + ", remaining " + floor.getRemainingMobs() + ", cleared " + floor.isCleared());
     }
 
+    /** spawners <player> [floorIndex]: state of every trial spawner on a floor. */
+    private void listSpawners(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+        if (args.length < 2) {
+            throw new WrongUsageException(getUsage(sender));
+        }
+        EntityPlayerMP player = getPlayer(server, sender, args[1]);
+        CitadelInstance citadel = CitadelWorldSavedData.get(player.world).getCitadelAt(new BlockPos(player));
+        if (citadel == null) {
+            throw new CommandException("Player " + player.getName() + " is not inside a tracked structure");
+        }
+        FloorData playerFloor = citadel.floorAt(MathHelper.floor(player.posY));
+        int floorIndex = args.length > 2 ? parseInt(args[2]) : (playerFloor == null ? 0 : playerFloor.getIndex());
+        FloorData floor = citadel.getFloor(floorIndex);
+        String tag = WaveMobFactory.floorTag(citadel.getCitadelId(), floorIndex);
+        int mobs = player.world.getEntities(EntityLiving.class,
+                e -> e != null && e.isEntityAlive() && WaveMobFactory.belongsTo(e, tag)).size();
+        send(sender, "Floor " + floorIndex + (floor == null ? " (unknown)" : " tier " + floor.getDifficultyTier()
+                + ", wave " + floor.getActiveWave() + "/" + floor.getTotalWaves() + ", remaining "
+                + floor.getRemainingMobs() + ", cleared " + floor.isCleared()) + "; wave mobs alive: " + mobs
+                + "; players on floor: " + FloorTrackerHandler.countPlayersOnFloor(player.world, citadel.getCitadelId(), floorIndex));
+        for (CitadelInstance.SpawnerPoint point : citadel.getSpawnerPoints()) {
+            if (point.floorIndex != floorIndex) {
+                continue;
+            }
+            TileEntity tile = player.world.isBlockLoaded(point.pos) ? player.world.getTileEntity(point.pos) : null;
+            String state;
+            if (tile instanceof TileEntityTrialSpawner) {
+                TileEntityTrialSpawner s = (TileEntityTrialSpawner) tile;
+                state = "wave " + s.getCurrentWave() + "/" + s.getTotalWaves() + (s.isWaveInProgress() ? " running" : " idle")
+                        + ", alive " + s.getAliveSpawnedMobs() + ", remaining " + s.getRemainingMobs() + ", cooldown "
+                        + s.getCooldownTicks() + ", exhausted " + s.isExhausted() + ", combo " + s.getAssignedMobCombo();
+            } else {
+                state = tile == null && player.world.isBlockLoaded(point.pos) ? "removed" : "not loaded / other";
+            }
+            send(sender, "  " + point.pos.getX() + "," + point.pos.getY() + "," + point.pos.getZ() + ": " + state);
+        }
+    }
+
     private static void listMobs(ICommandSender sender) {
         MobTierRegistry registry = MobTierRegistry.get();
         send(sender, "Mob pools (scanned: " + registry.isScanned() + ", " + registry.size() + " entries):");
@@ -220,7 +265,7 @@ public final class CommandShatteredCitadels extends CommandBase {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args, SUBCOMMANDS);
         }
-        if (args.length == 2 && "floorstate".equals(args[0])) {
+        if (args.length == 2 && ("floorstate".equals(args[0]) || "spawners".equals(args[0]))) {
             return getListOfStringsMatchingLastWord(args, server.getOnlinePlayerNames());
         }
         if (args.length == 2 && "generate".equals(args[0])) {
