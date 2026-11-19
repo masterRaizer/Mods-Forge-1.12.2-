@@ -1,0 +1,19 @@
+[
+  {
+    "modid": "${mod_id}",
+    "name": "${mod_name}",
+    "description": "Rare multi-floor citadels with mob waves, floor bosses, the Citadel Above the Clouds and dangerous underground dungeons. Integrates softly with dungeon, loot and progression mods.",
+    "version": "${mod_version}",
+    "mcversion": "${mc_version}",
+    "url": "",
+    "updateUrl": "",
+    "authorList": ["Shattered Crown Team"],
+    "credits": "Built on Forge and MixinBooter.",
+    "logoFile": "",
+    "screenshots": [],
+    "requiredMods": ["mixinbooter"],
+    "dependencies": ["mixinbooter"],
+    "dependants": [],
+    "useDependencyInformation": false
+  }
+]

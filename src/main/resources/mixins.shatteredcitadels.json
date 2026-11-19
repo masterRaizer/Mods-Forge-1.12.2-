@@ -1,0 +1,16 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_8",
+  "package": "com.shatteredcitadels.mixin",
+  "refmap": "mixins.shatteredcitadels.refmap.json",
+  "target": "@env(DEFAULT)",
+  "injectors": {
+    "defaultRequire": 1
+  },
+  "mixins": [
+    "AccessorEntityLiving"
+  ],
+  "client": [],
+  "server": []
+}
