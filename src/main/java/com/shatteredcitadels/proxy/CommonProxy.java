@@ -9,6 +9,8 @@ import com.shatteredcitadels.network.NetworkHandler;
 import com.shatteredcitadels.network.PacketBossCutscene;
 import com.shatteredcitadels.network.PacketFloorTitleBanner;
 import com.shatteredcitadels.network.PacketSyncFloorHud;
+import com.shatteredcitadels.item.ModItems;
+import com.shatteredcitadels.item.RelicEquipment;
 import com.shatteredcitadels.loot.ModLootTables;
 import com.shatteredcitadels.lore.QuestlineInstaller;
 import com.shatteredcitadels.mob.ModMobTierScanner;
@@ -61,6 +63,14 @@ public class CommonProxy {
 
     public void loadComplete(FMLLoadCompleteEvent event) {
         ModPaletteRegistry.init();
+        if (ModItems.CROWN_SHARD != null) {
+            boolean bauble = false;
+            for (Class<?> iface : ModItems.CROWN_SHARD.getClass().getInterfaces()) {
+                bauble |= "baubles.api.IBauble".equals(iface.getName());
+            }
+            ShatteredCitadelsMod.LOGGER.info("Relics: Baubles installed {}, relics are baubles {}",
+                    RelicEquipment.isBaublesLoaded(), bauble);
+        }
         ShatteredCitadelsMod.LOGGER.info("Mixin configurations queued by the late loader: {}",
                 LateMixinLoader.getQueuedConfigs());
         if (CastleDungeonsIntegration.isLoaded()) {

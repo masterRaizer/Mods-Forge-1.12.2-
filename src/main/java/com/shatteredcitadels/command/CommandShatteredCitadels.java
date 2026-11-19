@@ -6,6 +6,10 @@ import com.shatteredcitadels.boss.BossTags;
 import com.shatteredcitadels.compat.castledungeons.CastleDungeonsIntegration;
 import com.shatteredcitadels.config.MobTiers;
 import com.shatteredcitadels.floor.FloorTrackerHandler;
+import com.shatteredcitadels.item.ModItems;
+import com.shatteredcitadels.item.RelicEquipment;
+import com.shatteredcitadels.lore.LoreBookGenerator;
+import com.shatteredcitadels.lore.LoreTracker;
 import com.shatteredcitadels.mob.MobEntry;
 import com.shatteredcitadels.mob.MobTierRegistry;
 import com.shatteredcitadels.palette.CitadelArchetype;
@@ -29,7 +33,10 @@ import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityList;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.item.Item;
+import net.minecraft.item.ItemStack;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.math.BlockPos;
@@ -52,7 +59,7 @@ import java.util.Random;
  */
 public final class CommandShatteredCitadels extends CommandBase {
 
-    private static final String[] SUBCOMMANDS = {"list", "info", "palettes", "status", "generate", "floorstate", "mobs", "spawners", "boss"};
+    private static final String[] SUBCOMMANDS = {"list", "info", "palettes", "status", "generate", "floorstate", "mobs", "spawners", "boss", "relics", "lore"};
 
     @Override
     public String getName() {
@@ -131,6 +138,19 @@ public final class CommandShatteredCitadels extends CommandBase {
             case "boss":
                 bossInfo(server, sender, args);
                 break;
+            case "relics":
+                relics(server, sender, args);
+                break;
+            case "lore": {
+                if (args.length < 3) {
+                    throw new WrongUsageException(getUsage(sender));
+                }
+                EntityPlayerMP target = getPlayer(server, sender, args[1]);
+                int chapter = parseInt(args[2], 1, LoreBookGenerator.CHAPTERS);
+                target.inventory.addItemStackToInventory(LoreBookGenerator.create(chapter));
+                send(sender, "Gave lore chapter " + chapter + " (" + LoreBookGenerator.title(chapter) + ") to " + target.getName());
+                break;
+            }
             default:
                 throw new WrongUsageException(getUsage(sender));
         }
@@ -295,6 +315,32 @@ public final class CommandShatteredCitadels extends CommandBase {
         send(sender, "  arena integrity: solid blocks " + solid + ", fire " + fire);
     }
 
+    /** relics <player> [give|status]: hand out the four relics or report what is active. */
+    private void relics(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+        if (args.length < 2) {
+            throw new WrongUsageException(getUsage(sender));
+        }
+        EntityPlayerMP player = getPlayer(server, sender, args[1]);
+        if (args.length > 2 && "give".equals(args[2])) {
+            for (Item item : ModItems.all()) {
+                player.inventory.addItemStackToInventory(new ItemStack(item));
+            }
+            send(sender, "Gave the four relics to " + player.getName());
+            return;
+        }
+        boolean bauble = false;
+        for (Class<?> iface : ModItems.CROWN_SHARD.getClass().getInterfaces()) {
+            bauble |= "baubles.api.IBauble".equals(iface.getName());
+        }
+        send(sender, "Baubles loaded " + RelicEquipment.isBaublesLoaded() + ", ItemRelic implements IBauble " + bauble);
+        send(sender, "Active: crown " + RelicEquipment.isActive(player, ModItems.CROWN_SHARD) + ", aegis "
+                + RelicEquipment.isActive(player, ModItems.CLOUDSPIRE_AEGIS) + ", heart "
+                + RelicEquipment.isActive(player, ModItems.GOBLIN_FORGE_HEART) + "; allowFlying " + player.capabilities.allowFlying
+                + ", attack damage " + Math.round(player.getEntityAttribute(SharedMonsterAttributes.ATTACK_DAMAGE).getAttributeValue() * 100) / 100.0
+                + ", attack speed " + Math.round(player.getEntityAttribute(SharedMonsterAttributes.ATTACK_SPEED).getAttributeValue() * 100) / 100.0
+                + ", lore chapters " + Integer.bitCount(LoreTracker.collectedMask(player)));
+    }
+
     private static void listMobs(ICommandSender sender) {
         MobTierRegistry registry = MobTierRegistry.get();
         send(sender, "Mob pools (scanned: " + registry.isScanned() + ", " + registry.size() + " entries):");
@@ -335,7 +381,8 @@ public final class CommandShatteredCitadels extends CommandBase {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args, SUBCOMMANDS);
         }
-        if (args.length == 2 && ("floorstate".equals(args[0]) || "spawners".equals(args[0]) || "boss".equals(args[0]))) {
+        if (args.length == 2 && ("floorstate".equals(args[0]) || "spawners".equals(args[0]) || "boss".equals(args[0])
+                || "relics".equals(args[0]) || "lore".equals(args[0]))) {
             return getListOfStringsMatchingLastWord(args, server.getOnlinePlayerNames());
         }
         if (args.length == 2 && "generate".equals(args[0])) {
