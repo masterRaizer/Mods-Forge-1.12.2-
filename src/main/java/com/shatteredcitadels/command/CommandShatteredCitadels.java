@@ -165,6 +165,7 @@ public final class CommandShatteredCitadels extends CommandBase {
         int z = args.length >= 4 ? parseInt(args[3]) : pos.getZ();
         int chunkX = x >> 4;
         int chunkZ = z >> 4;
+        CommandCitadel.ensureSiteFree(world, chunkX, chunkZ);
         // A command may load chunks: make the 2x2 build area exist before writing.
         for (int dx = 0; dx <= 1; dx++) {
             for (int dz = 0; dz <= 1; dz++) {

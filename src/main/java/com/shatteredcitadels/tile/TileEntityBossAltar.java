@@ -319,6 +319,34 @@ public class TileEntityBossAltar extends TileEntity implements ITickable {
 
     // ------------------------------------------------------------------ defeat
 
+    /**
+     * Admin/debug: summon the boss now, skipping the cutscene. A defeated arena is re-armed first.
+     *
+     * @return null on success, otherwise the reason it could not be done
+     */
+    public String forceSummon() {
+        if (!(world instanceof WorldServer)) {
+            return "not a server world";
+        }
+        CitadelInstance citadel = resolveCitadel();
+        if (citadel == null || citadel.getBossArenaBounds() == null) {
+            return "the altar is not linked to a boss arena";
+        }
+        if (state == State.ACTIVE && bossUuid != null && ((WorldServer) world).getEntityFromUuid(bossUuid) != null) {
+            return "a boss is already active";
+        }
+        FloorData bossFloor = citadel.getBossFloor();
+        if (bossFloor != null) {
+            bossFloor.setBossDefeated(false);
+            CitadelWorldSavedData.get(world).markDirty();
+        }
+        BossCutsceneHandler.cancelAll(citadel.getCitadelId());
+        nextSpawnAttempt = 0L;
+        state = State.DORMANT;
+        trySpawnBoss((WorldServer) world, citadel, playersInArena((WorldServer) world, citadel.getBossArenaBounds()));
+        return state == State.ACTIVE ? null : "no free spot for the boss in the arena";
+    }
+
     /** A player died in the arena while the boss was alive. */
     public void onPlayerFallen(UUID playerId) {
         if (state == State.ACTIVE && fallenPlayers.add(playerId)) {

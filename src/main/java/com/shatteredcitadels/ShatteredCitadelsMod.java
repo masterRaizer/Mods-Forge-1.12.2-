@@ -1,6 +1,7 @@
 package com.shatteredcitadels;
 
 import com.shatteredcitadels.boss.BossCutsceneHandler;
+import com.shatteredcitadels.command.CommandCitadel;
 import com.shatteredcitadels.command.CommandShatteredCitadels;
 import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.floor.FloorTrackerHandler;
@@ -64,6 +65,7 @@ public final class ShatteredCitadelsMod {
     @Mod.EventHandler
     public void serverStarting(FMLServerStartingEvent event) {
         event.registerServerCommand(new CommandShatteredCitadels());
+        event.registerServerCommand(new CommandCitadel());
     }
 
     @Mod.EventHandler
