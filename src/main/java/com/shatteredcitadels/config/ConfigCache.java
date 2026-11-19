@@ -83,6 +83,10 @@ public final class ConfigCache {
         next.wavesPerFloorMin = waveRange[0];
         next.wavesPerFloorMax = waveRange[1];
         next.maxActiveMobsPerFloor = clamp(waves.maxActiveMobsPerFloor, 1, 64);
+        next.waveMobHealthMultiplierPerFloor = clamp(waves.waveMobHealthMultiplierPerFloor, 1.0D, 2.0D);
+        next.waveMobDamageMultiplierPerFloor = clamp(waves.waveMobDamageMultiplierPerFloor, 1.0D, 2.0D);
+        next.waveCooldownSeconds = clamp(waves.waveCooldownSeconds, 1, 60);
+        next.stuckMobTimeoutSeconds = clamp(waves.stuckMobTimeoutSeconds, 30, 3600);
         parseBlacklist(waves.mobBlacklist, next);
         next.enableAutoModMobScanner = waves.enableAutoModMobScanner;
         next.manualMobTierOverrides = parseTierOverrides(waves.manualMobTierOverrides);
@@ -314,6 +318,10 @@ public final class ConfigCache {
         int wavesPerFloorMin = 2;
         int wavesPerFloorMax = 4;
         int maxActiveMobsPerFloor = 12;
+        double waveMobHealthMultiplierPerFloor = 1.08D;
+        double waveMobDamageMultiplierPerFloor = 1.05D;
+        int waveCooldownSeconds = 5;
+        int stuckMobTimeoutSeconds = 240;
         Set<ResourceLocation> blacklistedEntities = Collections.emptySet();
         Set<String> blacklistedMods = Collections.emptySet();
         boolean enableAutoModMobScanner = true;
@@ -361,6 +369,10 @@ public final class ConfigCache {
             c.wavesPerFloorMin = wavesPerFloorMin;
             c.wavesPerFloorMax = wavesPerFloorMax;
             c.maxActiveMobsPerFloor = maxActiveMobsPerFloor;
+            c.waveMobHealthMultiplierPerFloor = waveMobHealthMultiplierPerFloor;
+            c.waveMobDamageMultiplierPerFloor = waveMobDamageMultiplierPerFloor;
+            c.waveCooldownSeconds = waveCooldownSeconds;
+            c.stuckMobTimeoutSeconds = stuckMobTimeoutSeconds;
             c.blacklistedEntities = blacklistedEntities;
             c.blacklistedMods = blacklistedMods;
             c.enableAutoModMobScanner = enableAutoModMobScanner;
@@ -416,6 +428,17 @@ public final class ConfigCache {
         public int getWavesPerFloorMin() { return wavesPerFloorMin; }
         public int getWavesPerFloorMax() { return wavesPerFloorMax; }
         public int getMaxActiveMobsPerFloor() { return maxActiveMobsPerFloor; }
+        public int getWaveCooldownTicks() { return waveCooldownSeconds * 20; }
+        public int getStuckMobTimeoutTicks() { return stuckMobTimeoutSeconds * 20; }
+
+        /** @param depth floor index for surface floors, |index| for crypt levels */
+        public double waveMobHealthScale(int depth) {
+            return Math.min(MAX_SCALING, Math.pow(waveMobHealthMultiplierPerFloor, Math.max(0, depth)));
+        }
+
+        public double waveMobDamageScale(int depth) {
+            return Math.min(MAX_SCALING, Math.pow(waveMobDamageMultiplierPerFloor, Math.max(0, depth)));
+        }
         public boolean isAutoModMobScannerEnabled() { return enableAutoModMobScanner; }
         public Map<ResourceLocation, Integer> getManualMobTierOverrides() { return manualMobTierOverrides; }
 

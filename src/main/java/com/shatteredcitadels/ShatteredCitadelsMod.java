@@ -3,6 +3,7 @@ package com.shatteredcitadels;
 import com.shatteredcitadels.command.CommandShatteredCitadels;
 import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.floor.FloorTrackerHandler;
+import com.shatteredcitadels.mob.ModMobTierScanner;
 import com.shatteredcitadels.proxy.CommonProxy;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -67,5 +68,6 @@ public final class ShatteredCitadelsMod {
     @Mod.EventHandler
     public void serverStopped(FMLServerStoppedEvent event) {
         FloorTrackerHandler.clearAll();
+        ModMobTierScanner.reset();
     }
 }

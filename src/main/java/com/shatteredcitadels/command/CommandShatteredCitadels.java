@@ -1,7 +1,10 @@
 package com.shatteredcitadels.command;
 
 import com.shatteredcitadels.compat.castledungeons.CastleDungeonsIntegration;
+import com.shatteredcitadels.config.MobTiers;
 import com.shatteredcitadels.floor.FloorTrackerHandler;
+import com.shatteredcitadels.mob.MobEntry;
+import com.shatteredcitadels.mob.MobTierRegistry;
 import com.shatteredcitadels.palette.CitadelArchetype;
 import com.shatteredcitadels.palette.ModPaletteRegistry;
 import com.shatteredcitadels.proxy.CommonProxy;
@@ -36,7 +39,7 @@ import java.util.Random;
  */
 public final class CommandShatteredCitadels extends CommandBase {
 
-    private static final String[] SUBCOMMANDS = {"list", "info", "palettes", "status", "generate", "floorstate"};
+    private static final String[] SUBCOMMANDS = {"list", "info", "palettes", "status", "generate", "floorstate", "mobs"};
 
     @Override
     public String getName() {
@@ -106,6 +109,9 @@ public final class CommandShatteredCitadels extends CommandBase {
             case "floorstate":
                 floorState(server, sender, args);
                 break;
+            case "mobs":
+                listMobs(sender);
+                break;
             default:
                 throw new WrongUsageException(getUsage(sender));
         }
@@ -172,6 +178,23 @@ public final class CommandShatteredCitadels extends CommandBase {
         FloorTrackerHandler.resyncCitadel(player.world, citadel.getCitadelId());
         send(sender, "Floor " + floor.getIndex() + ": wave " + floor.getActiveWave() + "/" + floor.getTotalWaves()
                 + ", remaining " + floor.getRemainingMobs() + ", cleared " + floor.isCleared());
+    }
+
+    private static void listMobs(ICommandSender sender) {
+        MobTierRegistry registry = MobTierRegistry.get();
+        send(sender, "Mob pools (scanned: " + registry.isScanned() + ", " + registry.size() + " entries):");
+        for (int tier = MobTiers.MIN_TIER; tier <= MobTiers.MAX_TIER; tier++) {
+            send(sender, "T" + tier + " " + summarize(registry.getTier(tier)));
+        }
+        send(sender, "Underground " + summarize(registry.getUnderground()));
+    }
+
+    private static String summarize(List<MobEntry> entries) {
+        StringBuilder text = new StringBuilder("(" + entries.size() + "): ");
+        for (int i = 0; i < entries.size() && i < 10; i++) {
+            text.append(i == 0 ? "" : ", ").append(entries.get(i).getId());
+        }
+        return entries.size() > 10 ? text.append(", ...").toString() : text.toString();
     }
 
     private static ITextComponent describe(CitadelInstance record) {

@@ -1,0 +1,5 @@
+{
+  "variants": {
+    "normal": { "model": "shatteredcitadels:trial_spawner" }
+  }
+}

@@ -148,6 +148,33 @@ public final class ModConfig {
         @Config.RangeInt(min = 1, max = 64)
         public int maxActiveMobsPerFloor = 12;
 
+        @Config.Name("waveMobHealthMultiplierPerFloor")
+        @Config.LangKey("config.shatteredcitadels.spawner_and_waves.waveMobHealthMultiplierPerFloor")
+        @Config.Comment("Compounding health multiplier for wave mobs per floor (crypt levels count by depth).")
+        @Config.RangeDouble(min = 1.0D, max = 2.0D)
+        public double waveMobHealthMultiplierPerFloor = 1.08D;
+
+        @Config.Name("waveMobDamageMultiplierPerFloor")
+        @Config.LangKey("config.shatteredcitadels.spawner_and_waves.waveMobDamageMultiplierPerFloor")
+        @Config.Comment("Compounding attack damage multiplier for wave mobs per floor.")
+        @Config.RangeDouble(min = 1.0D, max = 2.0D)
+        public double waveMobDamageMultiplierPerFloor = 1.05D;
+
+        @Config.Name("waveCooldownSeconds")
+        @Config.LangKey("config.shatteredcitadels.spawner_and_waves.waveCooldownSeconds")
+        @Config.Comment("Pause between two waves of the same spawner.")
+        @Config.RangeInt(min = 1, max = 60)
+        public int waveCooldownSeconds = 5;
+
+        @Config.Name("stuckMobTimeoutSeconds")
+        @Config.LangKey("config.shatteredcitadels.spawner_and_waves.stuckMobTimeoutSeconds")
+        @Config.Comment({
+                "Anti-stall: a wave mob that has been unloaded/missing, outside its floor, or alive for longer",
+                "than this is dropped from the wave (and removed if still present), so waves never hang."
+        })
+        @Config.RangeInt(min = 30, max = 3600)
+        public int stuckMobTimeoutSeconds = 240;
+
         @Config.Name("mobBlacklist")
         @Config.LangKey("config.shatteredcitadels.spawner_and_waves.mobBlacklist")
         @Config.Comment({

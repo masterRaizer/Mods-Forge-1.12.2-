@@ -7,8 +7,13 @@ import com.shatteredcitadels.core.LateMixinLoader;
 import com.shatteredcitadels.network.NetworkHandler;
 import com.shatteredcitadels.network.PacketFloorTitleBanner;
 import com.shatteredcitadels.network.PacketSyncFloorHud;
+import com.shatteredcitadels.mob.ModMobTierScanner;
 import com.shatteredcitadels.palette.ModPaletteRegistry;
+import com.shatteredcitadels.spawner.TrialSpawnerPlacer;
+import com.shatteredcitadels.spawner.WaveSpawnerHooks;
+import com.shatteredcitadels.tile.TileEntityTrialSpawner;
 import com.shatteredcitadels.worldgen.CitadelWorldGenerator;
+import net.minecraft.world.storage.loot.LootTableList;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLLoadCompleteEvent;
@@ -32,9 +37,15 @@ public class CommonProxy {
 
     public void init(FMLInitializationEvent event) {
         GameRegistry.registerWorldGenerator(WORLD_GENERATOR, CitadelWorldGenerator.WEIGHT);
+        // Citadels, crypts and adopted Castle Dungeons castles now place trial spawners.
+        WaveSpawnerHooks.setPlacer(new TrialSpawnerPlacer());
+        for (int tier = 1; tier <= 6; tier++) {
+            LootTableList.register(TileEntityTrialSpawner.lootTable(tier));
+        }
     }
 
     public void postInit(FMLPostInitializationEvent event) {
+        ModMobTierScanner.prefilter();
         // Ordered before Castle Dungeons (before:castle_dungeons): its post-init reads these files.
         if (CastleDungeonsIntegration.isLoaded()) {
             CastleConfigPatcher.patch(Loader.instance().getConfigDir());
