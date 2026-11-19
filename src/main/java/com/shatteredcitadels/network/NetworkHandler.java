@@ -16,6 +16,8 @@ public final class NetworkHandler {
 
     private static final int ID_SYNC_FLOOR_HUD = 0;
     private static final int ID_FLOOR_TITLE_BANNER = 1;
+    private static final int ID_BOSS_CUTSCENE = 2;
+    private static final int ID_CUTSCENE_SKIP = 3;
 
     private static SimpleNetworkWrapper channel;
 
@@ -29,6 +31,15 @@ public final class NetworkHandler {
         channel = NetworkRegistry.INSTANCE.newSimpleChannel(Reference.MODID);
         channel.registerMessage(PacketSyncFloorHud.Handler.class, PacketSyncFloorHud.class, ID_SYNC_FLOOR_HUD, Side.CLIENT);
         channel.registerMessage(PacketFloorTitleBanner.Handler.class, PacketFloorTitleBanner.class, ID_FLOOR_TITLE_BANNER, Side.CLIENT);
+        channel.registerMessage(PacketBossCutscene.Handler.class, PacketBossCutscene.class, ID_BOSS_CUTSCENE, Side.CLIENT);
+        channel.registerMessage(PacketCutsceneSkip.Handler.class, PacketCutsceneSkip.class, ID_CUTSCENE_SKIP, Side.SERVER);
+    }
+
+    /** Client only: send a client-to-server message. */
+    public static void sendToServer(IMessage message) {
+        if (channel != null) {
+            channel.sendToServer(message);
+        }
     }
 
     public static void sendTo(IMessage message, EntityPlayerMP player) {

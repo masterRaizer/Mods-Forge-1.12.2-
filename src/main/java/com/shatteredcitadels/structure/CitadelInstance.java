@@ -142,6 +142,17 @@ public final class CitadelInstance {
         return floors.headMap(0, false).size();
     }
 
+    /** @return the floor that holds the boss arena (crypt bosses live on their deepest level). */
+    public FloorData getBossFloor() {
+        if (bossArenaBounds != null) {
+            FloorData floor = floorAt(bossArenaBounds.minY + 1);
+            if (floor != null) {
+                return floor;
+            }
+        }
+        return floors.isEmpty() ? null : floors.lastEntry().getValue();
+    }
+
     public int getTopFloorIndex() {
         return floors.isEmpty() ? 0 : floors.lastKey();
     }

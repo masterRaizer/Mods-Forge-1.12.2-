@@ -20,6 +20,10 @@ public final class ClientModels {
 
     @SubscribeEvent
     public static void onModelRegistry(ModelRegistryEvent event) {
+        if (ModBlocks.BOSS_ALTAR_ITEM != null) {
+            ModelLoader.setCustomModelResourceLocation(ModBlocks.BOSS_ALTAR_ITEM, 0,
+                    new ModelResourceLocation(ModBlocks.BOSS_ALTAR_ITEM.getRegistryName(), "inventory"));
+        }
         if (ModBlocks.TRIAL_SPAWNER_ITEM != null) {
             ModelLoader.setCustomModelResourceLocation(ModBlocks.TRIAL_SPAWNER_ITEM, 0,
                     new ModelResourceLocation(ModBlocks.TRIAL_SPAWNER_ITEM.getRegistryName(), "inventory"));

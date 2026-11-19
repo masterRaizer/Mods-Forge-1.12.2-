@@ -29,7 +29,16 @@ public class LootTableItemsTest {
 
     @Test
     public void allSpawnerLootTablesUseValidItems() throws IOException {
-        File dir = new File("src/main/resources/assets/shatteredcitadels/loot_tables/spawner");
+        check("spawner");
+    }
+
+    @Test
+    public void allBossLootTablesUseValidItems() throws IOException {
+        check("boss");
+    }
+
+    private static void check(String folder) throws IOException {
+        File dir = new File("src/main/resources/assets/shatteredcitadels/loot_tables/" + folder);
         File[] files = dir.listFiles((d, name) -> name.endsWith(".json"));
         assertNotNull(files);
         assertTrue(files.length >= 6);

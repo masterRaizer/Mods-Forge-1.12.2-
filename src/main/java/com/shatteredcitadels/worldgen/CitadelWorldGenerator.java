@@ -285,7 +285,7 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
                 new StructureBoundingBox(minX, topLevelY, minZ, minX + size - 1, surfaceY + 4, minZ + size - 1));
         DungeonCryptBuilder builder = new DungeonCryptBuilder(writer, palette, random, record, minX, minZ, size, 1);
         builder.buildSurfaceRuin(cx, surfaceY, cz);
-        int built = builder.build(topLevelY, levels, cx, cz, surfaceY);
+        int built = builder.build(topLevelY, levels, cx, cz, surfaceY, true);
         if (built == 0) {
             return null;
         }

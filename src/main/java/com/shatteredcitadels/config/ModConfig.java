@@ -258,6 +258,23 @@ public final class ModConfig {
         @Config.RangeDouble(min = 1.0D, max = 20.0D)
         public double skyCitadelBossMultiplier = 3.0D;
 
+        @Config.Name("enableBossCutscene")
+        @Config.LangKey("config.shatteredcitadels.boss_settings.enableBossCutscene")
+        @Config.Comment("Play the entrance cutscene the first time a player enters a boss arena; the boss appears when it ends.")
+        public boolean enableBossCutscene = true;
+
+        @Config.Name("bossCutsceneSeconds")
+        @Config.LangKey("config.shatteredcitadels.boss_settings.bossCutsceneSeconds")
+        @Config.Comment("Length of the entrance cutscene. Players can skip it with sneak.")
+        @Config.RangeInt(min = 3, max = 15)
+        public int bossCutsceneSeconds = 6;
+
+        @Config.Name("bossTriggerRadius")
+        @Config.LangKey("config.shatteredcitadels.boss_settings.bossTriggerRadius")
+        @Config.Comment("Without a cutscene (disabled or already seen) the boss is summoned when a player comes this close to the altar.")
+        @Config.RangeInt(min = 2, max = 16)
+        public int bossTriggerRadius = 6;
+
         @Config.Name("strictArenaAntiGrief")
         @Config.LangKey("config.shatteredcitadels.boss_settings.strictArenaAntiGrief")
         @Config.Comment("Forbid bosses (and their projectiles/explosions) from breaking blocks of the arena.")

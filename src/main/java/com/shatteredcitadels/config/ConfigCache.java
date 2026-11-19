@@ -96,6 +96,9 @@ public final class ConfigCache {
         next.bossDamageMultiplierPerFloor = clamp(boss.bossDamageMultiplierPerFloor, 1.0D, 3.0D);
         next.skyCitadelBossMultiplier = clamp(boss.skyCitadelBossMultiplier, 1.0D, 20.0D);
         next.strictArenaAntiGrief = boss.strictArenaAntiGrief;
+        next.enableBossCutscene = boss.enableBossCutscene;
+        next.bossCutsceneSeconds = clamp(boss.bossCutsceneSeconds, 3, 15);
+        next.bossTriggerRadius = clamp(boss.bossTriggerRadius, 2, 16);
 
         next.enableFloorHud = hud.enableFloorHud;
         next.enableFloorBanner = hud.enableFloorBanner;
@@ -333,6 +336,9 @@ public final class ConfigCache {
         double bossDamageMultiplierPerFloor = 1.10D;
         double skyCitadelBossMultiplier = 3.0D;
         boolean strictArenaAntiGrief = true;
+        boolean enableBossCutscene = true;
+        int bossCutsceneSeconds = 6;
+        int bossTriggerRadius = 6;
 
         boolean enableFloorHud = true;
         boolean enableFloorBanner = true;
@@ -383,6 +389,9 @@ public final class ConfigCache {
             c.bossDamageMultiplierPerFloor = bossDamageMultiplierPerFloor;
             c.skyCitadelBossMultiplier = skyCitadelBossMultiplier;
             c.strictArenaAntiGrief = strictArenaAntiGrief;
+            c.enableBossCutscene = enableBossCutscene;
+            c.bossCutsceneSeconds = bossCutsceneSeconds;
+            c.bossTriggerRadius = bossTriggerRadius;
             c.enableFloorHud = enableFloorHud;
             c.enableFloorBanner = enableFloorBanner;
             c.bannerOffsetY = bannerOffsetY;
@@ -482,6 +491,9 @@ public final class ConfigCache {
         public double getBossDamageMultiplierPerFloor() { return bossDamageMultiplierPerFloor; }
         public double getSkyCitadelBossMultiplier() { return skyCitadelBossMultiplier; }
         public boolean isStrictArenaAntiGrief() { return strictArenaAntiGrief; }
+        public boolean isBossCutsceneEnabled() { return enableBossCutscene; }
+        public int getBossCutsceneTicks() { return bossCutsceneSeconds * 20; }
+        public int getBossTriggerRadius() { return bossTriggerRadius; }
 
         /** @param floor 1-based floor index. */
         public double bossHealthScale(int floor, boolean skyCitadelFinalBoss) {

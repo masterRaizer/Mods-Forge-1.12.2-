@@ -69,4 +69,28 @@ public class PacketSymmetryTest {
                 0, 1, 0, 1, 0, 0, 0, false, false, false);
         assertEquals(FloorHudState.MAX_NAME_LENGTH, s.getCitadelName().length());
     }
+
+    @Test
+    public void bossCutscenePacketRoundTrip() {
+        PacketBossCutscene start = PacketBossCutscene.start("@name:sky_citadel:1:2", "sky_citadel", 120,
+                new net.minecraft.util.math.BlockPos(100, 200, -50), true);
+        ByteBuf buf = Unpooled.buffer();
+        start.toBytes(buf);
+        PacketBossCutscene decoded = new PacketBossCutscene();
+        decoded.fromBytes(buf);
+        assertTrue(decoded.isStart());
+        assertEquals("@name:sky_citadel:1:2", decoded.getCitadelName());
+        assertEquals("sky_citadel", decoded.getArchetypeKey());
+        assertEquals(120, decoded.getDurationTicks());
+        assertEquals(new net.minecraft.util.math.BlockPos(100, 200, -50), decoded.getAltarPos());
+        assertTrue(decoded.isSky());
+        assertEquals(0, buf.readableBytes());
+
+        ByteBuf stopBuf = Unpooled.buffer();
+        PacketBossCutscene.stop().toBytes(stopBuf);
+        PacketBossCutscene stop = new PacketBossCutscene();
+        stop.fromBytes(stopBuf);
+        assertFalse(stop.isStart());
+        assertEquals(0, stopBuf.readableBytes());
+    }
 }

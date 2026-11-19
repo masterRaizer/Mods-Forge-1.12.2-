@@ -71,6 +71,7 @@ public final class DungeonCryptBuilder {
     /** Per level: room index per cell, -1 = corridor/wall. */
     private int[][][] roomOf;
     private final List<List<int[]>> rooms = new ArrayList<>();
+    private int[] bossRoom;
 
     /**
      * @param size square size in blocks; must be odd so the maze has a solid outer ring.
@@ -101,6 +102,14 @@ public final class DungeonCryptBuilder {
      * @return number of levels actually built (limited by the world bottom).
      */
     public int build(int topLevelY, int levels, int shaftX, int shaftZ, int shaftTopY) {
+        return build(topLevelY, levels, shaftX, shaftZ, shaftTopY, false);
+    }
+
+    /**
+     * @param bossChamber turn the largest room of the deepest level into a boss arena with an altar
+     *                    (standalone crypts; a citadel's crypt shares the citadel's boss)
+     */
+    public int build(int topLevelY, int levels, int shaftX, int shaftZ, int shaftTopY, boolean bossChamber) {
         int maxLevels = (topLevelY - (BlockWriter.MIN_Y + 1)) / LEVEL_HEIGHT + 1;
         int count = Math.max(0, Math.min(levels, maxLevels));
         if (count == 0) {
@@ -121,6 +130,9 @@ public final class DungeonCryptBuilder {
             connectLevels(k, topLevelY - k * LEVEL_HEIGHT);
         }
         buildEntranceShaft(si, sj, topLevelY, shaftTopY);
+        if (bossChamber) {
+            bossRoom = pickBossRoom(count - 1);
+        }
         for (int k = 0; k < count; k++) {
             int yL = topLevelY - k * LEVEL_HEIGHT;
             placeTraps(k, yL, si, sj);
@@ -472,6 +484,10 @@ public final class DungeonCryptBuilder {
             if (room[0] != k) {
                 continue;
             }
+            if (room == bossRoom) {
+                buildBossChamber(room, yL);
+                continue;
+            }
             RoomTag tag = ROOM_TAGS[room[5]];
             int minX = x0 + room[1];
             int minZ = z0 + room[2];
@@ -525,6 +541,47 @@ public final class DungeonCryptBuilder {
                 }
             }
         }
+    }
+
+    private int[] pickBossRoom(int level) {
+        int[] best = null;
+        int bestArea = 0;
+        for (List<int[]> holder : rooms) {
+            int[] room = holder.get(0);
+            int area = (room[3] - room[1] + 1) * (room[4] - room[2] + 1);
+            if (room[0] == level && area > bestArea) {
+                best = room;
+                bestArea = area;
+            }
+        }
+        return best;
+    }
+
+    /** Crypt boss arena: accent floor, lights, altar flush with the floor in the centre. */
+    private void buildBossChamber(int[] room, int yL) {
+        int minX = x0 + room[1];
+        int minZ = z0 + room[2];
+        int maxX = x0 + room[3];
+        int maxZ = z0 + room[4];
+        int cx = (minX + maxX) / 2;
+        int cz = (minZ + maxZ) / 2;
+        for (int x = minX; x <= maxX; x++) {
+            for (int z = minZ; z <= maxZ; z++) {
+                boolean edge = x == minX || x == maxX || z == minZ || z == maxZ;
+                w.set(x, yL, z, edge ? pal.get(PaletteSlot.ACCENT) : wall());
+                w.clear(x, yL + 1, z, x, yL + LEVEL_HEIGHT - 2, z);
+            }
+        }
+        w.set(minX, yL + LEVEL_HEIGHT - 1, minZ, pal.get(PaletteSlot.LIGHT));
+        w.set(maxX, yL + LEVEL_HEIGHT - 1, maxZ, pal.get(PaletteSlot.LIGHT));
+        w.set(minX, yL + LEVEL_HEIGHT - 1, maxZ, pal.get(PaletteSlot.LIGHT));
+        w.set(maxX, yL + LEVEL_HEIGHT - 1, minZ, pal.get(PaletteSlot.LIGHT));
+        BlockPos altar = new BlockPos(cx, yL, cz);
+        CitadelBuilder.placeBossAltar(w, altar, rec);
+        // Arena = room interior plus its walls, floor to ceiling.
+        StructureBoundingBox arena = new StructureBoundingBox(minX - 1, yL, minZ - 1, maxX + 1, yL + LEVEL_HEIGHT - 1, maxZ + 1);
+        rec.setBossArena(arena, altar.up());
+        rec.addRoom(arena, RoomTag.BOSS_ARENA, -(room[0] + 1));
     }
 
     private void cobwebs(int minX, int maxX, int minZ, int maxZ, int y) {

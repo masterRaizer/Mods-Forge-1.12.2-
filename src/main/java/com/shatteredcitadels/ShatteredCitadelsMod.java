@@ -1,5 +1,6 @@
 package com.shatteredcitadels;
 
+import com.shatteredcitadels.boss.BossCutsceneHandler;
 import com.shatteredcitadels.command.CommandShatteredCitadels;
 import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.floor.FloorTrackerHandler;
@@ -69,5 +70,6 @@ public final class ShatteredCitadelsMod {
     public void serverStopped(FMLServerStoppedEvent event) {
         FloorTrackerHandler.clearAll();
         ModMobTierScanner.reset();
+        BossCutsceneHandler.clearAll();
     }
 }

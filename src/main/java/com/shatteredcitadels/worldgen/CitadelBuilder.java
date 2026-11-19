@@ -1,5 +1,6 @@
 package com.shatteredcitadels.worldgen;
 
+import com.shatteredcitadels.block.ModBlocks;
 import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.config.MobTiers;
 import com.shatteredcitadels.palette.BlockPalette;
@@ -11,6 +12,7 @@ import com.shatteredcitadels.spawner.WaveSpawnerHooks;
 import com.shatteredcitadels.structure.CitadelInstance;
 import com.shatteredcitadels.structure.FloorData;
 import com.shatteredcitadels.structure.RoomTag;
+import com.shatteredcitadels.tile.TileEntityBossAltar;
 import net.minecraft.block.BlockChest;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -474,6 +476,7 @@ public final class CitadelBuilder {
         w.set(cx - 2, y0 + 2, cz + 2, pal.get(PaletteSlot.LIGHT));
         w.set(cx + 2, y0 + 2, cz + 2, pal.get(PaletteSlot.LIGHT));
         w.clear(cx - 1, y0 + 3, cz - 1, cx + 1, y0 + 5, cz + 1);
+        placeBossAltar(w, new BlockPos(cx, y0 + 2, cz), rec);
         // Ceiling light grid.
         for (int x = x0 + 2; x <= x1 - 2; x += 4) {
             for (int z = z0 + 2; z <= z1 - 2; z += 4) {
@@ -484,6 +487,17 @@ public final class CitadelBuilder {
         StructureBoundingBox arena = new StructureBoundingBox(x0, y0, z0, x1, y0 + h, z1);
         rec.setBossArena(arena, altar);
         rec.addRoom(arena, RoomTag.BOSS_ARENA, f);
+    }
+
+    /** Boss altar block (the boss stands on top of it); configured in memory, no markDirty(). */
+    static void placeBossAltar(BlockWriter writer, BlockPos pos, CitadelInstance record) {
+        if (ModBlocks.BOSS_ALTAR == null || !writer.set(pos, ModBlocks.BOSS_ALTAR.getDefaultState())) {
+            return;
+        }
+        TileEntity tile = writer.getWorld().getTileEntity(pos);
+        if (tile instanceof TileEntityBossAltar) {
+            ((TileEntityBossAltar) tile).configure(record.getCitadelId());
+        }
     }
 
     private void column(int floor, int x, int z, int size, int minY, int maxY) {

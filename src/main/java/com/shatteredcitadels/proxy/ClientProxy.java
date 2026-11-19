@@ -2,7 +2,9 @@ package com.shatteredcitadels.proxy;
 
 import com.shatteredcitadels.Reference;
 import com.shatteredcitadels.ShatteredCitadelsMod;
+import com.shatteredcitadels.client.ClientCutsceneOverlay;
 import com.shatteredcitadels.client.ClientFloorState;
+import com.shatteredcitadels.network.PacketBossCutscene;
 import com.shatteredcitadels.network.PacketFloorTitleBanner;
 import com.shatteredcitadels.network.PacketSyncFloorHud;
 import net.minecraft.client.Minecraft;
@@ -56,6 +58,11 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void handleFloorBanner(PacketFloorTitleBanner message) {
         Minecraft.getMinecraft().addScheduledTask(() -> ClientFloorState.showBanner(message));
+    }
+
+    @Override
+    public void handleBossCutscene(PacketBossCutscene message) {
+        Minecraft.getMinecraft().addScheduledTask(() -> ClientCutsceneOverlay.onPacket(message));
     }
 
     @Override

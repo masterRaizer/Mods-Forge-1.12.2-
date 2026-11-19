@@ -5,12 +5,14 @@ import com.shatteredcitadels.compat.castledungeons.CastleConfigPatcher;
 import com.shatteredcitadels.compat.castledungeons.CastleDungeonsIntegration;
 import com.shatteredcitadels.core.LateMixinLoader;
 import com.shatteredcitadels.network.NetworkHandler;
+import com.shatteredcitadels.network.PacketBossCutscene;
 import com.shatteredcitadels.network.PacketFloorTitleBanner;
 import com.shatteredcitadels.network.PacketSyncFloorHud;
 import com.shatteredcitadels.mob.ModMobTierScanner;
 import com.shatteredcitadels.palette.ModPaletteRegistry;
 import com.shatteredcitadels.spawner.TrialSpawnerPlacer;
 import com.shatteredcitadels.spawner.WaveSpawnerHooks;
+import com.shatteredcitadels.tile.TileEntityBossAltar;
 import com.shatteredcitadels.tile.TileEntityTrialSpawner;
 import com.shatteredcitadels.worldgen.CitadelWorldGenerator;
 import net.minecraft.world.storage.loot.LootTableList;
@@ -41,6 +43,7 @@ public class CommonProxy {
         WaveSpawnerHooks.setPlacer(new TrialSpawnerPlacer());
         for (int tier = 1; tier <= 6; tier++) {
             LootTableList.register(TileEntityTrialSpawner.lootTable(tier));
+            LootTableList.register(TileEntityBossAltar.bossLootTable(tier));
         }
     }
 
@@ -67,6 +70,10 @@ public class CommonProxy {
 
     /** Client-bound packet; never sent to a dedicated server, so nothing to do here. */
     public void handleFloorBanner(PacketFloorTitleBanner message) {
+    }
+
+    /** Client-bound packet; never sent to a dedicated server, so nothing to do here. */
+    public void handleBossCutscene(PacketBossCutscene message) {
     }
 
     /** @return true only on the physical client. */
