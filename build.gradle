@@ -98,8 +98,7 @@ tasks.named('compileJava', JavaCompile).configure {
             "-AreobfSrgFile=${tasks.reobfJar.srg.get().asFile}",
             "-AoutSrgFile=${mixinSrg}",
             "-AoutRefMapFile=${mixinRefMap}",
-            "-AdefaultObfuscationEnv=searge",
-            "-AmixinGenerateRefmap=true"
+            "-AdefaultObfuscationEnv=searge"
     ]
     outputs.file(mixinRefMap)
     outputs.file(mixinSrg)

@@ -1,19 +1,25 @@
 package com.shatteredcitadels.command;
 
 import com.shatteredcitadels.compat.castledungeons.CastleDungeonsIntegration;
+import com.shatteredcitadels.floor.FloorTrackerHandler;
 import com.shatteredcitadels.palette.CitadelArchetype;
 import com.shatteredcitadels.palette.ModPaletteRegistry;
 import com.shatteredcitadels.proxy.CommonProxy;
-import com.shatteredcitadels.structure.CitadelDataRecord;
-import com.shatteredcitadels.structure.CitadelSavedData;
+import com.shatteredcitadels.structure.CitadelInstance;
+import com.shatteredcitadels.structure.CitadelNameGenerator;
+import com.shatteredcitadels.structure.CitadelWorldSavedData;
+import com.shatteredcitadels.structure.FloorData;
 import com.shatteredcitadels.worldgen.BlockWriter;
 import com.shatteredcitadels.worldgen.CitadelPlan;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
 import net.minecraft.command.WrongUsageException;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.server.MinecraftServer;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
+import net.minecraft.util.text.ITextComponent;
 import net.minecraft.util.text.TextComponentString;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
@@ -21,6 +27,7 @@ import net.minecraft.world.gen.structure.StructureBoundingBox;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.List;
+import java.util.Locale;
 import java.util.Random;
 
 /**
@@ -29,7 +36,7 @@ import java.util.Random;
  */
 public final class CommandShatteredCitadels extends CommandBase {
 
-    private static final String[] SUBCOMMANDS = {"list", "info", "palettes", "status", "generate"};
+    private static final String[] SUBCOMMANDS = {"list", "info", "palettes", "status", "generate", "floorstate"};
 
     @Override
     public String getName() {
@@ -57,23 +64,26 @@ public final class CommandShatteredCitadels extends CommandBase {
             throw new WrongUsageException(getUsage(sender));
         }
         World world = sender.getEntityWorld();
-        CitadelSavedData data = CitadelSavedData.get(world);
+        CitadelWorldSavedData data = CitadelWorldSavedData.get(world);
         switch (args[0]) {
             case "list":
                 send(sender, "Tracked structures in dim " + world.provider.getDimension() + ": " + data.size());
-                for (CitadelDataRecord record : data.all()) {
-                    send(sender, describe(record));
+                for (CitadelInstance record : data.getAll()) {
+                    sender.sendMessage(describe(record));
                 }
                 break;
             case "info": {
                 BlockPos pos = sender.getPosition();
-                CitadelDataRecord record = data.findContaining(pos);
+                CitadelInstance record = data.getCitadelAt(pos);
                 if (record == null) {
                     send(sender, "No tracked structure at " + pos);
                 } else {
-                    send(sender, describe(record));
-                    CitadelDataRecord.FloorSpan floor = record.floorAt(pos.getY());
-                    send(sender, "Floor: " + (floor == null ? "none" : floor.index + " [" + floor.minY + ".." + floor.maxY + "]")
+                    sender.sendMessage(describe(record));
+                    FloorData floor = record.floorAt(pos.getY());
+                    send(sender, "Floor: " + (floor == null ? "none" : floor.getIndex() + " [" + floor.getMinY() + ".."
+                            + floor.getMaxY() + "] tier " + floor.getDifficultyTier() + ", wave " + floor.getActiveWave()
+                            + "/" + floor.getTotalWaves() + ", remaining " + floor.getRemainingMobs()
+                            + (floor.isCleared() ? ", cleared" : ""))
                             + ", spawners " + record.getSpawnerPoints().size() + ", chests " + record.getChestPoints().size()
                             + ", rooms " + record.getRooms().size());
                 }
@@ -90,6 +100,9 @@ public final class CommandShatteredCitadels extends CommandBase {
                 break;
             case "generate":
                 generate(sender, world, args);
+                break;
+            case "floorstate":
+                floorState(server, sender, args);
                 break;
             default:
                 throw new WrongUsageException(getUsage(sender));
@@ -115,8 +128,8 @@ public final class CommandShatteredCitadels extends CommandBase {
         int minX = (chunkX << 4) + 1;
         int minZ = (chunkZ << 4) + 1;
         Random random = new Random(world.getSeed() ^ ((long) chunkX << 32) ^ chunkZ ^ System.nanoTime());
-        String kind = args[1].toLowerCase(java.util.Locale.ROOT);
-        CitadelDataRecord record;
+        String kind = args[1].toLowerCase(Locale.ROOT);
+        CitadelInstance record;
         if ("crypt".equals(kind)) {
             record = CommonProxy.WORLD_GENERATOR.buildStandaloneCrypt(world, minX, minZ, random, clip, true);
         } else {
@@ -134,16 +147,43 @@ public final class CommandShatteredCitadels extends CommandBase {
         if (record == null) {
             throw new CommandException("Generation failed at " + minX + " " + minZ);
         }
-        send(sender, "Generated " + describe(record));
+        sender.sendMessage(new TextComponentString("Generated ").appendSibling(describe(record)));
     }
 
-    private static String describe(CitadelDataRecord record) {
+    /** floorstate <player> <activeWave> <remainingMobs> [cleared] [bossDefeated]: debug/admin override. */
+    private void floorState(MinecraftServer server, ICommandSender sender, String[] args) throws CommandException {
+        if (args.length < 4) {
+            throw new WrongUsageException(getUsage(sender));
+        }
+        EntityPlayerMP player = getPlayer(server, sender, args[1]);
+        CitadelWorldSavedData data = CitadelWorldSavedData.get(player.world);
+        CitadelInstance citadel = data.getCitadelAt(new BlockPos(player));
+        FloorData floor = citadel == null ? null : citadel.floorAt(MathHelper.floor(player.posY));
+        if (floor == null) {
+            throw new CommandException("Player " + player.getName() + " is not on a citadel floor");
+        }
+        floor.setActiveWave(parseInt(args[2], 0));
+        floor.setRemainingMobs(parseInt(args[3], 0));
+        floor.setCleared(args.length > 4 && parseBoolean(args[4]));
+        floor.setBossDefeated(args.length > 5 && parseBoolean(args[5]));
+        data.markDirty();
+        FloorTrackerHandler.resyncCitadel(player.world, citadel.getCitadelId());
+        send(sender, "Floor " + floor.getIndex() + ": wave " + floor.getActiveWave() + "/" + floor.getTotalWaves()
+                + ", remaining " + floor.getRemainingMobs() + ", cleared " + floor.isCleared());
+    }
+
+    private static ITextComponent describe(CitadelInstance record) {
         StructureBoundingBox b = record.getTotalBounds();
-        return "#" + record.getId() + " " + record.getType() + " (" + record.getArchetype() + ") floors="
-                + record.getFloors().size() + " bounds=[" + b.minX + "," + b.minY + "," + b.minZ + " -> "
-                + b.maxX + "," + b.maxY + "," + b.maxZ + "]" + (record.getBossAltarPos() != null
-                ? " altar=" + record.getBossAltarPos().getX() + "," + record.getBossAltarPos().getY() + "," + record.getBossAltarPos().getZ()
-                : "");
+        ITextComponent line = new TextComponentString("[" + record.getCitadelId().toString().substring(0, 8) + "] ");
+        line.appendSibling(CitadelNameGenerator.toComponent(record.getDisplayName()));
+        line.appendText(" - " + record.getType() + " (" + record.getArchetypeKey() + "), floors "
+                + record.getSurfaceFloorCount() + "+" + record.getUndergroundLevelCount() + " underground, bounds ["
+                + b.minX + "," + b.minY + "," + b.minZ + " -> " + b.maxX + "," + b.maxY + "," + b.maxZ + "]");
+        BlockPos altar = record.getBossAltarPos();
+        if (altar != null) {
+            line.appendText(", altar " + altar.getX() + "," + altar.getY() + "," + altar.getZ());
+        }
+        return line;
     }
 
     private static void send(ICommandSender sender, String message) {
@@ -154,6 +194,9 @@ public final class CommandShatteredCitadels extends CommandBase {
     public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos targetPos) {
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args, SUBCOMMANDS);
+        }
+        if (args.length == 2 && "floorstate".equals(args[0])) {
+            return getListOfStringsMatchingLastWord(args, server.getOnlinePlayerNames());
         }
         if (args.length == 2 && "generate".equals(args[0])) {
             List<String> kinds = new ArrayList<>();

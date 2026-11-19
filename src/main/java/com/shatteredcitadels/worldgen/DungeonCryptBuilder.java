@@ -1,12 +1,14 @@
 package com.shatteredcitadels.worldgen;
 
+import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.config.MobTiers;
 import com.shatteredcitadels.palette.BlockPalette;
 import com.shatteredcitadels.palette.PaletteSlot;
 import com.shatteredcitadels.spawner.SpawnerContext;
 import com.shatteredcitadels.spawner.SpawnerSource;
 import com.shatteredcitadels.spawner.WaveSpawnerHooks;
-import com.shatteredcitadels.structure.CitadelDataRecord;
+import com.shatteredcitadels.structure.CitadelInstance;
+import com.shatteredcitadels.structure.FloorData;
 import com.shatteredcitadels.structure.RoomTag;
 import net.minecraft.block.BlockBone;
 import net.minecraft.block.BlockChest;
@@ -55,7 +57,7 @@ public final class DungeonCryptBuilder {
     private final BlockWriter w;
     private final BlockPalette pal;
     private final Random rand;
-    private final CitadelDataRecord rec;
+    private final CitadelInstance rec;
     private final int x0;
     private final int z0;
     private final int size;
@@ -73,7 +75,7 @@ public final class DungeonCryptBuilder {
     /**
      * @param size square size in blocks; must be odd so the maze has a solid outer ring.
      */
-    public DungeonCryptBuilder(BlockWriter writer, BlockPalette palette, Random random, CitadelDataRecord record,
+    public DungeonCryptBuilder(BlockWriter writer, BlockPalette palette, Random random, CitadelInstance record,
                                int minX, int minZ, int size, int baseTier) {
         this.w = writer;
         this.pal = palette;
@@ -123,7 +125,8 @@ public final class DungeonCryptBuilder {
             int yL = topLevelY - k * LEVEL_HEIGHT;
             placeTraps(k, yL, si, sj);
             decorateRooms(k, yL);
-            rec.addFloor(-(k + 1), yL, yL + LEVEL_HEIGHT - 1);
+            rec.addFloor(-(k + 1), yL, yL + LEVEL_HEIGHT - 1, FloorData.clampDifficulty(baseTier + 2 + k),
+                    ConfigCache.get().rollWaveCount(rand), false);
         }
         rec.setHasCrypt(true);
         rec.expandBounds(new StructureBoundingBox(x0, topLevelY - (count - 1) * LEVEL_HEIGHT, z0,
@@ -545,7 +548,7 @@ public final class DungeonCryptBuilder {
         if (!w.inside(pos.getX(), pos.getY(), pos.getZ())) {
             return;
         }
-        SpawnerContext context = new SpawnerContext(SpawnerSource.CRYPT, rec.getId(), floorIndex, tier, tag);
+        SpawnerContext context = new SpawnerContext(SpawnerSource.CRYPT, rec.getCitadelId(), floorIndex, tier, tag);
         if (WaveSpawnerHooks.place(w.getWorld(), pos, context)) {
             rec.addSpawnerPoint(pos, floorIndex, tier);
         }

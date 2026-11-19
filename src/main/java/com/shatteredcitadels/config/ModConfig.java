@@ -249,6 +249,20 @@ public final class ModConfig {
         @Config.Comment("HUD anchor. Default keeps clear of Xaero's Minimap, Hwyla/Jade, potion icons and chat.")
         public HudPosition hudPosition = HudPosition.CENTER_LEFT;
 
+        @Config.Name("enableFloorBanner")
+        @Config.LangKey("config.shatteredcitadels.hud_and_loot.enableFloorBanner")
+        @Config.Comment("Show the fading citadel/floor title banner when entering a citadel or changing floors (client only).")
+        public boolean enableFloorBanner = true;
+
+        @Config.Name("bannerOffsetY")
+        @Config.LangKey("config.shatteredcitadels.hud_and_loot.bannerOffsetY")
+        @Config.Comment({
+                "Vertical offset of the floor banner in GUI pixels. The banner sits below the crosshair,",
+                "clear of Traveler's Titles (upper centre) and boss bars (top)."
+        })
+        @Config.RangeInt(min = -200, max = 200)
+        public int bannerOffsetY = 0;
+
         @Config.Name("hudOffsetX")
         @Config.LangKey("config.shatteredcitadels.hud_and_loot.hudOffsetX")
         @Config.Comment("Horizontal HUD offset in GUI pixels, away from the anchored edge.")

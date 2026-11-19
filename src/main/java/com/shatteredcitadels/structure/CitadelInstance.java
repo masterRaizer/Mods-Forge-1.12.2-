@@ -1,7 +1,7 @@
 package com.shatteredcitadels.structure;
 
+import com.shatteredcitadels.palette.CitadelArchetype;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.nbt.NBTTagIntArray;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
@@ -12,33 +12,42 @@ import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.TreeMap;
+import java.util.UUID;
 
 /**
- * Everything later stages need to know about one generated structure: floor Y ranges, total
- * bounds, boss arena, chest and spawner points and tagged rooms. Server thread only.
+ * Persistent description of one generated structure: identity and name, bounds, boss arena,
+ * floors with their live combat state, and the chest/spawner points and tagged rooms placed by
+ * the builders. Server thread only.
  */
-public final class CitadelDataRecord {
+public final class CitadelInstance {
 
-    private final long id;
+    private final UUID citadelId;
+    private final String displayName;
     private final StructureType type;
-    private final String archetype;
+    /** Null for structures not built from one of our archetypes (Castle Dungeons castles). */
+    private final CitadelArchetype archetype;
+    private final boolean skyCitadel;
+    private final boolean underground;
     private final int dimension;
     private final BlockPos origin;
     private StructureBoundingBox totalBounds;
-    /** floorIndex (0 = ground floor; negative = crypt levels) -> span. */
-    private final TreeMap<Integer, FloorSpan> floors = new TreeMap<>();
     private StructureBoundingBox bossArenaBounds;
     private BlockPos bossAltarPos;
+    /** floorIndex (0 = ground floor, -1.. = crypt levels) -> floor. */
+    private final TreeMap<Integer, FloorData> floors = new TreeMap<>();
     private final List<SpawnerPoint> spawnerPoints = new ArrayList<>();
     private final List<BlockPos> chestPoints = new ArrayList<>();
     private final List<TaggedRoom> rooms = new ArrayList<>();
     private boolean hasCrypt;
 
-    public CitadelDataRecord(long id, StructureType type, String archetype, int dimension, BlockPos origin,
-                             StructureBoundingBox totalBounds) {
-        this.id = id;
+    public CitadelInstance(UUID citadelId, String displayName, StructureType type, CitadelArchetype archetype,
+                           int dimension, BlockPos origin, StructureBoundingBox totalBounds) {
+        this.citadelId = citadelId;
+        this.displayName = displayName == null ? "" : displayName;
         this.type = type;
-        this.archetype = archetype == null ? "" : archetype;
+        this.archetype = archetype;
+        this.skyCitadel = type == StructureType.SKY_CITADEL;
+        this.underground = type == StructureType.CRYPT;
         this.dimension = dimension;
         this.origin = origin.toImmutable();
         this.totalBounds = copy(totalBounds);
@@ -46,12 +55,14 @@ public final class CitadelDataRecord {
 
     // ------------------------------------------------------------------ mutation (during build)
 
-    public void addFloor(int floorIndex, int minY, int maxY) {
-        floors.put(floorIndex, new FloorSpan(floorIndex, Math.min(minY, maxY), Math.max(minY, maxY)));
+    public FloorData addFloor(int floorIndex, int minY, int maxY, int difficultyTier, int totalWaves, boolean bossFloor) {
+        FloorData floor = new FloorData(floorIndex, minY, maxY, difficultyTier, totalWaves, bossFloor);
+        floors.put(floorIndex, floor);
+        return floor;
     }
 
     public void setBossArena(StructureBoundingBox bounds, BlockPos altar) {
-        this.bossArenaBounds = copy(bounds);
+        this.bossArenaBounds = bounds == null ? null : copy(bounds);
         this.bossAltarPos = altar == null ? null : altar.toImmutable();
     }
 
@@ -80,19 +91,29 @@ public final class CitadelDataRecord {
 
     // ------------------------------------------------------------------ queries
 
-    public long getId() { return id; }
+    public UUID getCitadelId() { return citadelId; }
+    /** Name in the form produced by {@link CitadelNameGenerator}; localised on display. */
+    public String getDisplayName() { return displayName; }
     public StructureType getType() { return type; }
-    public String getArchetype() { return archetype; }
+    public CitadelArchetype getArchetype() { return archetype; }
+    public boolean isSkyCitadel() { return skyCitadel; }
+    public boolean isUnderground() { return underground; }
     public int getDimension() { return dimension; }
     public BlockPos getOrigin() { return origin; }
     public StructureBoundingBox getTotalBounds() { return copy(totalBounds); }
-    public Map<Integer, FloorSpan> getFloors() { return Collections.unmodifiableMap(floors); }
     public StructureBoundingBox getBossArenaBounds() { return bossArenaBounds == null ? null : copy(bossArenaBounds); }
     public BlockPos getBossAltarPos() { return bossAltarPos; }
+    public Map<Integer, FloorData> getFloors() { return Collections.unmodifiableMap(floors); }
+    public FloorData getFloor(int index) { return floors.get(index); }
     public List<SpawnerPoint> getSpawnerPoints() { return Collections.unmodifiableList(spawnerPoints); }
     public List<BlockPos> getChestPoints() { return Collections.unmodifiableList(chestPoints); }
     public List<TaggedRoom> getRooms() { return Collections.unmodifiableList(rooms); }
     public boolean hasCrypt() { return hasCrypt; }
+
+    /** @return archetype key, or the structure type for structures without an archetype. */
+    public String getArchetypeKey() {
+        return archetype != null ? archetype.key() : type.name().toLowerCase(java.util.Locale.ROOT);
+    }
 
     public int getOriginChunkX() { return origin.getX() >> 4; }
     public int getOriginChunkZ() { return origin.getZ() >> 4; }
@@ -102,13 +123,23 @@ public final class CitadelDataRecord {
     }
 
     /** @return the floor whose Y span contains {@code y}, or null. */
-    public FloorSpan floorAt(int y) {
-        for (FloorSpan span : floors.values()) {
-            if (y >= span.minY && y <= span.maxY) {
-                return span;
+    public FloorData floorAt(int y) {
+        for (FloorData floor : floors.values()) {
+            if (floor.containsY(y)) {
+                return floor;
             }
         }
         return null;
+    }
+
+    /** @return number of floors above ground (index &gt;= 0). */
+    public int getSurfaceFloorCount() {
+        return floors.tailMap(0, true).size();
+    }
+
+    /** @return number of crypt levels (index &lt; 0). */
+    public int getUndergroundLevelCount() {
+        return floors.headMap(0, false).size();
     }
 
     public int getTopFloorIndex() {
@@ -119,23 +150,26 @@ public final class CitadelDataRecord {
 
     public NBTTagCompound writeToNBT() {
         NBTTagCompound tag = new NBTTagCompound();
-        tag.setLong("id", id);
+        tag.setUniqueId("id", citadelId);
+        tag.setString("name", displayName);
         tag.setString("type", type.name());
-        tag.setString("archetype", archetype);
+        tag.setString("archetype", archetype == null ? "" : archetype.key());
+        tag.setBoolean("sky", skyCitadel);
+        tag.setBoolean("underground", underground);
         tag.setInteger("dim", dimension);
         tag.setLong("origin", origin.toLong());
         tag.setTag("bounds", totalBounds.toNBTTagIntArray());
-        NBTTagList floorList = new NBTTagList();
-        for (FloorSpan span : floors.values()) {
-            floorList.appendTag(new NBTTagIntArray(new int[]{span.index, span.minY, span.maxY}));
-        }
-        tag.setTag("floors", floorList);
         if (bossArenaBounds != null) {
             tag.setTag("arena", bossArenaBounds.toNBTTagIntArray());
         }
         if (bossAltarPos != null) {
             tag.setLong("altar", bossAltarPos.toLong());
         }
+        NBTTagList floorList = new NBTTagList();
+        for (FloorData floor : floors.values()) {
+            floorList.appendTag(floor.writeToNBT());
+        }
+        tag.setTag("floors", floorList);
         NBTTagList spawners = new NBTTagList();
         for (SpawnerPoint point : spawnerPoints) {
             NBTTagCompound s = new NBTTagCompound();
@@ -165,43 +199,47 @@ public final class CitadelDataRecord {
         return tag;
     }
 
-    public static CitadelDataRecord readFromNBT(NBTTagCompound tag) {
-        CitadelDataRecord record = new CitadelDataRecord(
-                tag.getLong("id"),
-                StructureType.byName(tag.getString("type")),
-                tag.getString("archetype"),
+    /** @return the instance, or null if the tag lacks an identity (corrupt entry). */
+    public static CitadelInstance readFromNBT(NBTTagCompound tag) {
+        if (!tag.hasUniqueId("id")) {
+            return null;
+        }
+        StructureType type = StructureType.byName(tag.getString("type"));
+        CitadelInstance instance = new CitadelInstance(
+                tag.getUniqueId("id"),
+                tag.getString("name"),
+                type,
+                CitadelArchetype.byKey(tag.getString("archetype")),
                 tag.getInteger("dim"),
                 BlockPos.fromLong(tag.getLong("origin")),
                 readBox(tag.getIntArray("bounds")));
-        NBTTagList floorList = tag.getTagList("floors", Constants.NBT.TAG_INT_ARRAY);
-        for (int i = 0; i < floorList.tagCount(); i++) {
-            int[] f = floorList.getIntArrayAt(i);
-            if (f.length == 3) {
-                record.addFloor(f[0], f[1], f[2]);
-            }
-        }
         if (tag.hasKey("arena", Constants.NBT.TAG_INT_ARRAY)) {
-            record.bossArenaBounds = readBox(tag.getIntArray("arena"));
+            instance.bossArenaBounds = readBox(tag.getIntArray("arena"));
         }
         if (tag.hasKey("altar", Constants.NBT.TAG_LONG)) {
-            record.bossAltarPos = BlockPos.fromLong(tag.getLong("altar"));
+            instance.bossAltarPos = BlockPos.fromLong(tag.getLong("altar"));
+        }
+        NBTTagList floorList = tag.getTagList("floors", Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < floorList.tagCount(); i++) {
+            FloorData floor = FloorData.readFromNBT(floorList.getCompoundTagAt(i));
+            instance.floors.put(floor.getIndex(), floor);
         }
         NBTTagList spawners = tag.getTagList("spawners", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < spawners.tagCount(); i++) {
             NBTTagCompound s = spawners.getCompoundTagAt(i);
-            record.addSpawnerPoint(BlockPos.fromLong(s.getLong("pos")), s.getInteger("floor"), s.getInteger("tier"));
+            instance.addSpawnerPoint(BlockPos.fromLong(s.getLong("pos")), s.getInteger("floor"), s.getInteger("tier"));
         }
         NBTTagList chests = tag.getTagList("chests", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < chests.tagCount(); i++) {
-            record.addChestPoint(BlockPos.fromLong(chests.getCompoundTagAt(i).getLong("pos")));
+            instance.addChestPoint(BlockPos.fromLong(chests.getCompoundTagAt(i).getLong("pos")));
         }
         NBTTagList roomList = tag.getTagList("rooms", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < roomList.tagCount(); i++) {
             NBTTagCompound r = roomList.getCompoundTagAt(i);
-            record.addRoom(readBox(r.getIntArray("box")), RoomTag.byName(r.getString("tag")), r.getInteger("floor"));
+            instance.addRoom(readBox(r.getIntArray("box")), RoomTag.byName(r.getString("tag")), r.getInteger("floor"));
         }
-        record.hasCrypt = tag.getBoolean("crypt");
-        return record;
+        instance.hasCrypt = tag.getBoolean("crypt");
+        return instance;
     }
 
     private static StructureBoundingBox readBox(int[] data) {
@@ -214,18 +252,6 @@ public final class CitadelDataRecord {
     }
 
     // ------------------------------------------------------------------ value types
-
-    public static final class FloorSpan {
-        public final int index;
-        public final int minY;
-        public final int maxY;
-
-        FloorSpan(int index, int minY, int maxY) {
-            this.index = index;
-            this.minY = minY;
-            this.maxY = maxY;
-        }
-    }
 
     public static final class SpawnerPoint {
         public final BlockPos pos;

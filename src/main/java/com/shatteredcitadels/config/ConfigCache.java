@@ -94,6 +94,8 @@ public final class ConfigCache {
         next.strictArenaAntiGrief = boss.strictArenaAntiGrief;
 
         next.enableFloorHud = hud.enableFloorHud;
+        next.enableFloorBanner = hud.enableFloorBanner;
+        next.bannerOffsetY = clamp(hud.bannerOffsetY, -200, 200);
         next.hudPosition = hud.hudPosition == null ? HudPosition.CENTER_LEFT : hud.hudPosition;
         next.hudOffsetX = clamp(hud.hudOffsetX, 0, 512);
         next.hudOffsetY = clamp(hud.hudOffsetY, 0, 512);
@@ -325,6 +327,8 @@ public final class ConfigCache {
         boolean strictArenaAntiGrief = true;
 
         boolean enableFloorHud = true;
+        boolean enableFloorBanner = true;
+        int bannerOffsetY = 0;
         HudPosition hudPosition = HudPosition.CENTER_LEFT;
         int hudOffsetX = 4;
         int hudOffsetY = 0;
@@ -368,6 +372,8 @@ public final class ConfigCache {
             c.skyCitadelBossMultiplier = skyCitadelBossMultiplier;
             c.strictArenaAntiGrief = strictArenaAntiGrief;
             c.enableFloorHud = enableFloorHud;
+            c.enableFloorBanner = enableFloorBanner;
+            c.bannerOffsetY = bannerOffsetY;
             c.hudPosition = hudPosition;
             c.hudOffsetX = hudOffsetX;
             c.hudOffsetY = hudOffsetY;
@@ -475,6 +481,8 @@ public final class ConfigCache {
 
         // --- hud & loot
         public boolean isFloorHudEnabled() { return enableFloorHud; }
+        public boolean isFloorBannerEnabled() { return enableFloorBanner; }
+        public int getBannerOffsetY() { return bannerOffsetY; }
         public HudPosition getHudPosition() { return hudPosition; }
         public int getHudOffsetX() { return hudOffsetX; }
         public int getHudOffsetY() { return hudOffsetY; }

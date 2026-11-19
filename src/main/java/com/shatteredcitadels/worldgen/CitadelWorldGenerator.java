@@ -5,11 +5,13 @@ import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.palette.BlockPalette;
 import com.shatteredcitadels.palette.CitadelArchetype;
 import com.shatteredcitadels.palette.ModPaletteRegistry;
-import com.shatteredcitadels.structure.CitadelDataRecord;
-import com.shatteredcitadels.structure.CitadelSavedData;
+import com.shatteredcitadels.structure.CitadelInstance;
+import com.shatteredcitadels.structure.CitadelNameGenerator;
+import com.shatteredcitadels.structure.CitadelWorldSavedData;
 import com.shatteredcitadels.structure.StructureType;
 import net.minecraft.block.material.Material;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.WorldType;
 import net.minecraft.world.biome.Biome;
@@ -79,7 +81,7 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
             if (citadelChunk) {
                 Random buildRandom = new Random(buildSeed);
                 CitadelPlan plan = planCitadel(world, (chunkX << 4) + 1, (chunkZ << 4) + 1, buildRandom, null, null, false);
-                if (plan != null && CitadelSavedData.get(world).isFarEnough(chunkX, chunkZ,
+                if (plan != null && CitadelWorldSavedData.get(world).isFarEnough(chunkX, chunkZ,
                         config.getMinDistanceBetweenCitadelsChunks())) {
                     buildCitadel(world, plan, buildRandom, clip);
                 } else if (plan != null) {
@@ -87,7 +89,7 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
                             chunkX, chunkZ);
                 }
             } else {
-                CitadelSavedData data = CitadelSavedData.get(world);
+                CitadelWorldSavedData data = CitadelWorldSavedData.get(world);
                 boolean free = !data.isChunkOccupied(chunkX, chunkZ) && !data.isChunkOccupied(chunkX + 1, chunkZ)
                         && !data.isChunkOccupied(chunkX, chunkZ + 1) && !data.isChunkOccupied(chunkX + 1, chunkZ + 1);
                 if (free) {
@@ -232,14 +234,15 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
     // ------------------------------------------------------------------ building
 
     /** Builds the planned citadel (and its crypt) and registers it in the floor tracker. */
-    public CitadelDataRecord buildCitadel(World world, CitadelPlan plan, Random random, StructureBoundingBox clip) {
-        CitadelSavedData data = CitadelSavedData.get(world);
+    public CitadelInstance buildCitadel(World world, CitadelPlan plan, Random random, StructureBoundingBox clip) {
+        CitadelWorldSavedData data = CitadelWorldSavedData.get(world);
         BlockPalette palette = ModPaletteRegistry.get(plan.archetype);
         BlockWriter writer = new BlockWriter(world, clip);
-        CitadelDataRecord record = new CitadelDataRecord(data.allocateId(),
-                plan.sky ? StructureType.SKY_CITADEL : StructureType.CITADEL, plan.archetype.key(),
-                world.provider.getDimension(), new BlockPos(plan.minX, plan.baseY, plan.minZ), plan.totalBounds());
         Random buildRandom = new Random(plan.buildSeed ^ random.nextLong());
+        CitadelInstance record = new CitadelInstance(MathHelper.getRandomUUID(buildRandom),
+                CitadelNameGenerator.generate(plan.archetype.key(), buildRandom),
+                plan.sky ? StructureType.SKY_CITADEL : StructureType.CITADEL, plan.archetype,
+                world.provider.getDimension(), new BlockPos(plan.minX, plan.baseY, plan.minZ), plan.totalBounds());
         new CitadelBuilder(writer, plan, palette, buildRandom, record).build();
         if (plan.cryptLevels > 0) {
             int tier = plan.sky ? 3 : 2;
@@ -247,16 +250,16 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
                     .build(plan.cryptLevelY(0), plan.cryptLevels, CitadelBuilder.shaftX(plan), CitadelBuilder.shaftZ(plan),
                             plan.floorY(0));
         }
-        data.add(record);
+        data.register(record);
         ShatteredCitadelsMod.LOGGER.info("Generated {} #{} ({}, {} floors, crypt levels {}) at {} y={}..{}: {} blocks, {} clipped",
-                record.getType(), record.getId(), plan.archetype.key(), plan.floors, plan.cryptLevels,
+                record.getType(), record.getCitadelId(), plan.archetype.key(), plan.floors, plan.cryptLevels,
                 record.getOrigin(), record.getTotalBounds().minY, record.getTotalBounds().maxY,
                 writer.getWritten(), writer.getRejected());
         return record;
     }
 
     /** Standalone crypt with a ruined surface entrance; footprint 21x21 inside the clip box. */
-    public CitadelDataRecord buildStandaloneCrypt(World world, int minX, int minZ, Random random,
+    public CitadelInstance buildStandaloneCrypt(World world, int minX, int minZ, Random random,
                                                   StructureBoundingBox clip, boolean ignoreTerrain) {
         int size = 21;
         int cx = minX + 11;
@@ -272,11 +275,12 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         int surfaceY = Math.max(MIN_BASE_Y + 12, top.getY() - 1);
         int topLevelY = surfaceY - 12;
         int levels = 2 + random.nextInt(2);
-        CitadelSavedData data = CitadelSavedData.get(world);
+        CitadelWorldSavedData data = CitadelWorldSavedData.get(world);
         CitadelArchetype archetype = random.nextBoolean() ? CitadelArchetype.KEEPERS_CITADEL : CitadelArchetype.OBSIDIAN_BASTILLE;
         BlockPalette palette = ModPaletteRegistry.get(archetype);
         BlockWriter writer = new BlockWriter(world, clip);
-        CitadelDataRecord record = new CitadelDataRecord(data.allocateId(), StructureType.CRYPT, archetype.key(),
+        CitadelInstance record = new CitadelInstance(MathHelper.getRandomUUID(random),
+                CitadelNameGenerator.generate("crypt", random), StructureType.CRYPT, archetype,
                 world.provider.getDimension(), new BlockPos(minX, topLevelY, minZ),
                 new StructureBoundingBox(minX, topLevelY, minZ, minX + size - 1, surfaceY + 4, minZ + size - 1));
         DungeonCryptBuilder builder = new DungeonCryptBuilder(writer, palette, random, record, minX, minZ, size, 1);
@@ -285,9 +289,9 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         if (built == 0) {
             return null;
         }
-        data.add(record);
+        data.register(record);
         ShatteredCitadelsMod.LOGGER.info("Generated CRYPT #{} ({} levels) at {}: {} blocks, {} clipped",
-                record.getId(), built, record.getOrigin(), writer.getWritten(), writer.getRejected());
+                record.getCitadelId(), built, record.getOrigin(), writer.getWritten(), writer.getRejected());
         return record;
     }
 }

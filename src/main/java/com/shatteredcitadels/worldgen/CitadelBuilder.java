@@ -1,5 +1,6 @@
 package com.shatteredcitadels.worldgen;
 
+import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.config.MobTiers;
 import com.shatteredcitadels.palette.BlockPalette;
 import com.shatteredcitadels.palette.CitadelArchetype;
@@ -7,7 +8,8 @@ import com.shatteredcitadels.palette.PaletteSlot;
 import com.shatteredcitadels.spawner.SpawnerContext;
 import com.shatteredcitadels.spawner.SpawnerSource;
 import com.shatteredcitadels.spawner.WaveSpawnerHooks;
-import com.shatteredcitadels.structure.CitadelDataRecord;
+import com.shatteredcitadels.structure.CitadelInstance;
+import com.shatteredcitadels.structure.FloorData;
 import com.shatteredcitadels.structure.RoomTag;
 import net.minecraft.block.BlockChest;
 import net.minecraft.block.material.Material;
@@ -48,7 +50,7 @@ public final class CitadelBuilder {
     private final CitadelPlan p;
     private final BlockPalette pal;
     private final Random rand;
-    private final CitadelDataRecord rec;
+    private final CitadelInstance rec;
     private final SpawnerSource source;
     private final IBlockState air = Blocks.AIR.getDefaultState();
     private final IBlockState window;
@@ -65,7 +67,7 @@ public final class CitadelBuilder {
     private final List<int[]> reserved = new ArrayList<>();
 
     public CitadelBuilder(BlockWriter writer, CitadelPlan plan, BlockPalette palette, Random random,
-                          CitadelDataRecord record) {
+                          CitadelInstance record) {
         this.w = writer;
         this.p = plan;
         this.pal = palette;
@@ -115,10 +117,12 @@ public final class CitadelBuilder {
         if (p.sky) {
             buildSpire();
         }
+        ConfigCache.Snapshot waves = ConfigCache.get();
         for (int f = 0; f < p.floors; f++) {
             int y0 = p.floorY(f);
             int height = f == p.topFloorIndex() ? p.arenaHeight : CitadelPlan.FLOOR_HEIGHT;
-            rec.addFloor(f, y0, y0 + height - 1);
+            boolean boss = f == p.topFloorIndex();
+            rec.addFloor(f, y0, y0 + height - 1, difficultyForFloor(f), boss ? 1 : waves.rollWaveCount(rand), boss);
         }
     }
 
@@ -412,7 +416,7 @@ public final class CitadelBuilder {
         if (!w.inside(pos.getX(), pos.getY(), pos.getZ())) {
             return;
         }
-        SpawnerContext context = new SpawnerContext(source, rec.getId(), floor, tier, tag);
+        SpawnerContext context = new SpawnerContext(source, rec.getCitadelId(), floor, tier, tag);
         if (WaveSpawnerHooks.place(w.getWorld(), pos, context)) {
             rec.addSpawnerPoint(pos, floor, tier);
         }
@@ -535,6 +539,14 @@ public final class CitadelBuilder {
                 {cx + 1, cz + 1, x1 - 1, z1 - 1},
                 {x0 + 1, cz + 1, cx - 1, z1 - 1}
         };
+    }
+
+    /** Floor difficulty 1-6: regular citadels span 1..5, the Citadel Above the Clouds 2..6. */
+    private int difficultyForFloor(int floor) {
+        int min = p.sky ? 2 : 1;
+        int max = p.sky ? FloorData.MAX_DIFFICULTY : FloorData.MAX_DIFFICULTY - 1;
+        int span = Math.max(1, p.floors - 1);
+        return FloorData.clampDifficulty(min + Math.round(floor * (max - min) / (float) span));
     }
 
     private int tierForFloor(int floor) {

@@ -5,11 +5,14 @@ import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.spawner.SpawnerContext;
 import com.shatteredcitadels.spawner.SpawnerSource;
 import com.shatteredcitadels.spawner.WaveSpawnerHooks;
-import com.shatteredcitadels.structure.CitadelDataRecord;
-import com.shatteredcitadels.structure.CitadelSavedData;
+import com.shatteredcitadels.structure.CitadelInstance;
+import com.shatteredcitadels.structure.CitadelNameGenerator;
+import com.shatteredcitadels.structure.FloorData;
+import com.shatteredcitadels.structure.CitadelWorldSavedData;
 import com.shatteredcitadels.structure.RoomTag;
 import com.shatteredcitadels.structure.StructureType;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraftforge.fml.common.Loader;
@@ -94,7 +97,7 @@ public final class CastleDungeonsIntegration {
             if (!config.isCastleDungeonsSectionOverride()) {
                 return true;
             }
-            boolean allowed = CitadelSavedData.get(context.world)
+            boolean allowed = CitadelWorldSavedData.get(context.world)
                     .isFarEnough(chunkX, chunkZ, config.getMinDistanceBetweenCitadelsChunks());
             if (!allowed) {
                 rejectedByDistance++;
@@ -120,19 +123,25 @@ public final class CastleDungeonsIntegration {
             int depth = gridDepth * CELL_SIZE + 1;
             int layerCount = Math.max(1, layers);
             int top = y + layerCount * LAYER_HEIGHT + ROOF_HEIGHT;
-            CitadelSavedData data = CitadelSavedData.get(context.world);
-            CitadelDataRecord record = new CitadelDataRecord(data.allocateId(), StructureType.CASTLE_DUNGEONS, MODID,
+            CitadelWorldSavedData data = CitadelWorldSavedData.get(context.world);
+            Random random = context.world.rand;
+            CitadelInstance record = new CitadelInstance(MathHelper.getRandomUUID(random),
+                    CitadelNameGenerator.generate(MODID, random), StructureType.CASTLE_DUNGEONS, null,
                     context.world.provider.getDimension(), new BlockPos(x, y, z),
                     new StructureBoundingBox(x, Math.max(0, y - FOUNDATION_DEPTH), z, x + width - 1, Math.min(255, top),
                             z + depth - 1));
+            int span = Math.max(1, layerCount - 1);
             for (int i = 0; i < layerCount; i++) {
-                record.addFloor(i, y + i * LAYER_HEIGHT, y + i * LAYER_HEIGHT + LAYER_HEIGHT - 1);
+                boolean boss = i == layerCount - 1;
+                int tier = FloorData.clampDifficulty(1 + Math.round(i * 4 / (float) span));
+                record.addFloor(i, y + i * LAYER_HEIGHT, y + i * LAYER_HEIGHT + LAYER_HEIGHT - 1, tier,
+                        boss ? 1 : ConfigCache.get().rollWaveCount(random), boss);
             }
             int topY = y + (layerCount - 1) * LAYER_HEIGHT;
             StructureBoundingBox arena = new StructureBoundingBox(x, topY, z, x + width - 1, topY + LAYER_HEIGHT - 1, z + depth - 1);
             record.setBossArena(arena, new BlockPos(x + width / 2, topY + 1, z + depth / 2));
             record.addRoom(arena, RoomTag.BOSS_ARENA, layerCount - 1);
-            data.add(record);
+            data.register(record);
             context.record = record;
             adoptedCastles++;
         } catch (RuntimeException e) {
@@ -155,24 +164,24 @@ public final class CastleDungeonsIntegration {
                 return false;
             }
             Context context = current();
-            CitadelDataRecord record = context != null ? context.record : null;
+            CitadelInstance record = context != null ? context.record : null;
             if (record == null) {
-                record = CitadelSavedData.get(world).findContaining(pos);
+                record = CitadelWorldSavedData.get(world).getCitadelAt(pos);
             }
             int floor = 0;
             if (record != null) {
-                CitadelDataRecord.FloorSpan span = record.floorAt(pos.getY());
-                floor = span != null ? span.index : Math.max(0, (pos.getY() - record.getOrigin().getY()) / LAYER_HEIGHT);
+                FloorData span = record.floorAt(pos.getY());
+                floor = span != null ? span.getIndex() : Math.max(0, (pos.getY() - record.getOrigin().getY()) / LAYER_HEIGHT);
             }
             int tier = 1 + Math.max(0, Math.min(2, difficulty)) + (floor >= 3 ? 1 : 0);
             SpawnerContext spawnerContext = new SpawnerContext(SpawnerSource.CASTLE_DUNGEONS,
-                    record != null ? record.getId() : 0L, floor, tier, RoomTag.GUARD_ROOM);
+                    record != null ? record.getCitadelId() : null, floor, tier, RoomTag.GUARD_ROOM);
             if (!WaveSpawnerHooks.place(world, pos, spawnerContext)) {
                 return false;
             }
             if (record != null) {
                 record.addSpawnerPoint(pos, floor, spawnerContext.getTier());
-                CitadelSavedData.get(world).markDirty();
+                CitadelWorldSavedData.get(world).markDirty();
             }
             replacedSpawners++;
             return true;
@@ -198,7 +207,7 @@ public final class CastleDungeonsIntegration {
         final World world;
         final int chunkX;
         final int chunkZ;
-        CitadelDataRecord record;
+        CitadelInstance record;
 
         Context(World world, int chunkX, int chunkZ) {
             this.world = world;

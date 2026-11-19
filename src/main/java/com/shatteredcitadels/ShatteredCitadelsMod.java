@@ -2,6 +2,7 @@ package com.shatteredcitadels;
 
 import com.shatteredcitadels.command.CommandShatteredCitadels;
 import com.shatteredcitadels.config.ConfigCache;
+import com.shatteredcitadels.floor.FloorTrackerHandler;
 import com.shatteredcitadels.proxy.CommonProxy;
 import net.minecraftforge.fml.common.Mod;
 import net.minecraftforge.fml.common.SidedProxy;
@@ -10,6 +11,7 @@ import net.minecraftforge.fml.common.event.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
+import net.minecraftforge.fml.common.event.FMLServerStoppedEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -60,5 +62,10 @@ public final class ShatteredCitadelsMod {
     @Mod.EventHandler
     public void serverStarting(FMLServerStartingEvent event) {
         event.registerServerCommand(new CommandShatteredCitadels());
+    }
+
+    @Mod.EventHandler
+    public void serverStopped(FMLServerStoppedEvent event) {
+        FloorTrackerHandler.clearAll();
     }
 }
