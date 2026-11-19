@@ -20,8 +20,6 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 @Config.LangKey("config.shatteredcitadels.title")
 public final class ModConfig {
 
-    public static final int MIN_TIER = 1;
-    public static final int MAX_TIER = 5;
 
     @Config.Name("castle_generation")
     @Config.LangKey("config.shatteredcitadels.castle_generation")

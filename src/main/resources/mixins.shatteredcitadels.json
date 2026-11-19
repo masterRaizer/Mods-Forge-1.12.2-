@@ -8,9 +8,7 @@
   "injectors": {
     "defaultRequire": 1
   },
-  "mixins": [
-    "AccessorEntityLiving"
-  ],
+  "mixins": [],
   "client": [],
   "server": []
 }

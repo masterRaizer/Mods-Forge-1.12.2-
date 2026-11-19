@@ -128,7 +128,7 @@ public final class ConfigCache {
         }
         if (resolved.isEmpty()) {
             // Absolute fallback: vanilla mobs always exist.
-            resolved.put(ModConfig.MIN_TIER, Collections.singletonList(new ResourceLocation("minecraft", "zombie")));
+            resolved.put(MobTiers.MIN_TIER, Collections.singletonList(new ResourceLocation("minecraft", "zombie")));
             ShatteredCitadelsMod.LOGGER.warn("boss_settings.bossPoolByTier resolved to nothing; falling back to minecraft:zombie");
         }
         Snapshot next = snapshot.copy();
@@ -180,7 +180,7 @@ public final class ConfigCache {
             Integer tier = parseTier(value.substring(eq + 1).trim());
             if (!ENTITY_ID.matcher(id).matches() || tier == null) {
                 warnInvalid("spawner_and_waves.manualMobTierOverrides", line,
-                        "expected modid:entity=tier with tier " + ModConfig.MIN_TIER + "-" + ModConfig.MAX_TIER);
+                        "expected modid:entity=tier with tier " + MobTiers.MIN_TIER + "-" + MobTiers.MAX_TIER);
                 continue;
             }
             result.put(new ResourceLocation(id), tier);
@@ -200,7 +200,7 @@ public final class ConfigCache {
                 Integer tier = eq > 0 ? parseTier(value.substring(0, eq).trim()) : null;
                 if (tier == null) {
                     warnInvalid("boss_settings.bossPoolByTier", line,
-                            "expected tier=modid:entity,... with tier " + ModConfig.MIN_TIER + "-" + ModConfig.MAX_TIER);
+                            "expected tier=modid:entity,... with tier " + MobTiers.MIN_TIER + "-" + MobTiers.MAX_TIER);
                     continue;
                 }
                 Set<ResourceLocation> bucket = merged.get(tier);
@@ -233,7 +233,7 @@ public final class ConfigCache {
     private static Integer parseTier(String text) {
         try {
             int tier = Integer.parseInt(text);
-            return tier >= ModConfig.MIN_TIER && tier <= ModConfig.MAX_TIER ? tier : null;
+            return tier >= MobTiers.MIN_TIER && tier <= MobTiers.MAX_TIER ? tier : null;
         } catch (NumberFormatException e) {
             return null;
         }
@@ -399,7 +399,7 @@ public final class ConfigCache {
          */
         public List<ResourceLocation> getBossCandidates(int tier) {
             Map<Integer, List<ResourceLocation>> pool = resolvedBossPoolByTier;
-            for (int t = Math.min(tier, ModConfig.MAX_TIER); t >= ModConfig.MIN_TIER; t--) {
+            for (int t = Math.min(tier, MobTiers.MAX_TIER); t >= MobTiers.MIN_TIER; t--) {
                 List<ResourceLocation> list = pool.get(t);
                 if (list != null && !list.isEmpty()) {
                     return list;

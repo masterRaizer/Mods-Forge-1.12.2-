@@ -1,7 +1,6 @@
 package com.shatteredcitadels.util;
 
 import com.shatteredcitadels.ShatteredCitadelsMod;
-import com.shatteredcitadels.mixin.AccessorEntityLiving;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.SharedMonsterAttributes;
 import net.minecraft.entity.ai.attributes.IAttribute;
@@ -21,27 +20,17 @@ public final class EntityStats {
 
     private static volatile Field experienceField;
     private static volatile boolean experienceFieldFailed;
-    private static volatile boolean accessorUnavailable;
 
     private EntityStats() {
     }
 
-    /** @return XP dropped on death, or 0 if unavailable. */
+    /**
+     * @return XP dropped on death, or 0 if unavailable. Uses cached reflection: EntityLiving is
+     * loaded before late mixins apply, so it cannot be targeted from the late mixin config.
+     */
     public static int getExperienceValue(EntityLiving entity) {
         if (entity == null) {
             return 0;
-        }
-        if (!accessorUnavailable) {
-            try {
-                Object raw = entity;
-                if (raw instanceof AccessorEntityLiving) {
-                    return ((AccessorEntityLiving) raw).shatteredcitadels$getExperienceValue();
-                }
-            } catch (LinkageError e) {
-                // The mixin config was rejected and the accessor interface cannot be loaded.
-                accessorUnavailable = true;
-                ShatteredCitadelsMod.LOGGER.warn("Entity accessor mixin unavailable, using reflection fallback");
-            }
         }
         Field field = resolveExperienceField();
         if (field == null) {
