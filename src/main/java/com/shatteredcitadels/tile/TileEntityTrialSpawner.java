@@ -2,6 +2,7 @@ package com.shatteredcitadels.tile;
 
 import com.shatteredcitadels.Reference;
 import com.shatteredcitadels.ShatteredCitadelsMod;
+import com.shatteredcitadels.advancement.CustomAdvancementTriggers;
 import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.config.MobTiers;
 import com.shatteredcitadels.floor.FloorTrackerHandler;
@@ -20,6 +21,7 @@ import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.item.EntityItem;
 import net.minecraft.entity.item.EntityXPOrb;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.item.ItemStack;
 import net.minecraft.nbt.NBTTagCompound;
@@ -392,6 +394,11 @@ public class TileEntityTrialSpawner extends TileEntity implements ITickable {
         world.playSound(null, pos, SoundEvents.ENTITY_GENERIC_EXPLODE, SoundCategory.BLOCKS, 0.6F, 1.4F);
         dropLoot(server);
         CitadelInstance citadel = resolveCitadel();
+        if (citadel != null) {
+            for (EntityPlayerMP player : FloorTrackerHandler.playersOnFloor(world, citadelId, floorIndex)) {
+                CustomAdvancementTriggers.spawnerCompleted(player, floorIndex < 0);
+            }
+        }
         ShatteredCitadelsMod.LOGGER.info("Trial spawner {} (floor {}) completed {} waves and dissolved", pos, floorIndex,
                 totalWaves);
         world.setBlockToAir(pos);

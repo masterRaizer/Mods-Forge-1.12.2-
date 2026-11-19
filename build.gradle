@@ -63,9 +63,16 @@ repositories {
 // Castle Dungeons 2.2p1 (1.12.2). Compile-only: mixins targeting it live in a mixin config
 // that is queued only when the mod is installed. Never shipped or required at runtime.
 def castleDungeons = 'curse.maven:castle-dungeons-399213:3456250'
+// Baubles 1.5.2 API: relics implement IBauble via @Optional.Interface (stripped without Baubles).
+def baubles = 'curse.maven:baubles-227083:2518667'
 
 dependencies {
     compileOnly rfg.deobf(castleDungeons)
+    compileOnly rfg.deobf(baubles)
+    // ./gradlew runServer -PwithBaubles  -> dev run with Baubles installed
+    if (project.hasProperty('withBaubles')) {
+        runtimeOnly rfg.deobf(baubles)
+    }
     // ./gradlew runServer -PwithCastleDungeons  -> dev run with Castle Dungeons installed
     if (project.hasProperty('withCastleDungeons')) {
         runtimeOnly rfg.deobf(castleDungeons)
@@ -109,6 +116,10 @@ tasks.named('reobfJar', ReobfuscatedJar).configure {
 }
 
 processResources {
+    // The BetterQuesting questline lives in config/ for pack makers and ships inside the jar.
+    from('config/betterquesting') {
+        into 'assets/shatteredcitadels/questline'
+    }
     def props = [
             'mod_id'     : project.mod_id,
             'mod_name'   : project.mod_name,

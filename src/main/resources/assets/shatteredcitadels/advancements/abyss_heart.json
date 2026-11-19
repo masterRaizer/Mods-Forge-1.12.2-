@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "item": "shatteredcitadels:goblin_forge_heart"
+    },
+    "title": {
+      "translate": "advancements.shatteredcitadels.abyss_heart.title"
+    },
+    "description": {
+      "translate": "advancements.shatteredcitadels.abyss_heart.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "shatteredcitadels:depth_hunter",
+  "criteria": {
+    "crypt_boss": {
+      "trigger": "shatteredcitadels:boss_defeated",
+      "conditions": {
+        "underground": true
+      }
+    }
+  },
+  "rewards": {
+    "experience": 200
+  }
+}

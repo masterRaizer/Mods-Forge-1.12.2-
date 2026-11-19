@@ -2,7 +2,9 @@ package com.shatteredcitadels.client;
 
 import com.shatteredcitadels.Reference;
 import com.shatteredcitadels.block.ModBlocks;
+import com.shatteredcitadels.item.ModItems;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
+import net.minecraft.item.Item;
 import net.minecraftforge.client.event.ModelRegistryEvent;
 import net.minecraftforge.client.model.ModelLoader;
 import net.minecraftforge.fml.common.Mod;
@@ -20,6 +22,11 @@ public final class ClientModels {
 
     @SubscribeEvent
     public static void onModelRegistry(ModelRegistryEvent event) {
+        for (Item item : ModItems.all()) {
+            if (item != null) {
+                ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(item.getRegistryName(), "inventory"));
+            }
+        }
         if (ModBlocks.BOSS_ALTAR_ITEM != null) {
             ModelLoader.setCustomModelResourceLocation(ModBlocks.BOSS_ALTAR_ITEM, 0,
                     new ModelResourceLocation(ModBlocks.BOSS_ALTAR_ITEM.getRegistryName(), "inventory"));

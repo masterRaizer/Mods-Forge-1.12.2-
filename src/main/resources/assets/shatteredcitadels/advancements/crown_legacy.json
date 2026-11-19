@@ -1,0 +1,77 @@
+{
+  "display": {
+    "icon": {
+      "item": "shatteredcitadels:crown_shard"
+    },
+    "title": {
+      "translate": "advancements.shatteredcitadels.crown_legacy.title"
+    },
+    "description": {
+      "translate": "advancements.shatteredcitadels.crown_legacy.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "shatteredcitadels:archivist",
+  "criteria": {
+    "crown_shard": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "shatteredcitadels:crown_shard"
+          }
+        ]
+      }
+    },
+    "cloudspire_aegis": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "shatteredcitadels:cloudspire_aegis"
+          }
+        ]
+      }
+    },
+    "goblin_forge_heart": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "shatteredcitadels:goblin_forge_heart"
+          }
+        ]
+      }
+    },
+    "architect_blade": {
+      "trigger": "minecraft:inventory_changed",
+      "conditions": {
+        "items": [
+          {
+            "item": "shatteredcitadels:architect_blade"
+          }
+        ]
+      }
+    }
+  },
+  "requirements": [
+    [
+      "crown_shard"
+    ],
+    [
+      "cloudspire_aegis"
+    ],
+    [
+      "goblin_forge_heart"
+    ],
+    [
+      "architect_blade"
+    ]
+  ],
+  "rewards": {
+    "experience": 750
+  }
+}

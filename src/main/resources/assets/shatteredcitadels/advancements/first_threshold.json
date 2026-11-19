@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:iron_door"
+    },
+    "title": {
+      "translate": "advancements.shatteredcitadels.first_threshold.title"
+    },
+    "description": {
+      "translate": "advancements.shatteredcitadels.first_threshold.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "shatteredcitadels:root",
+  "criteria": {
+    "entered": {
+      "trigger": "shatteredcitadels:floor_reached",
+      "conditions": {
+        "min_floor": 0
+      }
+    }
+  },
+  "rewards": {
+    "experience": 10
+  }
+}

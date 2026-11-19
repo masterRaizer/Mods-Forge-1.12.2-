@@ -1,11 +1,13 @@
 package com.shatteredcitadels.spawner;
 
 import com.shatteredcitadels.ShatteredCitadelsMod;
+import com.shatteredcitadels.advancement.CustomAdvancementTriggers;
 import com.shatteredcitadels.floor.FloorTrackerHandler;
 import com.shatteredcitadels.structure.CitadelInstance;
 import com.shatteredcitadels.structure.CitadelWorldSavedData;
 import com.shatteredcitadels.structure.FloorData;
 import com.shatteredcitadels.tile.TileEntityTrialSpawner;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.world.World;
 
@@ -64,6 +66,9 @@ public final class FloorCombatState {
             floor.setActiveWave(Math.max(maxWave, floor.getTotalWaves()));
             floor.setRemainingMobs(0);
             ShatteredCitadelsMod.LOGGER.info("Floor {} of citadel {} cleared", floorIndex, citadel.getCitadelId());
+            for (EntityPlayerMP player : FloorTrackerHandler.playersOnFloor(world, citadel.getCitadelId(), floorIndex)) {
+                CustomAdvancementTriggers.floorCleared(player, floorIndex < 0);
+            }
         }
         CitadelWorldSavedData.get(world).markDirty();
         FloorTrackerHandler.resyncCitadel(world, citadel.getCitadelId());

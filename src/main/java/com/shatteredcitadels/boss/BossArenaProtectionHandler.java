@@ -1,6 +1,7 @@
 package com.shatteredcitadels.boss;
 
 import com.shatteredcitadels.Reference;
+import com.shatteredcitadels.advancement.CustomAdvancementTriggers;
 import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.structure.CitadelInstance;
 import com.shatteredcitadels.structure.CitadelWorldSavedData;
@@ -9,6 +10,7 @@ import net.minecraft.block.material.Material;
 import net.minecraft.entity.Entity;
 import net.minecraft.entity.EntityLiving;
 import net.minecraft.entity.EntityLivingBase;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.util.DamageSource;
 import net.minecraft.util.math.BlockPos;
@@ -214,7 +216,14 @@ public final class BossArenaProtectionHandler {
     @SubscribeEvent(priority = EventPriority.LOWEST)
     public static void onDeath(LivingDeathEvent event) {
         EntityLivingBase entity = event.getEntityLiving();
-        if (entity.world.isRemote || !BossTags.isBoss(entity)) {
+        if (entity.world.isRemote) {
+            return;
+        }
+        if (entity instanceof EntityPlayerMP) {
+            recordFallenPlayer((EntityPlayerMP) entity);
+            return;
+        }
+        if (!BossTags.isBoss(entity)) {
             return;
         }
         BlockPos altar = BossTags.altarOf(entity);
@@ -224,6 +233,27 @@ public final class BossArenaProtectionHandler {
         TileEntity tile = entity.world.getTileEntity(altar);
         if (tile instanceof TileEntityBossAltar) {
             ((TileEntityBossAltar) tile).onBossDefeated(entity);
+        }
+    }
+
+    private static void recordFallenPlayer(EntityPlayerMP player) {
+        CitadelInstance citadel = CitadelWorldSavedData.get(player.world).getCitadelAt(player.getPosition());
+        if (citadel == null || citadel.getBossArenaBounds() == null || citadel.getBossAltarPos() == null
+                || !ArenaSpots.isInside(citadel.getBossArenaBounds(), player)) {
+            return;
+        }
+        TileEntity tile = player.world.getTileEntity(citadel.getBossAltarPos().down());
+        if (tile instanceof TileEntityBossAltar) {
+            ((TileEntityBossAltar) tile).onPlayerFallen(player.getUniqueID());
+        }
+    }
+
+    /** Advancements for everyone who fought the boss. */
+    @SubscribeEvent
+    public static void onBossDefeated(CitadelBossDefeatedEvent event) {
+        CitadelInstance citadel = event.getCitadel();
+        for (EntityPlayerMP player : event.getParticipants()) {
+            CustomAdvancementTriggers.bossDefeated(player, citadel.isSkyCitadel(), citadel.isUnderground(), event.isFlawless(player));
         }
     }
 

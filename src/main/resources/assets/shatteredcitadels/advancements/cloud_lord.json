@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "item": "shatteredcitadels:cloudspire_aegis"
+    },
+    "title": {
+      "translate": "advancements.shatteredcitadels.cloud_lord.title"
+    },
+    "description": {
+      "translate": "advancements.shatteredcitadels.cloud_lord.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "shatteredcitadels:keeper_slayer",
+  "criteria": {
+    "sky_boss": {
+      "trigger": "shatteredcitadels:boss_defeated",
+      "conditions": {
+        "sky": true
+      }
+    }
+  },
+  "rewards": {
+    "experience": 500
+  }
+}

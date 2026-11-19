@@ -10,6 +10,7 @@ import com.shatteredcitadels.boss.BossTags;
 import com.shatteredcitadels.boss.CitadelBossDefeatedEvent;
 import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.floor.FloorTrackerHandler;
+import com.shatteredcitadels.loot.ModLootTables;
 import com.shatteredcitadels.structure.CitadelInstance;
 import com.shatteredcitadels.structure.CitadelWorldSavedData;
 import com.shatteredcitadels.structure.FloorData;
@@ -22,6 +23,8 @@ import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.SoundEvents;
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.nbt.NBTTagList;
+import net.minecraft.nbt.NBTTagString;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityLockableLoot;
 import net.minecraft.util.EnumParticleTypes;
@@ -37,6 +40,7 @@ import net.minecraft.world.BossInfoServer;
 import net.minecraft.world.WorldServer;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraftforge.common.MinecraftForge;
+import net.minecraftforge.common.util.Constants;
 import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
@@ -71,6 +75,8 @@ public class TileEntityBossAltar extends TileEntity implements ITickable {
     private State state = State.DORMANT;
     private UUID bossUuid;
     private long cutsceneStartedAt;
+    /** Players who died in the arena during the current fight (for the "flawless" advancement). */
+    private final Set<UUID> fallenPlayers = new HashSet<>();
 
     // runtime
     private BossInfoServer bossInfo;
@@ -195,6 +201,7 @@ public class TileEntityBossAltar extends TileEntity implements ITickable {
             return;
         }
         bossUuid = boss.getUniqueID();
+        fallenPlayers.clear();
         controller.reset();
         controller.attach(boss);
         bossMissingSince = -1L;
@@ -312,6 +319,17 @@ public class TileEntityBossAltar extends TileEntity implements ITickable {
 
     // ------------------------------------------------------------------ defeat
 
+    /** A player died in the arena while the boss was alive. */
+    public void onPlayerFallen(UUID playerId) {
+        if (state == State.ACTIVE && fallenPlayers.add(playerId)) {
+            markDirty();
+        }
+    }
+
+    public Set<UUID> getFallenPlayers() {
+        return new HashSet<>(fallenPlayers);
+    }
+
     /** Called by the protection handler when the boss dies. */
     public void onBossDefeated(EntityLivingBase boss) {
         if (state == State.DEFEATED || !(world instanceof WorldServer)) {
@@ -339,7 +357,7 @@ public class TileEntityBossAltar extends TileEntity implements ITickable {
             }
             placeTrophyChest(server, citadel);
             FloorTrackerHandler.resyncCitadel(world, citadel.getCitadelId());
-            MinecraftForge.EVENT_BUS.post(new CitadelBossDefeatedEvent(citadel, boss, participants));
+            MinecraftForge.EVENT_BUS.post(new CitadelBossDefeatedEvent(citadel, boss, participants, getFallenPlayers()));
             ShatteredCitadelsMod.LOGGER.info("Boss of citadel {} defeated by {} player(s)", citadel.getCitadelId(), participants.size());
         }
         server.playSound(null, pos, SoundEvents.UI_TOAST_CHALLENGE_COMPLETE, SoundCategory.PLAYERS, 1.0F, 1.0F);
@@ -378,13 +396,9 @@ public class TileEntityBossAltar extends TileEntity implements ITickable {
             tile = server.getTileEntity(chestPos);
         }
         if (tile instanceof TileEntityLockableLoot) {
-            ((TileEntityLockableLoot) tile).setLootTable(bossLootTable(BossFactory.bossTier(citadel) + (citadel.isSkyCitadel() ? 1 : 0)),
-                    server.rand.nextLong());
+            ((TileEntityLockableLoot) tile).setLootTable(citadel.isSkyCitadel() ? ModLootTables.BOSS_CHEST_SKY
+                    : ModLootTables.BOSS_CHEST_NORMAL, server.rand.nextLong());
         }
-    }
-
-    public static ResourceLocation bossLootTable(int tier) {
-        return new ResourceLocation(Reference.MODID, "boss/tier_" + Math.max(1, Math.min(6, tier)));
     }
 
     // ------------------------------------------------------------------ helpers
@@ -428,6 +442,11 @@ public class TileEntityBossAltar extends TileEntity implements ITickable {
             compound.setUniqueId("bossUuid", bossUuid);
         }
         compound.setLong("cutsceneStartedAt", cutsceneStartedAt);
+        NBTTagList fallen = new NBTTagList();
+        for (UUID id : fallenPlayers) {
+            fallen.appendTag(new NBTTagString(id.toString()));
+        }
+        compound.setTag("fallenPlayers", fallen);
         return compound;
     }
 
@@ -444,5 +463,14 @@ public class TileEntityBossAltar extends TileEntity implements ITickable {
         state = loaded;
         bossUuid = compound.hasUniqueId("bossUuid") ? compound.getUniqueId("bossUuid") : null;
         cutsceneStartedAt = compound.getLong("cutsceneStartedAt");
+        fallenPlayers.clear();
+        NBTTagList fallen = compound.getTagList("fallenPlayers", Constants.NBT.TAG_STRING);
+        for (int i = 0; i < fallen.tagCount(); i++) {
+            try {
+                fallenPlayers.add(UUID.fromString(fallen.getStringTagAt(i)));
+            } catch (IllegalArgumentException e) {
+                // Corrupt entry: ignore.
+            }
+        }
     }
 }

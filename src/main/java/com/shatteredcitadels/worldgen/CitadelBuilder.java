@@ -3,6 +3,7 @@ package com.shatteredcitadels.worldgen;
 import com.shatteredcitadels.block.ModBlocks;
 import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.config.MobTiers;
+import com.shatteredcitadels.loot.ModLootTables;
 import com.shatteredcitadels.palette.BlockPalette;
 import com.shatteredcitadels.palette.CitadelArchetype;
 import com.shatteredcitadels.palette.PaletteSlot;
@@ -20,9 +21,9 @@ import net.minecraft.init.Blocks;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityLockableLoot;
 import net.minecraft.util.EnumFacing;
+import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
-import net.minecraft.world.storage.loot.LootTableList;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -364,7 +365,7 @@ public final class CitadelBuilder {
 
             boolean chestHere = q == chestQuadrant || tag == RoomTag.TREASURY;
             if (chestHere) {
-                placeChestAgainstWall(f, b, y0);
+                placeChestAgainstWall(f, b, y0, ModLootTables.forFloor(difficultyForFloor(f)));
             }
 
             boolean spawnerHere = q == (stairsQuadrant + 2) % 4 || (spawners > 1 && q == (stairsQuadrant + 3) % 4);
@@ -389,7 +390,7 @@ public final class CitadelBuilder {
         }
     }
 
-    private void placeChestAgainstWall(int f, int[] b, int y0) {
+    private void placeChestAgainstWall(int f, int[] b, int y0, ResourceLocation lootTable) {
         int qx = (b[0] + b[2]) / 2;
         boolean north = b[1] == z0 + 1;
         int z = north ? b[1] : b[3];
@@ -397,19 +398,20 @@ public final class CitadelBuilder {
         for (int offset = 0; offset <= 3; offset++) {
             int x = qx + (offset % 2 == 0 ? offset / 2 : -(offset / 2 + 1));
             if (placeable(f, x, y0 + 1, z)) {
-                placeChest(new BlockPos(x, y0 + 1, z), facing);
+                placeChest(new BlockPos(x, y0 + 1, z), facing, lootTable);
                 return;
             }
         }
     }
 
-    private void placeChest(BlockPos pos, EnumFacing facing) {
+    /** Loot is set as a table (never pre-filled), which is what makes the chest Lootr-compatible. */
+    private void placeChest(BlockPos pos, EnumFacing facing, ResourceLocation lootTable) {
         if (!w.set(pos, Blocks.CHEST.getDefaultState().withProperty(BlockChest.FACING, facing))) {
             return;
         }
         TileEntity tile = w.getWorld().getTileEntity(pos);
         if (tile instanceof TileEntityLockableLoot) {
-            ((TileEntityLockableLoot) tile).setLootTable(LootTableList.CHESTS_SIMPLE_DUNGEON, rand.nextLong());
+            ((TileEntityLockableLoot) tile).setLootTable(lootTable, rand.nextLong());
         }
         rec.addChestPoint(pos);
     }

@@ -1,0 +1,23 @@
+{
+  "display": {
+    "icon": {
+      "item": "shatteredcitadels:boss_altar"
+    },
+    "title": {
+      "translate": "advancements.shatteredcitadels.root.title"
+    },
+    "description": {
+      "translate": "advancements.shatteredcitadels.root.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false,
+    "background": "minecraft:textures/blocks/stonebrick.png"
+  },
+  "criteria": {
+    "found": {
+      "trigger": "shatteredcitadels:enter_structure"
+    }
+  }
+}

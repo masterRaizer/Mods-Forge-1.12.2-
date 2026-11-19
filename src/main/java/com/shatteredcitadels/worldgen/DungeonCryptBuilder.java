@@ -2,6 +2,7 @@ package com.shatteredcitadels.worldgen;
 
 import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.config.MobTiers;
+import com.shatteredcitadels.loot.ModLootTables;
 import com.shatteredcitadels.palette.BlockPalette;
 import com.shatteredcitadels.palette.PaletteSlot;
 import com.shatteredcitadels.spawner.SpawnerContext;
@@ -31,7 +32,6 @@ import net.minecraft.tileentity.TileEntityLockableLoot;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
-import net.minecraft.world.storage.loot.LootTableList;
 
 import java.util.ArrayDeque;
 import java.util.ArrayList;
@@ -617,7 +617,7 @@ public final class DungeonCryptBuilder {
         }
         TileEntity tile = w.getWorld().getTileEntity(pos);
         if (tile instanceof TileEntityLockableLoot) {
-            ((TileEntityLockableLoot) tile).setLootTable(LootTableList.CHESTS_SIMPLE_DUNGEON, rand.nextLong());
+            ((TileEntityLockableLoot) tile).setLootTable(ModLootTables.UNDERGROUND_CRYPT, rand.nextLong());
         }
         rec.addChestPoint(pos);
     }

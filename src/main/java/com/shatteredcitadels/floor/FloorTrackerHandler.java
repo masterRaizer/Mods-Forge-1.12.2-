@@ -2,6 +2,7 @@ package com.shatteredcitadels.floor;
 
 import com.shatteredcitadels.Reference;
 import com.shatteredcitadels.ShatteredCitadelsMod;
+import com.shatteredcitadels.advancement.CustomAdvancementTriggers;
 import com.shatteredcitadels.network.NetworkHandler;
 import com.shatteredcitadels.network.PacketFloorTitleBanner;
 import com.shatteredcitadels.network.PacketSyncFloorHud;
@@ -18,7 +19,9 @@ import net.minecraftforge.fml.common.eventhandler.SubscribeEvent;
 import net.minecraftforge.fml.common.gameevent.PlayerEvent;
 import net.minecraftforge.fml.common.gameevent.TickEvent;
 
+import java.util.ArrayList;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -99,6 +102,10 @@ public final class FloorTrackerHandler {
         NetworkHandler.sendTo(new PacketSyncFloorHud(now), player);
         if (now.isInside() && !now.sameFloorAs(previous)) {
             NetworkHandler.sendTo(new PacketFloorTitleBanner(now), player);
+            if (previous == null || !previous.isInside() || !previous.getCitadelId().equals(now.getCitadelId())) {
+                CustomAdvancementTriggers.enterStructure(player, structureType(now));
+            }
+            CustomAdvancementTriggers.floorReached(player, now.getFloorIndex());
         }
     }
 
@@ -117,6 +124,16 @@ public final class FloorTrackerHandler {
                 refresh((EntityPlayerMP) player, false);
             }
         }
+    }
+
+    private static String structureType(FloorHudState state) {
+        if (state.isSkyCitadel()) {
+            return "sky_citadel";
+        }
+        if (state.isUndergroundOnly()) {
+            return "crypt";
+        }
+        return "castle_dungeons".equals(state.getArchetypeKey()) ? "castle_dungeons" : "citadel";
     }
 
     private static FloorHudState resolve(EntityPlayer player) {
@@ -138,27 +155,29 @@ public final class FloorTrackerHandler {
     }
 
     public static int countPlayersOnFloor(World world, UUID citadelId, int floorIndex) {
+        return playersOnFloor(world, citadelId, floorIndex).size();
+    }
+
+    /** @return living, non-spectator players standing on the floor right now. */
+    public static List<EntityPlayerMP> playersOnFloor(World world, UUID citadelId, int floorIndex) {
+        List<EntityPlayerMP> result = new ArrayList<>();
         if (world == null || world.isRemote || citadelId == null) {
-            return 0;
+            return result;
         }
         CitadelInstance citadel = CitadelWorldSavedData.get(world).getById(citadelId);
-        if (citadel == null) {
-            return 0;
-        }
-        FloorData floor = citadel.getFloor(floorIndex);
+        FloorData floor = citadel == null ? null : citadel.getFloor(floorIndex);
         if (floor == null) {
-            return 0;
+            return result;
         }
-        int count = 0;
         for (EntityPlayer player : world.playerEntities) {
-            if (player.isSpectator() || !player.isEntityAlive()) {
+            if (!(player instanceof EntityPlayerMP) || player.isSpectator() || !player.isEntityAlive()) {
                 continue;
             }
             BlockPos pos = new BlockPos(player.posX, player.posY, player.posZ);
             if (citadel.contains(pos) && floor.containsY(MathHelper.floor(player.posY))) {
-                count++;
+                result.add((EntityPlayerMP) player);
             }
         }
-        return count;
+        return result;
     }
 }

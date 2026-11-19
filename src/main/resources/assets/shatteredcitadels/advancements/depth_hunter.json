@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:bone"
+    },
+    "title": {
+      "translate": "advancements.shatteredcitadels.depth_hunter.title"
+    },
+    "description": {
+      "translate": "advancements.shatteredcitadels.depth_hunter.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "shatteredcitadels:descent",
+  "criteria": {
+    "cleared": {
+      "trigger": "shatteredcitadels:floor_cleared",
+      "conditions": {
+        "underground": true
+      }
+    }
+  },
+  "rewards": {
+    "experience": 60
+  }
+}
