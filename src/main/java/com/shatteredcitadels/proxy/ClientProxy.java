@@ -1,10 +1,12 @@
 package com.shatteredcitadels.proxy;
 
+import com.shatteredcitadels.Reference;
 import com.shatteredcitadels.ShatteredCitadelsMod;
 import com.shatteredcitadels.client.ClientFloorState;
 import com.shatteredcitadels.network.PacketFloorTitleBanner;
 import com.shatteredcitadels.network.PacketSyncFloorHud;
 import net.minecraft.client.Minecraft;
+import net.minecraft.client.resources.I18n;
 import net.minecraft.client.resources.Language;
 import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLLoadCompleteEvent;
@@ -39,8 +41,10 @@ public class ClientProxy extends CommonProxy {
     public void loadComplete(FMLLoadCompleteEvent event) {
         super.loadComplete(event);
         Language language = Minecraft.getMinecraft().getLanguageManager().getCurrentLanguage();
-        ShatteredCitadelsMod.LOGGER.debug("Client ready, language: {}",
-                language == null ? "unknown" : language.getLanguageCode());
+        ShatteredCitadelsMod.LOGGER.debug("Client ready, language: {}, lang domain present: {}, key present: {}",
+                language == null ? "unknown" : language.getLanguageCode(),
+                Minecraft.getMinecraft().getResourceManager().getResourceDomains().contains(Reference.MODID),
+                I18n.hasKey("config.shatteredcitadels.title"));
     }
 
     /** Network thread -> client thread: never touch client state from the netty thread. */

@@ -97,6 +97,8 @@ public final class CommandShatteredCitadels extends CommandBase {
             case "status":
                 send(sender, "Castle Dungeons installed: " + CastleDungeonsIntegration.isLoaded() + "; "
                         + CastleDungeonsIntegration.describeStatus());
+                send(sender, "Floor tracker: " + FloorTrackerHandler.cachedPlayerCount() + " cached player state(s), "
+                        + server.getCurrentPlayerCount() + " online");
                 break;
             case "generate":
                 generate(sender, world, args);
