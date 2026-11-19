@@ -50,10 +50,27 @@ repositories {
         name = 'CleanroomMC (MixinBooter)'
         url = 'https://maven.cleanroommc.com'
     }
+    maven {
+        name = 'CurseMaven'
+        url = 'https://cursemaven.com'
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
     mavenCentral()
 }
 
+// Castle Dungeons 2.2p1 (1.12.2). Compile-only: mixins targeting it live in a mixin config
+// that is queued only when the mod is installed. Never shipped or required at runtime.
+def castleDungeons = 'curse.maven:castle-dungeons-399213:3456250'
+
 dependencies {
+    compileOnly rfg.deobf(castleDungeons)
+    // ./gradlew runServer -PwithCastleDungeons  -> dev run with Castle Dungeons installed
+    if (project.hasProperty('withCastleDungeons')) {
+        runtimeOnly rfg.deobf(castleDungeons)
+    }
+
     // MixinBooter ships Sponge Mixin + MixinExtras and the mixin annotation processor.
     implementation("zone.rong:mixinbooter:${project.mixinbooter_version}") { transitive = false }
 

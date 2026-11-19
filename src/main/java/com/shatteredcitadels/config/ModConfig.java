@@ -41,10 +41,26 @@ public final class ModConfig {
     @Config.Comment("Floor HUD placement (client) and loot rarity (server).")
     public static final HudAndLoot HUD_AND_LOOT = new HudAndLoot();
 
+    @Config.Name("integration")
+    @Config.LangKey("config.shatteredcitadels.integration")
+    @Config.Comment("Castle Dungeons patching and block palettes taken from installed mods.")
+    public static final Integration INTEGRATION = new Integration();
+
     private ModConfig() {
     }
 
     public static final class CastleGeneration {
+
+        @Config.Name("enableCitadelGeneration")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.enableCitadelGeneration")
+        @Config.Comment("Generate citadels, the Citadel Above the Clouds and underground crypts in new chunks.")
+        public boolean enableCitadelGeneration = true;
+
+        @Config.Name("maxFoundationDrop")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.maxFoundationDrop")
+        @Config.Comment("Maximum height difference of the terrain under a citadel; steeper sites are rejected.")
+        @Config.RangeInt(min = 4, max = 24)
+        public int maxFoundationDrop = 12;
 
         @Config.Name("castleSectionSize")
         @Config.LangKey("config.shatteredcitadels.castle_generation.castleSectionSize")
@@ -256,6 +272,45 @@ public final class ModConfig {
         @Config.Comment("Chance for a rare item in loot of the lower floors (0.025 = 2.5%).")
         @Config.RangeDouble(min = 0.0D, max = 1.0D)
         public double lowFloorRareLootChance = 0.025D;
+    }
+
+    public static final class Integration {
+
+        @Config.Name("castleDungeonsOverrideSectionSize")
+        @Config.LangKey("config.shatteredcitadels.integration.castleDungeonsOverrideSectionSize")
+        @Config.Comment("Apply castle_generation.castleSectionSize and the minimum citadel distance to Castle Dungeons.")
+        public boolean castleDungeonsOverrideSectionSize = true;
+
+        @Config.Name("castleDungeonsReplaceSpawners")
+        @Config.LangKey("config.shatteredcitadels.integration.castleDungeonsReplaceSpawners")
+        @Config.Comment("Replace Castle Dungeons spawners with citadel wave spawners (blacklisted mobs removed).")
+        public boolean castleDungeonsReplaceSpawners = true;
+
+        @Config.Name("castleDungeonsPatchConfigFiles")
+        @Config.LangKey("config.shatteredcitadels.integration.castleDungeonsPatchConfigFiles")
+        @Config.Comment({
+                "Fallback if the mixins cannot apply (other Castle Dungeons version): rewrite section-size and",
+                "strip blacklisted mobs in config/castle_dungeons/*.cfg before Castle Dungeons reads them.",
+                "A one-time backup (*.shatteredcitadels.bak) is written next to each changed file."
+        })
+        public boolean castleDungeonsPatchConfigFiles = true;
+
+        @Config.Name("enableModdedPalettes")
+        @Config.LangKey("config.shatteredcitadels.integration.enableModdedPalettes")
+        @Config.Comment("Use blocks from installed mods in citadel palettes (vanilla blocks are always the fallback).")
+        @Config.RequiresMcRestart
+        public boolean enableModdedPalettes = true;
+
+        @Config.Name("paletteOverrides")
+        @Config.LangKey("config.shatteredcitadels.integration.paletteOverrides")
+        @Config.Comment({
+                "Palette overrides, tried before the built-in candidates. Format: archetype.slot=entry",
+                "archetype: keepers_citadel, obsidian_bastille, techno_arcane_spire, titan_forge, sky_citadel",
+                "slot: wall, pillar, floor, stairs, accent, light, furniture",
+                "entry: modid:block, modid:block@meta, modid:*keyword* (scan), variants joined with |"
+        })
+        @Config.RequiresMcRestart
+        public String[] paletteOverrides = {};
     }
 
     /**

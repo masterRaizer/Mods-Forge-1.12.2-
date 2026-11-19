@@ -1,5 +1,6 @@
 package com.shatteredcitadels;
 
+import com.shatteredcitadels.command.CommandShatteredCitadels;
 import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.proxy.CommonProxy;
 import net.minecraftforge.fml.common.Mod;
@@ -8,6 +9,7 @@ import net.minecraftforge.fml.common.event.FMLInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLLoadCompleteEvent;
 import net.minecraftforge.fml.common.event.FMLPostInitializationEvent;
 import net.minecraftforge.fml.common.event.FMLPreInitializationEvent;
+import net.minecraftforge.fml.common.event.FMLServerStartingEvent;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
@@ -53,5 +55,10 @@ public final class ShatteredCitadelsMod {
         // Every mod has registered its entities now: resolve entity IDs from the config.
         ConfigCache.resolveRegistryEntries();
         PROXY.loadComplete(event);
+    }
+
+    @Mod.EventHandler
+    public void serverStarting(FMLServerStartingEvent event) {
+        event.registerServerCommand(new CommandShatteredCitadels());
     }
 }

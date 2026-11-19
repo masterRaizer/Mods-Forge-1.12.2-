@@ -53,6 +53,10 @@ public final class ConfigCache {
         ModConfig.SpawnerAndWaves waves = ModConfig.SPAWNER_AND_WAVES;
         ModConfig.BossSettings boss = ModConfig.BOSS_SETTINGS;
         ModConfig.HudAndLoot hud = ModConfig.HUD_AND_LOOT;
+        ModConfig.Integration integration = ModConfig.INTEGRATION;
+
+        next.enableCitadelGeneration = gen.enableCitadelGeneration;
+        next.maxFoundationDrop = clamp(gen.maxFoundationDrop, 4, 24);
 
         next.castleSectionSize = clamp(gen.castleSectionSize, 24, 64);
         next.minDistanceBetweenCitadelsChunks = clamp(gen.minDistanceBetweenCitadelsChunks, 8, 1024);
@@ -95,6 +99,21 @@ public final class ConfigCache {
         next.hudOffsetY = clamp(hud.hudOffsetY, 0, 512);
         next.hudScale = clamp(hud.hudScale, 0.5D, 2.0D);
         next.lowFloorRareLootChance = clamp01(hud.lowFloorRareLootChance);
+
+        next.castleDungeonsOverrideSectionSize = integration.castleDungeonsOverrideSectionSize;
+        next.castleDungeonsReplaceSpawners = integration.castleDungeonsReplaceSpawners;
+        next.castleDungeonsPatchConfigFiles = integration.castleDungeonsPatchConfigFiles;
+        next.enableModdedPalettes = integration.enableModdedPalettes;
+        List<String> overrides = new ArrayList<>();
+        if (integration.paletteOverrides != null) {
+            for (String line : integration.paletteOverrides) {
+                String value = normalize(line);
+                if (!value.isEmpty()) {
+                    overrides.add(value);
+                }
+            }
+        }
+        next.paletteOverrides = Collections.unmodifiableList(overrides);
 
         // Registry-resolved views survive a rebuild until resolveRegistryEntries() runs again.
         next.resolvedBossPoolByTier = previous.resolvedBossPoolByTier;
@@ -277,6 +296,8 @@ public final class ConfigCache {
     /** Immutable once published. Fields are package-private for the builder above. */
     public static final class Snapshot {
 
+        boolean enableCitadelGeneration = true;
+        int maxFoundationDrop = 12;
         int castleSectionSize = 36;
         int minDistanceBetweenCitadelsChunks = 64;
         double skyCitadelChance = 0.06D;
@@ -310,11 +331,19 @@ public final class ConfigCache {
         double hudScale = 1.0D;
         double lowFloorRareLootChance = 0.025D;
 
+        boolean castleDungeonsOverrideSectionSize = true;
+        boolean castleDungeonsReplaceSpawners = true;
+        boolean castleDungeonsPatchConfigFiles = true;
+        boolean enableModdedPalettes = true;
+        List<String> paletteOverrides = Collections.emptyList();
+
         Snapshot() {
         }
 
         Snapshot copy() {
             Snapshot c = new Snapshot();
+            c.enableCitadelGeneration = enableCitadelGeneration;
+            c.maxFoundationDrop = maxFoundationDrop;
             c.castleSectionSize = castleSectionSize;
             c.minDistanceBetweenCitadelsChunks = minDistanceBetweenCitadelsChunks;
             c.skyCitadelChance = skyCitadelChance;
@@ -344,10 +373,17 @@ public final class ConfigCache {
             c.hudOffsetY = hudOffsetY;
             c.hudScale = hudScale;
             c.lowFloorRareLootChance = lowFloorRareLootChance;
+            c.castleDungeonsOverrideSectionSize = castleDungeonsOverrideSectionSize;
+            c.castleDungeonsReplaceSpawners = castleDungeonsReplaceSpawners;
+            c.castleDungeonsPatchConfigFiles = castleDungeonsPatchConfigFiles;
+            c.enableModdedPalettes = enableModdedPalettes;
+            c.paletteOverrides = paletteOverrides;
             return c;
         }
 
         // --- castle generation
+        public boolean isCitadelGenerationEnabled() { return enableCitadelGeneration; }
+        public int getMaxFoundationDrop() { return maxFoundationDrop; }
         public int getCastleSectionSize() { return castleSectionSize; }
         public int getMinDistanceBetweenCitadelsChunks() { return minDistanceBetweenCitadelsChunks; }
         public double getSkyCitadelChance() { return skyCitadelChance; }
@@ -444,5 +480,12 @@ public final class ConfigCache {
         public int getHudOffsetY() { return hudOffsetY; }
         public double getHudScale() { return hudScale; }
         public double getLowFloorRareLootChance() { return lowFloorRareLootChance; }
+
+        // --- integration
+        public boolean isCastleDungeonsSectionOverride() { return castleDungeonsOverrideSectionSize; }
+        public boolean isCastleDungeonsSpawnerReplacement() { return castleDungeonsReplaceSpawners; }
+        public boolean isCastleDungeonsConfigPatching() { return castleDungeonsPatchConfigFiles; }
+        public boolean isModdedPalettesEnabled() { return enableModdedPalettes; }
+        public List<String> getPaletteOverrides() { return paletteOverrides; }
     }
 }

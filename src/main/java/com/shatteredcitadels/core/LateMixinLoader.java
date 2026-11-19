@@ -37,6 +37,7 @@ public final class LateMixinLoader implements ILateMixinLoader {
     static {
         Map<String, String> configs = new LinkedHashMap<>();
         configs.put(Reference.MIXIN_CONFIG_CORE, ALWAYS);
+        configs.put(Reference.MIXIN_CONFIG_CASTLE_DUNGEONS, "castle_dungeons");
         CONFIGS = Collections.unmodifiableMap(configs);
     }
 
