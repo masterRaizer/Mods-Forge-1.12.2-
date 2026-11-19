@@ -1,0 +1,17 @@
+{
+  "boss.shield_activate": {
+    "category": "hostile",
+    "subtitle": "shatteredcitadels.subtitle.boss.shield_activate",
+    "sounds": [
+      { "name": "minecraft:block/end_portal/eyeplace1", "pitch": 0.7 },
+      { "name": "minecraft:block/end_portal/eyeplace2", "pitch": 0.7 }
+    ]
+  },
+  "boss.shield_charge": {
+    "category": "hostile",
+    "subtitle": "shatteredcitadels.subtitle.boss.shield_charge",
+    "sounds": [
+      { "name": "minecraft:mob/evocation_illager/prepare_wololo", "pitch": 1.3 }
+    ]
+  }
+}

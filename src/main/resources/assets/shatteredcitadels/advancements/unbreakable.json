@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:totem_of_undying"
+    },
+    "title": {
+      "translate": "advancements.shatteredcitadels.unbreakable.title"
+    },
+    "description": {
+      "translate": "advancements.shatteredcitadels.unbreakable.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "shatteredcitadels:crown_legacy",
+  "criteria": {
+    "flawless": {
+      "trigger": "shatteredcitadels:boss_defeated",
+      "conditions": {
+        "flawless": true
+      }
+    }
+  },
+  "rewards": {
+    "experience": 300
+  }
+}

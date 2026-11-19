@@ -1,0 +1,17 @@
+{
+  "required": false,
+  "minVersion": "0.8",
+  "compatibilityLevel": "JAVA_8",
+  "package": "com.shatteredcitadels.mixin.castledungeons",
+  "plugin": "com.shatteredcitadels.core.CastleDungeonsMixinPlugin",
+  "refmap": "mixins.shatteredcitadels.refmap.json",
+  "injectors": {
+    "defaultRequire": 0
+  },
+  "mixins": [
+    "CastleDungeonsMixin",
+    "CastleDungeonsGeneratorMixin",
+    "CastleDungeonsBuilderMixin",
+    "CastleDungeonsEditorMixin"
+  ]
+}

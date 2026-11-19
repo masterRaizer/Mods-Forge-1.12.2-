@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:ladder"
+    },
+    "title": {
+      "translate": "advancements.shatteredcitadels.ascension.title"
+    },
+    "description": {
+      "translate": "advancements.shatteredcitadels.ascension.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "shatteredcitadels:first_threshold",
+  "criteria": {
+    "floor": {
+      "trigger": "shatteredcitadels:floor_reached",
+      "conditions": {
+        "min_floor": 3
+      }
+    }
+  },
+  "rewards": {
+    "experience": 40
+  }
+}

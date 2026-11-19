@@ -1,0 +1,9 @@
+{
+  "parent": "block/cube_bottom_top",
+  "textures": {
+    "top": "blocks/endframe_top",
+    "side": "blocks/endframe_side",
+    "bottom": "blocks/end_stone",
+    "particle": "blocks/endframe_side"
+  }
+}

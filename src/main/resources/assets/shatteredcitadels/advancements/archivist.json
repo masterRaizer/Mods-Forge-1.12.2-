@@ -1,0 +1,29 @@
+{
+  "display": {
+    "icon": {
+      "item": "minecraft:written_book"
+    },
+    "title": {
+      "translate": "advancements.shatteredcitadels.archivist.title"
+    },
+    "description": {
+      "translate": "advancements.shatteredcitadels.archivist.description"
+    },
+    "frame": "goal",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "shatteredcitadels:root",
+  "criteria": {
+    "chronicles": {
+      "trigger": "shatteredcitadels:lore_collected",
+      "conditions": {
+        "chapters": 7
+      }
+    }
+  },
+  "rewards": {
+    "experience": 120
+  }
+}

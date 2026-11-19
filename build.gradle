@@ -1,0 +1,159 @@
+import com.gtnewhorizons.retrofuturagradle.mcp.ReobfuscatedJar
+
+plugins {
+    id 'java'
+    id 'eclipse'
+    id 'idea'
+    id 'com.gtnewhorizons.retrofuturagradle' version '1.4.9'
+}
+
+version = project.mod_version
+group = project.mod_group
+base {
+    archivesName = project.mod_id
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(8)
+        vendor = JvmVendorSpec.AZUL
+    }
+    withSourcesJar()
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+// Strict lint for the mod sources only (not for the decompiled Minecraft sources).
+tasks.named('compileJava', JavaCompile).configure {
+    options.compilerArgs += ['-Xlint:deprecation', '-Xlint:unchecked', '-Werror']
+}
+
+minecraft {
+    mcVersion = project.minecraft_version
+    mcpMappingChannel = project.mappings_channel
+    mcpMappingVersion = project.mappings_version
+    username = 'Developer'
+    useDependencyAccessTransformers = true
+
+    extraRunJvmArguments.addAll([
+            '-ea:com.shatteredcitadels',
+            '-Dmixin.hotSwap=true',
+            '-Dmixin.checks.interfaces=true',
+            '-Dmixin.debug.export=true'
+    ])
+}
+
+repositories {
+    maven {
+        name = 'CleanroomMC (MixinBooter)'
+        url = 'https://maven.cleanroommc.com'
+    }
+    maven {
+        name = 'CurseMaven'
+        url = 'https://cursemaven.com'
+        content {
+            includeGroup 'curse.maven'
+        }
+    }
+    mavenCentral()
+}
+
+// Castle Dungeons 2.2p1 (1.12.2). Compile-only: mixins targeting it live in a mixin config
+// that is queued only when the mod is installed. Never shipped or required at runtime.
+def castleDungeons = 'curse.maven:castle-dungeons-399213:3456250'
+// Baubles 1.5.2 API: relics implement IBauble via @Optional.Interface (stripped without Baubles).
+def baubles = 'curse.maven:baubles-227083:2518667'
+
+dependencies {
+    compileOnly rfg.deobf(castleDungeons)
+    compileOnly rfg.deobf(baubles)
+    // ./gradlew runServer -PwithBaubles  -> dev run with Baubles installed
+    if (project.hasProperty('withBaubles')) {
+        runtimeOnly rfg.deobf(baubles)
+    }
+    // ./gradlew runServer -PwithCastleDungeons  -> dev run with Castle Dungeons installed
+    if (project.hasProperty('withCastleDungeons')) {
+        runtimeOnly rfg.deobf(castleDungeons)
+    }
+
+    // MixinBooter ships Sponge Mixin + MixinExtras and the mixin annotation processor.
+    implementation("zone.rong:mixinbooter:${project.mixinbooter_version}") { transitive = false }
+
+    annotationProcessor 'org.ow2.asm:asm-debug-all:5.2'
+    annotationProcessor 'com.google.guava:guava:24.1.1-jre'
+    annotationProcessor 'com.google.code.gson:gson:2.8.6'
+    annotationProcessor("zone.rong:mixinbooter:${project.mixinbooter_version}") { transitive = false }
+
+    testImplementation 'junit:junit:4.13.2'
+}
+
+// ---------------------------------------------------------------------------
+// Mixin refmap generation (annotation processor -> refmap -> jar resources)
+// ---------------------------------------------------------------------------
+def mixinRefMapName = "mixins.${project.mod_id}.refmap.json"
+def mixinTmpDir = layout.buildDirectory.dir('tmp/mixins').get().asFile
+def mixinRefMap = new File(mixinTmpDir, mixinRefMapName)
+def mixinSrg = new File(mixinTmpDir, 'mixins.srg')
+
+tasks.named('compileJava', JavaCompile).configure {
+    doFirst {
+        mixinTmpDir.mkdirs()
+    }
+    options.compilerArgs += [
+            "-AreobfSrgFile=${tasks.reobfJar.srg.get().asFile}",
+            "-AoutSrgFile=${mixinSrg}",
+            "-AoutRefMapFile=${mixinRefMap}",
+            "-AdefaultObfuscationEnv=searge"
+    ]
+    outputs.file(mixinRefMap)
+    outputs.file(mixinSrg)
+}
+
+tasks.named('reobfJar', ReobfuscatedJar).configure {
+    extraSrgFiles.from(mixinSrg)
+}
+
+processResources {
+    // The BetterQuesting questline lives in config/ for pack makers and ships inside the jar.
+    from('config/betterquesting') {
+        into 'assets/shatteredcitadels/questline'
+    }
+    def props = [
+            'mod_id'     : project.mod_id,
+            'mod_name'   : project.mod_name,
+            'mod_version': project.mod_version,
+            'mc_version' : project.minecraft_version
+    ]
+    inputs.properties(props)
+    filesMatching('mcmod.info') {
+        expand(props)
+    }
+    // compileJava writes the refmap; resources must be processed after it.
+    dependsOn tasks.named('compileJava')
+    from(mixinRefMap)
+}
+
+jar {
+    manifest {
+        attributes(
+                'Implementation-Title': project.mod_name,
+                'Implementation-Version': project.mod_version
+        )
+    }
+}
+
+// Keep the Java constant and gradle.properties in sync: fail fast on mismatch.
+tasks.register('verifyModVersion') {
+    def referenceFile = file('src/main/java/com/shatteredcitadels/Reference.java')
+    def expected = project.mod_version
+    inputs.file(referenceFile)
+    doLast {
+        def text = referenceFile.getText('UTF-8')
+        if (!text.contains("VERSION = \"${expected}\"")) {
+            throw new GradleException("Reference.VERSION does not match mod_version=${expected}")
+        }
+    }
+}
+tasks.named('compileJava').configure { dependsOn 'verifyModVersion' }

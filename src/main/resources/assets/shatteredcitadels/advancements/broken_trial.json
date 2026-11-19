@@ -1,0 +1,26 @@
+{
+  "display": {
+    "icon": {
+      "item": "shatteredcitadels:trial_spawner"
+    },
+    "title": {
+      "translate": "advancements.shatteredcitadels.broken_trial.title"
+    },
+    "description": {
+      "translate": "advancements.shatteredcitadels.broken_trial.description"
+    },
+    "frame": "task",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "shatteredcitadels:first_threshold",
+  "criteria": {
+    "spawner": {
+      "trigger": "shatteredcitadels:spawner_completed"
+    }
+  },
+  "rewards": {
+    "experience": 25
+  }
+}

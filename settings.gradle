@@ -1,0 +1,21 @@
+pluginManagement {
+    repositories {
+        maven {
+            name = 'GTNH Maven (RetroFuturaGradle)'
+            url = 'https://nexus.gtnewhorizons.com/repository/public/'
+        }
+        maven {
+            name = 'Forge Maven'
+            url = 'https://maven.minecraftforge.net/'
+        }
+        gradlePluginPortal()
+        mavenCentral()
+    }
+}
+
+plugins {
+    // Auto-provisions a Java 8 toolchain when the host only has a newer JDK.
+    id 'org.gradle.toolchains.foojay-resolver-convention' version '0.8.0'
+}
+
+rootProject.name = 'shatteredcitadels'
