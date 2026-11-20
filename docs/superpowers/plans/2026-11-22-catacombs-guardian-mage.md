@@ -273,6 +273,7 @@ dungeons.
     - bookshelf walls and 8 freestanding stacks;
     - 2 enchanting tables, 2 brewing stands, cauldrons, a raised 7x7 dais, palette light blocks;
     - 4-6 pedestals: quartz pillar plus chest plus a ring of sealed gates;
+    - chests on the deepest level use `ModLootTables.CATACOMB_DEEP`, other catacomb chests `UNDERGROUND_CRYPT`;
     - the sigil;
   - the plan integration and the config listed above.
 - [ ] **Step 4: Run them.** Run `./gradlew build`. Expected: BUILD SUCCESSFUL, all tests pass.
@@ -420,6 +421,7 @@ dungeons.
   damage source is cancelled while any shield guard lives. The aura is shown with
   `EnumParticleTypes.SPELL_WITCH` rings. Guards are `EntitySkeleton` with an iron sword and leather
   armour, tagged with `BossTags` so they do not count as floor wave mobs.
+  Leash: every 20 ticks, if the mage is outside `area`, it teleports to the anchor nearest the area centre.
 
 - [ ] **Step 1: Write failing tests** in `MageSpellCycleTest`:
   - `noSummonOverCap`: with `aliveGuards=4, maxGuards=6`, 1000 draws never return SUMMON.
