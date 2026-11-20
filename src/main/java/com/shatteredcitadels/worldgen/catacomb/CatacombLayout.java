@@ -94,6 +94,7 @@ public final class CatacombLayout {
         }
         layout.carveMaze(rand);
         layout.openHalls(rand);
+        layout.pruneDeadEnds(rand, cells >= 11 ? 12 : 1);
         layout.addLoops(rand);
         return layout;
     }
@@ -392,7 +393,7 @@ public final class CatacombLayout {
         int corridorCells = 0;
         for (int i = 0; i < n; i++) {
             for (int j = 0; j < n; j++) {
-                if (hallOf[i][j] == null) {
+                if (hallOf[i][j] == null && open[i][j]) {
                     corridorCells++;
                 }
             }
@@ -404,11 +405,61 @@ public final class CatacombLayout {
             EnumFacing d = DIRS[rand.nextInt(4)];
             int ni = i + d.getXOffset();
             int nj = j + d.getZOffset();
-            if (!inside(ni, nj) || hallOf[i][j] != null || hallOf[ni][nj] != null || link(i, j, d)) {
+            if (!inside(ni, nj) || hallOf[i][j] != null || hallOf[ni][nj] != null || !open[i][j] || !open[ni][nj]
+                    || link(i, j, d)) {
                 continue;
             }
             setLink(i, j, d);
             wanted--;
+        }
+    }
+
+    /**
+     * Fills back part of the dead ends, a few passes deep, so stretches of solid rock break up the
+     * grid and the corridors that remain wind. Removing a dead end never disconnects anything.
+     */
+    private void pruneDeadEnds(Random rand, int passes) {
+        for (int pass = 0; pass < passes; pass++) {
+            List<int[]> ends = new ArrayList<>();
+            for (int i = 0; i < n; i++) {
+                for (int j = 0; j < n; j++) {
+                    if (!open[i][j] || hallOf[i][j] != null) {
+                        continue;
+                    }
+                    int links = 0;
+                    for (EnumFacing d : DIRS) {
+                        if (link(i, j, d)) {
+                            links++;
+                        }
+                    }
+                    if (links <= 1) {
+                        ends.add(new int[]{i, j});
+                    }
+                }
+            }
+            for (int[] c : ends) {
+                if (rand.nextInt(10) < 8) {
+                    close(c[0], c[1]);
+                }
+            }
+        }
+    }
+
+    private void close(int ci, int cj) {
+        open[ci][cj] = false;
+        for (EnumFacing d : DIRS) {
+            int ni = ci + d.getXOffset();
+            int nj = cj + d.getZOffset();
+            if (!inside(ni, nj)) {
+                continue;
+            }
+            int ai = Math.min(ci, ni);
+            int aj = Math.min(cj, nj);
+            if (d.getAxis() == EnumFacing.Axis.X) {
+                east[ai][aj] = false;
+            } else {
+                south[ai][aj] = false;
+            }
         }
     }
 

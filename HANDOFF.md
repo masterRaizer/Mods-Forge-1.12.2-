@@ -39,7 +39,14 @@
 3. ✅ Гигантский особняк (1.5.0): `ManorPlan`/`ManorPlanner`/`ManorBuilder`, зоны = индексы этажей с
    `FloorData.zoneKey` и `requiresFloor` (спавнеры спят, пока предыдущая зона не зачищена), срезки — железная
    дверь + рычаг на дальней стороне + печать на ближней. Тип `MANOR`, палитра `GOTHIC_MANOR`.
-4. Винтовая лестница вниз и гигантские катакомбы с магом-хранителем (зона с артефактами и книжными стеллажами).
+4. ✅ Катакомбы с магом-хранителем (1.6.0, дизайн `docs/superpowers/specs/2026-11-22-catacombs-guardian-mage-design.md`,
+   план `docs/superpowers/plans/2026-11-22-catacombs-guardian-mage.md`) + пункт 1 YUNG (подземелья со спавнером):
+   `worldgen/catacomb/` — `CatacombLayout` (сетка ячеек 5 блоков: залы, лабиринт, обрезка тупиков, петли),
+   `CatacombBuilder` (уровни через 10 блоков, винтовые лестницы, печати между уровнями, залы, святилище на этаже -10
+   с `FloorData.sideBoss`, не снимающим защиту постройки), `FragmentPlan` + `VanillaDungeonReplacer` (ванильные
+   подземелья запрещены на `TERRAIN_GEN_BUS`, по одному куску на регион). Маг — `entity/EntityGuardianMage`
+   (`MageSpellCycle`, `EntityMageBolt`), вызывается `TileEntityMageSigil` под помостом, смерть —
+   `structure/MageSanctum`. Предметы: посох, фолиант (TRINKET), кольцо (RING).
 5. Херобрин (телепорт, молнии, призыв, фазы) и несколько вариантов его замков.
 6. Другие измерения (Незер, Край, Atum) для всех типов построек.
 

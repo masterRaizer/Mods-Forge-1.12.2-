@@ -192,6 +192,6 @@ public final class CitadelPlan implements StructurePlan {
     @Override
     public String describe() {
         return archetype.key() + (sky ? " sky" : "") + ", " + floors + " floors" + (wings ? " with wings" : "")
-                + (cryptLevels > 0 ? ", crypt " + cryptLevels : "") + " at " + minX + "," + baseY + "," + minZ;
+                + (hasCatacombs() ? ", catacombs " + cryptLevels : "") + " at " + minX + "," + baseY + "," + minZ;
     }
 }

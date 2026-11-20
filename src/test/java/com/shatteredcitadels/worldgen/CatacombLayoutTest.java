@@ -124,4 +124,21 @@ public class CatacombLayoutTest {
         assertEquals(null, layout.sanctum());
         assertEquals(2, layout.halls().size()); // entrance + one themed hall
     }
+
+    /** Part of the dead ends are filled back in, so solid rock breaks up the grid. */
+    @Test
+    public void someCellsStaySolidRock() {
+        for (long seed = 1; seed <= 20; seed++) {
+            CatacombLayout layout = CatacombLayout.generate(seed, 19, 9, 9, true, true);
+            int open = 0;
+            for (int i = 0; i < 19; i++) {
+                for (int j = 0; j < 19; j++) {
+                    if (layout.open(i, j)) {
+                        open++;
+                    }
+                }
+            }
+            assertTrue("seed " + seed + ": " + open + " of 361 open", open < 361 * 85 / 100 && open > 361 / 3);
+        }
+    }
 }

@@ -79,7 +79,7 @@ public class CatacombBuilder {
 
     /** Half the side of a full catacomb plus its shell and the alignment shift, for planners. */
     public static int footprintRadius() {
-        return CELL * CELLS / 2 + 2;
+        return CELL * CELLS / 2 + 4;
     }
 
     /** @return y of level k's floor. */
