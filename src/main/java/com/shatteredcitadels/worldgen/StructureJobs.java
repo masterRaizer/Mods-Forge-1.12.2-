@@ -109,7 +109,8 @@ public final class StructureJobs extends WorldSavedData {
     public boolean isNear(int chunkX, int chunkZ, int minDistanceChunks) {
         long limit = (long) minDistanceChunks * minDistanceChunks;
         for (Job job : jobs) {
-            if (job.plan instanceof CryptPlan) {
+            // Underground pieces are not structure sites; overlap is still caught by isReserved.
+            if (job.plan instanceof CryptPlan || job.plan instanceof com.shatteredcitadels.worldgen.catacomb.FragmentPlan) {
                 continue;
             }
             StructureBoundingBox box = job.plan.footprint();

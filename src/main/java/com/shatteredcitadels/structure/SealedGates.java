@@ -33,7 +33,15 @@ public final class SealedGates {
         openMatching(world, citadel, clearedFloor, false);
     }
 
-    /** Opens every loaded gate of the structure (boss defeated). */
+    /**
+     * Gates the surface boss's defeat opens: everything above ground. Catacomb gates (negative
+     * floors: levels and the mage's sanctum) keep their own order.
+     */
+    public static boolean opensOnConquest(CitadelInstance.GatePoint gate) {
+        return gate.requiredFloor >= 0;
+    }
+
+    /** Opens every loaded gate of the structure that conquest opens (boss defeated). */
     public static void openAll(World world, CitadelInstance citadel) {
         openMatching(world, citadel, 0, true);
     }
@@ -45,7 +53,6 @@ public final class SealedGates {
         }
         if (citadel.isConquered()) {
             openAll(world, citadel);
-            return;
         }
         for (CitadelInstance.GatePoint gate : new ArrayList<>(citadel.getGates())) {
             FloorData floor = citadel.getFloor(gate.requiredFloor);
@@ -61,7 +68,7 @@ public final class SealedGates {
         }
         List<BlockPos> opened = new ArrayList<>();
         for (CitadelInstance.GatePoint gate : new ArrayList<>(citadel.getGates())) {
-            if (!all && gate.requiredFloor != floor) {
+            if (all ? !opensOnConquest(gate) : gate.requiredFloor != floor) {
                 continue;
             }
             if (!world.isBlockLoaded(gate.pos)) {

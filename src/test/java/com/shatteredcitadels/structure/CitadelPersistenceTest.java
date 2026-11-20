@@ -196,4 +196,21 @@ public class CitadelPersistenceTest {
         c.getFloor(3).setBossDefeated(true);
         assertTrue(c.isConquered());
     }
+
+    /** Beating the surface boss does not hand out the catacombs: they stay sealed and protected until the mage dies. */
+    @Test
+    public void catacombsStayProtectedUntilMageDies() {
+        CitadelInstance c = new CitadelInstance(UUID.randomUUID(), "Test", StructureType.CITADEL, CitadelArchetype.KEEPERS_CITADEL, 0,
+                new BlockPos(0, 64, 0), new StructureBoundingBox(-50, 5, -50, 50, 120, 50));
+        c.addFloor(3, 85, 92, 4, 1, true).setBossDefeated(true);
+        FloorData sanctum = c.addFloor(-10, 20, 34, 5, 0, true).setSideBoss(true);
+        assertTrue(c.isConqueredAt(new BlockPos(0, 70, 0)));
+        org.junit.Assert.assertFalse(c.isConqueredAt(new BlockPos(0, 40, 0)));
+        c.addGate(new BlockPos(1, 40, 1), -2, 0);
+        c.addGate(new BlockPos(1, 70, 1), 2, 0);
+        org.junit.Assert.assertFalse(SealedGates.opensOnConquest(c.getGates().get(0)));
+        assertTrue(SealedGates.opensOnConquest(c.getGates().get(1)));
+        sanctum.setBossDefeated(true);
+        assertTrue(c.isConqueredAt(new BlockPos(0, 40, 0)));
+    }
 }

@@ -183,4 +183,50 @@ public class CatacombBuilderTest {
         assertTrue(rec.isInPart(new BlockPos(0, 62, 0)));
         org.junit.Assert.assertFalse(rec.isInPart(new BlockPos(30, 63, 30)));
     }
+
+    @Test
+    public void spawnersAreReachable() {
+        for (long seed = 20; seed < 26; seed++) {
+            CitadelInstance rec = record();
+            BlockWriter writer = new BlockWriter(new Blueprint());
+            builder(writer, rec, seed).withSanctum().build(0, 0, 54, 3, 0, 0, 64);
+            for (CitadelInstance.SpawnerPoint point : rec.getSpawnerPoints()) {
+                BlockPos p = point.pos;
+                boolean reachable = false;
+                for (net.minecraft.util.EnumFacing d : net.minecraft.util.EnumFacing.HORIZONTALS) {
+                    BlockPos n = p.offset(d);
+                    if (writer.isPlanned(n.getX(), n.getY(), n.getZ()) && !writer.isSolid(n.getX(), n.getY(), n.getZ())) {
+                        reachable = true;
+                    }
+                }
+                assertTrue("seed " + seed + " spawner in rock at " + p, reachable);
+            }
+        }
+    }
+
+    /** Every open block of the levels is enclosed by planned blocks: no hole to raw terrain, caves or water. */
+    @Test
+    public void shellIsClosed() {
+        for (long seed = 30; seed < 34; seed++) {
+            BlockWriter writer = new BlockWriter(new Blueprint());
+            builder(writer, record(), seed).withSanctum().build(0, 0, 54, 3, 0, 0, 64);
+            int levelsTop = 54 + CatacombBuilder.CORRIDOR_HEIGHT + 3;
+            for (int x = -60; x <= 60; x++) {
+                for (int z = -60; z <= 60; z++) {
+                    for (int y = 10; y <= levelsTop; y++) {
+                        if (Math.abs(x) <= 2 && Math.abs(z) <= 2) {
+                            continue; // the entrance shaft continues upwards
+                        }
+                        if (!writer.isPlanned(x, y, z) || writer.isSolid(x, y, z)) {
+                            continue;
+                        }
+                        for (net.minecraft.util.EnumFacing d : net.minecraft.util.EnumFacing.values()) {
+                            assertTrue("seed " + seed + ": open " + x + "," + y + "," + z + " next to raw terrain " + d,
+                                    writer.isPlanned(x + d.getXOffset(), y + d.getYOffset(), z + d.getZOffset()));
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

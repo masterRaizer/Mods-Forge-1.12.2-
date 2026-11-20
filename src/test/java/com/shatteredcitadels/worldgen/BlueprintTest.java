@@ -220,4 +220,42 @@ public class BlueprintTest {
         }
         assertTrue("about 60 % of 40 regions", found >= 15 && found <= 35);
     }
+
+    /** A queued buried fragment must not push surface structures 64 chunks away (it is not a structure site). */
+    @Test
+    public void pendingFragmentsDoNotBlockSurfaceStructures() {
+        StructureJobs jobs = new StructureJobs("test_jobs");
+        jobs.submit(new com.shatteredcitadels.worldgen.catacomb.FragmentPlan(8, 8, 30, 1L, 0));
+        assertFalse(jobs.isNear(3, 3, 64));
+        assertTrue(jobs.isReserved(new StructureBoundingBox(0, 0, 0, 16, 255, 16)));
+    }
+
+    /** Catacombs start below the lowest surface around them (ocean, river, valley). */
+    @Test
+    public void catacombTopFollowsLowestSurface() {
+        // Plains around ~66: twelve blocks below that; never above baseY - 10.
+        assertEquals(54, com.shatteredcitadels.worldgen.catacomb.CatacombSite.topLevelY(70, 0.125F));
+        assertEquals(40, com.shatteredcitadels.worldgen.catacomb.CatacombSite.topLevelY(50, 0.125F));
+        int ocean = com.shatteredcitadels.worldgen.catacomb.CatacombSite.topLevelY(70, -1.0F);
+        assertTrue("under an ocean floor: " + ocean, ocean <= 36);
+        CitadelPlan tower = new CitadelPlan(0, 0, 21, 70, 6, 12, false, CitadelArchetype.KEEPERS_CITADEL, 120, 2, 9L, 0,
+                false, 0, 34);
+        assertEquals(34, tower.cryptLevelY(0));
+        assertEquals(34, ((CitadelPlan) StructurePlans.read(tower.writeToNBT())).cryptLevelY(0));
+        ManorPlan manor = new ManorPlan(0, 0, 70, 5L, 0, 2, 30);
+        assertEquals(30, ((ManorPlan) StructurePlans.read(manor.writeToNBT())).catacombTopY());
+        NBTTagCompound legacy = manor.writeToNBT();
+        legacy.removeTag("catacombTop");
+        assertEquals(ManorBuilder.cellarY(70) - 10, ManorPlan.read(legacy).catacombTopY());
+    }
+
+    /** Buried fragments keep clear of each section's structure site, so castles and manors are not rejected for them. */
+    @Test
+    public void fragmentsAvoidStructureSites() {
+        int[] site = CitadelWorldGenerator.siteCandidate(99L, 5, 5, 36);
+        assertTrue(CitadelWorldGenerator.isNearSiteCandidate(99L, site[0] + 8, site[1] - 8, 36, 12));
+        assertFalse(CitadelWorldGenerator.isNearSiteCandidate(99L, site[0] + 20, site[1], 36, 12)
+                && CitadelWorldGenerator.isNearSiteCandidate(99L, site[0] + 20, site[1] + 20, 36, 12)
+                && CitadelWorldGenerator.isNearSiteCandidate(99L, site[0] - 20, site[1] - 20, 36, 12));
+    }
 }

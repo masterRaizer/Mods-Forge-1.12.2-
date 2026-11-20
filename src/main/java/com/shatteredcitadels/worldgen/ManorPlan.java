@@ -25,12 +25,19 @@ public final class ManorPlan implements StructurePlan {
     public final int dimension;
     /** Catacomb levels under the cellar, 0 = none. */
     public final int catacombLevels;
+    /** Y of the first catacomb level's floor. */
+    private final int catacombTop;
 
     public ManorPlan(int originX, int originZ, int baseY, long seed, int dimension) {
         this(originX, originZ, baseY, seed, dimension, 0);
     }
 
     public ManorPlan(int originX, int originZ, int baseY, long seed, int dimension, int catacombLevels) {
+        this(originX, originZ, baseY, seed, dimension, catacombLevels, ManorBuilder.cellarY(baseY) - 10);
+    }
+
+    public ManorPlan(int originX, int originZ, int baseY, long seed, int dimension, int catacombLevels, int catacombTop) {
+        this.catacombTop = catacombTop;
         this.originX = originX;
         this.originZ = originZ;
         this.baseY = baseY;
@@ -39,9 +46,9 @@ public final class ManorPlan implements StructurePlan {
         this.catacombLevels = catacombLevels;
     }
 
-    /** @return y of the floor of the first catacomb level (ten blocks under the cellar floor). */
+    /** @return y of the floor of the first catacomb level (at least ten blocks under the cellar floor). */
     public int catacombTopY() {
-        return ManorBuilder.cellarY(baseY) - 10;
+        return catacombTop;
     }
 
     /** @return the lowest y the manor reaches, catacombs and sanctum included. */
@@ -91,13 +98,15 @@ public final class ManorPlan implements StructurePlan {
         tag.setInteger("dim", dimension);
         if (catacombLevels > 0) {
             tag.setInteger("catacombs", catacombLevels);
+            tag.setInteger("catacombTop", catacombTop);
         }
         return tag;
     }
 
     public static ManorPlan read(NBTTagCompound tag) {
         return new ManorPlan(tag.getInteger("x"), tag.getInteger("z"), tag.getInteger("y"), tag.getLong("seed"),
-                tag.getInteger("dim"), tag.getInteger("catacombs"));
+                tag.getInteger("dim"), tag.getInteger("catacombs"),
+                tag.hasKey("catacombTop") ? tag.getInteger("catacombTop") : ManorBuilder.cellarY(tag.getInteger("y")) - 10);
     }
 
     @Override

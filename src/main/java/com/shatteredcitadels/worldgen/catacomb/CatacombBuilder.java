@@ -351,7 +351,7 @@ public class CatacombBuilder {
         StructureBoundingBox box = hallBox(hall, yL);
         switch (hall.kind()) {
             case CRYPT:
-                cryptHall(box, level, yL);
+                cryptHall(hall, box, level, yL);
                 break;
             case SPIDER_CAVE:
                 spiderCave(box, level, yL);
@@ -389,7 +389,8 @@ public class CatacombBuilder {
         return w.isSolid(x, y, z);
     }
 
-    private void cryptHall(StructureBoundingBox box, int level, int yL) {
+    private void cryptHall(CatacombLayout.Hall hall, StructureBoundingBox box, int level, int yL) {
+        CatacombLayout layout = layouts.get(Math.min(level, layouts.size() - 1));
         int midX = (box.minX + box.maxX) / 2;
         for (int x = box.minX + 1; x <= box.maxX - 1; x += 3) {
             if (Math.abs(x - midX) <= 1) {
@@ -399,10 +400,12 @@ public class CatacombBuilder {
                 sarcophagus(x, z, yL);
             }
         }
-        // Wall tombs in the two long walls.
+        // Wall tombs in the two long walls, only where a corridor cell lies behind (its wall backs the tomb).
         for (int z = box.minZ + 1; z <= box.maxZ - 1; z += 3) {
+            int cj = Math.floorDiv(z - z0, CELL);
             for (int x : new int[]{box.minX - 1, box.maxX + 1}) {
-                if (solidWall(x, yL + 1, z) && solidWall(x, yL + 3, z)) {
+                int behind = x < box.minX ? hall.ci0 - 1 : hall.ci1 + 1;
+                if (layout.open(behind, cj) && solidWall(x, yL + 1, z) && solidWall(x, yL + 3, z)) {
                     w.set(x, yL + 1, z, cat.bone());
                     w.set(x, yL + 2, z, rand.nextBoolean()
                             ? Blocks.SKULL.getDefaultState().withProperty(BlockSkull.FACING, EnumFacing.UP) : air);
@@ -428,7 +431,23 @@ public class CatacombBuilder {
                 for (int y = yL + CORRIDOR_HEIGHT + 1; y <= top; y++) {
                     w.set(x, y, z, air);
                 }
-                w.set(x, top + 1, z, rand.nextBoolean() ? Blocks.STONE.getDefaultState() : Blocks.COBBLESTONE.getDefaultState());
+                // Rock above every column up to the highest possible raise, so uneven neighbours stay sealed.
+                for (int y = top + 1; y <= yL + CORRIDOR_HEIGHT + 3; y++) {
+                    w.set(x, y, z, rand.nextBoolean() ? Blocks.STONE.getDefaultState() : Blocks.COBBLESTONE.getDefaultState());
+                }
+                // Close the raised part off from the rock around the hall.
+                for (EnumFacing side : EnumFacing.HORIZONTALS) {
+                    int nx = x + side.getXOffset();
+                    int nz = z + side.getZOffset();
+                    if (box.isVecInside(new BlockPos(nx, box.minY, nz))) {
+                        continue;
+                    }
+                    for (int y = yL + CORRIDOR_HEIGHT + 1; y <= yL + CORRIDOR_HEIGHT + 3; y++) {
+                        if (!w.isPlanned(nx, y, nz)) {
+                            w.set(nx, y, nz, cat.wall(rand));
+                        }
+                    }
+                }
                 if (rand.nextInt(4) == 0) {
                     w.set(x, top, z, Blocks.WEB.getDefaultState());
                 }
@@ -598,7 +617,9 @@ public class CatacombBuilder {
                 for (int y = fy + 1; y < surfaceY; y++) {
                     w.set(x, y, z, cat.wall(rand));
                 }
-                w.set(x, surfaceY, z, step == 1 ? cat.floor(rand) : stair(out));
+                if (surfaceY > fy) {
+                    w.set(x, surfaceY, z, step == 1 ? cat.floor(rand) : stair(out));
+                }
             }
         }
         // Sealed doorway: opens when the deepest level is cleared.
@@ -781,12 +802,15 @@ public class CatacombBuilder {
                 }
             }
         }
-        // At least a couple of corridor spawners per level, so every level has waves.
-        for (int i = 0; i < 2 + corridorCells / 60; i++) {
+        // At least a couple of corridor spawners per level, so every level has waves; only in open
+        // corridor cells (filled-in dead ends are solid rock).
+        int wanted = 2 + corridorCells / 60;
+        for (int attempt = 0; attempt < wanted * 30 && wanted > 0; attempt++) {
             int ci = rand.nextInt(layout.cells());
             int cj = rand.nextInt(layout.cells());
-            if (layout.hallAt(ci, cj) == null) {
+            if (layout.open(ci, cj) && layout.hallAt(ci, cj) == null) {
                 spawner(new BlockPos(cellX(ci) + 2, yL + 1, cellZ(cj) + 2), level, RoomTag.UNDERGROUND_LAIR);
+                wanted--;
             }
         }
     }

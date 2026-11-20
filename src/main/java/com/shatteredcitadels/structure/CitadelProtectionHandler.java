@@ -47,7 +47,7 @@ public final class CitadelProtectionHandler {
             return false;
         }
         CitadelInstance citadel = CitadelWorldSavedData.get(world).getCitadelAt(pos);
-        if (citadel == null || citadel.isConquered() || !citadel.isInPart(pos) || citadel.isPlayerPlaced(pos)) {
+        if (citadel == null || citadel.isConqueredAt(pos) || !citadel.isInPart(pos) || citadel.isPlayerPlaced(pos)) {
             return false;
         }
         return !isAlwaysBreakable(world.getBlockState(pos));
@@ -103,7 +103,7 @@ public final class CitadelProtectionHandler {
             return;
         }
         CitadelInstance citadel = CitadelWorldSavedData.get(world).getCitadelAt(event.getPos());
-        if (citadel != null && !citadel.isConquered()) {
+        if (citadel != null && !citadel.isConqueredAt(event.getPos())) {
             citadel.markPlayerPlaced(event.getPos());
             CitadelWorldSavedData.get(world).markDirty();
         }
@@ -127,6 +127,11 @@ public final class CitadelProtectionHandler {
     @SubscribeEvent(priority = EventPriority.HIGH)
     public static void onMobGriefing(EntityMobGriefingEvent event) {
         Entity entity = event.getEntity();
+        // The guardian mage's fireballs must never set its own library alight, conquered or not.
+        if (entity instanceof com.shatteredcitadels.entity.EntityGuardianMage) {
+            event.setResult(Event.Result.DENY);
+            return;
+        }
         if (entity == null || entity.world.isRemote || entity instanceof EntityPlayer) {
             return;
         }

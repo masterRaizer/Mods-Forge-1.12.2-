@@ -25,6 +25,8 @@ import java.util.Random;
 public final class VanillaDungeonReplacer {
 
     private static final long SALT = 0x6A09E667F3BCC909L;
+    /** Chunks kept free around each section's structure site (a castle with its moat and catacombs). */
+    private static final int SITE_CLEARANCE_CHUNKS = 12;
 
     private VanillaDungeonReplacer() {
     }
@@ -45,7 +47,8 @@ public final class VanillaDungeonReplacer {
         ConfigCache.Snapshot config = ConfigCache.get();
         FragmentPlan plan = fragmentAt(world.getSeed(), event.getChunkX(), event.getChunkZ(),
                 config.getFragmentRegionChunks(), config.getFragmentChance(), world.provider.getDimension());
-        if (plan == null) {
+        if (plan == null || CitadelWorldGenerator.isNearSiteCandidate(world.getSeed(), event.getChunkX(), event.getChunkZ(),
+                config.getCastleSectionSize(), SITE_CLEARANCE_CHUNKS)) {
             return;
         }
         StructureBoundingBox f = plan.footprint();

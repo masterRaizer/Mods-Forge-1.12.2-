@@ -134,6 +134,24 @@ public final class CitadelInstance {
         return false;
     }
 
+    /**
+     * Conquest as it applies at {@code pos}: below the ground floor, catacombs whose guardian mage
+     * still lives stay sealed and protected even after the surface boss has fallen.
+     */
+    public boolean isConqueredAt(BlockPos pos) {
+        if (!isConquered()) {
+            return false;
+        }
+        if (pos.getY() < getOrigin().getY() - 1) {
+            for (FloorData floor : floors.values()) {
+                if (floor.isSideBoss() && !floor.isBossDefeated()) {
+                    return false;
+                }
+            }
+        }
+        return true;
+    }
+
     public void addChestPoint(BlockPos pos) {
         chestPoints.add(pos.toImmutable());
     }

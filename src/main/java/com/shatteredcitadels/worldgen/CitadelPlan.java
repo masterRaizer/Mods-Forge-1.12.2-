@@ -44,10 +44,20 @@ public final class CitadelPlan implements StructurePlan {
     public final boolean wings;
     /** Added to every floor index: 1 for the keep of a walled castle (floor 0 is the courtyard). */
     public final int floorOffset;
+    /** Y of the first catacomb level's floor (below the lowest ground around the tower). */
+    public final int catacombTop;
 
     public CitadelPlan(int minX, int minZ, int width, int baseY, int floors, int arenaHeight, boolean sky,
                        CitadelArchetype archetype, int spireTop, int cryptLevels, long buildSeed,
                        int dimension, boolean wings, int floorOffset) {
+        this(minX, minZ, width, baseY, floors, arenaHeight, sky, archetype, spireTop, cryptLevels, buildSeed, dimension,
+                wings, floorOffset, baseY - 10);
+    }
+
+    public CitadelPlan(int minX, int minZ, int width, int baseY, int floors, int arenaHeight, boolean sky,
+                       CitadelArchetype archetype, int spireTop, int cryptLevels, long buildSeed,
+                       int dimension, boolean wings, int floorOffset, int catacombTop) {
+        this.catacombTop = catacombTop;
         this.minX = minX;
         this.minZ = minZ;
         this.width = width;
@@ -85,7 +95,7 @@ public final class CitadelPlan implements StructurePlan {
 
     /** @return Y of the floor of catacomb level {@code level} (0 = shallowest). */
     public int cryptLevelY(int level) {
-        return CatacombBuilder.levelY(baseY - 10, level);
+        return CatacombBuilder.levelY(catacombTop, level);
     }
 
     public boolean hasCatacombs() {
@@ -173,6 +183,7 @@ public final class CitadelPlan implements StructurePlan {
         tag.setString("archetype", archetype.key());
         tag.setInteger("spire", spireTop);
         tag.setInteger("crypt", cryptLevels);
+        tag.setInteger("catacombTop", catacombTop);
         tag.setLong("seed", buildSeed);
         tag.setInteger("dim", dimension);
         tag.setBoolean("wings", wings);
@@ -186,7 +197,7 @@ public final class CitadelPlan implements StructurePlan {
                 tag.getInteger("baseY"), tag.getInteger("floors"), tag.getInteger("arena"), tag.getBoolean("sky"),
                 archetype == null ? CitadelArchetype.KEEPERS_CITADEL : archetype, tag.getInteger("spire"),
                 tag.getInteger("crypt"), tag.getLong("seed"), tag.getInteger("dim"), tag.getBoolean("wings"),
-                tag.getInteger("offset"));
+                tag.getInteger("offset"), tag.hasKey("catacombTop") ? tag.getInteger("catacombTop") : tag.getInteger("baseY") - 10);
     }
 
     @Override

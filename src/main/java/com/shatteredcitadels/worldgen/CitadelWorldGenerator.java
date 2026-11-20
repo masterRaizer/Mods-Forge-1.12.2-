@@ -6,6 +6,7 @@ import com.shatteredcitadels.palette.BlockPalette;
 import com.shatteredcitadels.palette.CitadelArchetype;
 import com.shatteredcitadels.palette.ModPaletteRegistry;
 import com.shatteredcitadels.worldgen.catacomb.CatacombBuilder;
+import com.shatteredcitadels.worldgen.catacomb.CatacombSite;
 import com.shatteredcitadels.structure.CitadelInstance;
 import com.shatteredcitadels.structure.CitadelNameGenerator;
 import com.shatteredcitadels.structure.CitadelWorldSavedData;
@@ -64,8 +65,9 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         Random sectionRandom = sectionRandom(world.getSeed(), sx, sz);
         // Fixed draw order: every chunk of the section derives identical candidates.
         int span = Math.max(1, section - 2 * SECTION_MARGIN - 1);
-        int citadelChunkX = sx * section + SECTION_MARGIN + sectionRandom.nextInt(span);
-        int citadelChunkZ = sz * section + SECTION_MARGIN + sectionRandom.nextInt(span);
+        int[] site = drawSite(sectionRandom, sx, sz, section);
+        int citadelChunkX = site[0];
+        int citadelChunkZ = site[1];
         int cryptChunkX = sx * section + SECTION_MARGIN + sectionRandom.nextInt(span);
         int cryptChunkZ = sz * section + SECTION_MARGIN + sectionRandom.nextInt(span);
         double cryptRoll = sectionRandom.nextDouble();
@@ -127,6 +129,39 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
             }
         }
         return true;
+    }
+
+    /** The first two draws of a section's random: its structure site chunk. */
+    private static int[] drawSite(Random sectionRandom, int sx, int sz, int section) {
+        int span = Math.max(1, section - 2 * SECTION_MARGIN - 1);
+        int x = sx * section + SECTION_MARGIN + sectionRandom.nextInt(span);
+        int z = sz * section + SECTION_MARGIN + sectionRandom.nextInt(span);
+        return new int[]{x, z};
+    }
+
+    /** @return {chunkX, chunkZ} of the structure site of the section holding the chunk. */
+    public static int[] siteCandidate(long worldSeed, int chunkX, int chunkZ, int section) {
+        int sx = Math.floorDiv(chunkX, section);
+        int sz = Math.floorDiv(chunkZ, section);
+        return drawSite(sectionRandom(worldSeed, sx, sz), sx, sz, section);
+    }
+
+    /**
+     * @return true if a structure site (of this section or a neighbouring one) lies within
+     * {@code radius} chunks; buried pieces stay away from there so they never block a castle or manor.
+     */
+    public static boolean isNearSiteCandidate(long worldSeed, int chunkX, int chunkZ, int section, int radius) {
+        int sx = Math.floorDiv(chunkX, section);
+        int sz = Math.floorDiv(chunkZ, section);
+        for (int dx = -1; dx <= 1; dx++) {
+            for (int dz = -1; dz <= 1; dz++) {
+                int[] site = drawSite(sectionRandom(worldSeed, sx + dx, sz + dz), sx + dx, sz + dz, section);
+                if (Math.abs(site[0] - chunkX) <= radius && Math.abs(site[1] - chunkZ) <= radius) {
+                    return true;
+                }
+            }
+        }
+        return false;
     }
 
     static Random sectionRandom(long worldSeed, int sx, int sz) {
@@ -208,8 +243,11 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         }
         int spireTop = sky ? Math.min(BlockWriter.MAX_Y, Math.max(spireTarget, roof + 6)) : roof + 4;
 
-        // Catacomb levels and the sanctum below the deepest must stay above the world floor.
-        while (cryptLevels > 0 && CatacombBuilder.levelY(baseY - 10, cryptLevels - 1) - CatacombBuilder.SANCTUM_DEPTH
+        // Catacombs stay under the lowest ground around them, and above the world floor with the sanctum.
+        int catacombTop = cryptLevels > 0
+                ? CatacombSite.topLevelY(baseY, CatacombSite.minBaseHeight(world, centerX, centerZ, CatacombBuilder.footprintRadius()))
+                : baseY - 10;
+        while (cryptLevels > 0 && CatacombBuilder.levelY(catacombTop, cryptLevels - 1) - CatacombBuilder.SANCTUM_DEPTH
                 < BlockWriter.MIN_Y + 1) {
             cryptLevels--;
         }
@@ -217,7 +255,7 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
                 : sky ? CitadelArchetype.SKY_CITADEL : chooseArchetype(biome, archetypeRoll);
         boolean wings = config.getTowerWingChance() > 0.0D;
         return new CitadelPlan(minX, minZ, width, baseY, floors, arenaHeight, sky, archetype, spireTop,
-                cryptLevels, random.nextLong(), world.provider.getDimension(), wings, floorOffset);
+                cryptLevels, random.nextLong(), world.provider.getDimension(), wings, floorOffset, catacombTop);
     }
 
     /**
