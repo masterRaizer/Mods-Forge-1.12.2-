@@ -100,25 +100,46 @@ public final class ModConfig {
         @Config.Name("minFloors")
         @Config.LangKey("config.shatteredcitadels.castle_generation.minFloors")
         @Config.Comment("Minimum floors of a regular citadel.")
-        @Config.RangeInt(min = 3, max = 7)
+        @Config.RangeInt(min = 2, max = 30)
         public int minFloors = 3;
 
         @Config.Name("maxFloors")
         @Config.LangKey("config.shatteredcitadels.castle_generation.maxFloors")
-        @Config.Comment("Maximum floors of a regular citadel.")
-        @Config.RangeInt(min = 3, max = 7)
-        public int maxFloors = 7;
+        @Config.Comment("Maximum floors of a regular citadel. Citadels are shortened automatically to stay below Y 250.")
+        @Config.RangeInt(min = 2, max = 30)
+        public int maxFloors = 9;
+
+        @Config.Name("towerCitadelChance")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.towerCitadelChance")
+        @Config.Comment({
+                "Chance that a regular citadel becomes a tower citadel that rises towards the build limit",
+                "(towerMinFloors..towerMaxFloors floors, 8 blocks each, roof below Y 250). 0 disables towers."
+        })
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double towerCitadelChance = 0.30D;
+
+        @Config.Name("towerMinFloors")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.towerMinFloors")
+        @Config.Comment("Minimum floors of a tower citadel.")
+        @Config.RangeInt(min = 2, max = 30)
+        public int towerMinFloors = 12;
+
+        @Config.Name("towerMaxFloors")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.towerMaxFloors")
+        @Config.Comment("Maximum floors of a tower citadel; the default 30 means 'as high as the world allows' (about 20-22 floors from sea level).")
+        @Config.RangeInt(min = 2, max = 30)
+        public int towerMaxFloors = 30;
 
         @Config.Name("skyCitadelMinFloors")
         @Config.LangKey("config.shatteredcitadels.castle_generation.skyCitadelMinFloors")
         @Config.Comment("Minimum floors of the Citadel Above the Clouds.")
-        @Config.RangeInt(min = 10, max = 14)
+        @Config.RangeInt(min = 6, max = 30)
         public int skyCitadelMinFloors = 10;
 
         @Config.Name("skyCitadelMaxFloors")
         @Config.LangKey("config.shatteredcitadels.castle_generation.skyCitadelMaxFloors")
         @Config.Comment("Maximum floors of the Citadel Above the Clouds.")
-        @Config.RangeInt(min = 10, max = 14)
+        @Config.RangeInt(min = 6, max = 30)
         public int skyCitadelMaxFloors = 14;
 
         @Config.Name("dimensionWhitelist")

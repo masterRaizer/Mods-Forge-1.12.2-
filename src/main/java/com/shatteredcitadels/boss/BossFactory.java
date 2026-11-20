@@ -139,7 +139,7 @@ public final class BossFactory {
         boss.getEntityData().setInteger(BossTags.PHASE, 1);
 
         ConfigCache.Snapshot config = ConfigCache.get();
-        int floors = Math.max(1, citadel.getSurfaceFloorCount());
+        int floors = Math.max(1, citadel.getSurfaceFloorCount()); // scaling is capped at MAX_SCALING_FLOOR
         boolean uber = citadel.isSkyCitadel();
         // Frostmaw, Pharaoh & co. already have boss-grade stats: only floor scaling applies to them.
         boolean nativeBoss = isNativeBoss(boss);

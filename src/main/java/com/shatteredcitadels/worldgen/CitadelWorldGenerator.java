@@ -121,10 +121,22 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
      */
     public CitadelPlan planCitadel(World world, int minX, int minZ, Random random, Boolean forceSky,
                                    CitadelArchetype forceArchetype, boolean ignoreTerrain) {
+        return planCitadel(world, minX, minZ, random, forceSky, null, forceArchetype, ignoreTerrain);
+    }
+
+    /** @param forceTower null = roll with towerCitadelChance (regular citadels only) */
+    public CitadelPlan planCitadel(World world, int minX, int minZ, Random random, Boolean forceSky, Boolean forceTower,
+                                   CitadelArchetype forceArchetype, boolean ignoreTerrain) {
         ConfigCache.Snapshot config = ConfigCache.get();
         boolean sky = forceSky != null ? forceSky : random.nextDouble() < config.getSkyCitadelChance();
         int width = sky ? 21 + 2 * random.nextInt(2) : 25 + 2 * random.nextInt(3);
         int floors = config.rollFloorCount(random, sky);
+        double towerRoll = random.nextDouble();
+        int towerFloors = config.rollTowerFloorCount(random);
+        boolean tower = !sky && (forceTower != null ? forceTower : towerRoll < config.getTowerCitadelChance());
+        if (tower) {
+            floors = Math.max(floors, towerFloors);
+        }
         int arenaHeight = 12 + random.nextInt(3);
         int spireTarget = 210 + random.nextInt(31);
         boolean crypt = random.nextDouble() < config.getUndergroundUnderCastleChance();
@@ -156,9 +168,7 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
 
         // Shrink until the roof, battlements and corner lights fit below Y 250.
         int minFloors = sky ? config.getSkyCitadelMinFloors() : config.getMinFloors();
-        while (floors > minFloors && baseY + (floors - 1) * CitadelPlan.FLOOR_HEIGHT + arenaHeight + 4 > BlockWriter.MAX_Y) {
-            floors--;
-        }
+        floors = fitFloors(baseY, floors, minFloors, arenaHeight);
         int roof = baseY + (floors - 1) * CitadelPlan.FLOOR_HEIGHT + arenaHeight;
         if (roof + 4 > BlockWriter.MAX_Y) {
             return null;
@@ -173,6 +183,18 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
                 : sky ? CitadelArchetype.SKY_CITADEL : chooseArchetype(biome, archetypeRoll);
         return new CitadelPlan(minX, minZ, width, baseY, floors, arenaHeight, sky, archetype, spireTop,
                 cryptLevels, random.nextLong());
+    }
+
+    /**
+     * @return the floor count shortened (never below {@code minFloors}) so the roof, battlements and
+     * corner lights stay below {@link BlockWriter#MAX_Y}.
+     */
+    static int fitFloors(int baseY, int floors, int minFloors, int arenaHeight) {
+        int fitted = floors;
+        while (fitted > minFloors && baseY + (fitted - 1) * CitadelPlan.FLOOR_HEIGHT + arenaHeight + 4 > BlockWriter.MAX_Y) {
+            fitted--;
+        }
+        return fitted;
     }
 
     /** @return sorted ground heights on a 4-block grid, or null if the site is mostly water. */
@@ -236,7 +258,7 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
     /** Builds the planned citadel (and its crypt) and registers it in the floor tracker. */
     public CitadelInstance buildCitadel(World world, CitadelPlan plan, Random random, StructureBoundingBox clip) {
         CitadelWorldSavedData data = CitadelWorldSavedData.get(world);
-        BlockPalette palette = ModPaletteRegistry.get(plan.archetype);
+        BlockPalette palette = ModPaletteRegistry.forCitadel(plan.archetype, plan.buildSeed);
         BlockWriter writer = new BlockWriter(world, clip);
         Random buildRandom = new Random(plan.buildSeed ^ random.nextLong());
         CitadelInstance record = new CitadelInstance(MathHelper.getRandomUUID(buildRandom),
@@ -277,7 +299,7 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         int levels = 2 + random.nextInt(2);
         CitadelWorldSavedData data = CitadelWorldSavedData.get(world);
         CitadelArchetype archetype = random.nextBoolean() ? CitadelArchetype.KEEPERS_CITADEL : CitadelArchetype.OBSIDIAN_BASTILLE;
-        BlockPalette palette = ModPaletteRegistry.get(archetype);
+        BlockPalette palette = ModPaletteRegistry.forCitadel(archetype, random.nextLong());
         BlockWriter writer = new BlockWriter(world, clip);
         CitadelInstance record = new CitadelInstance(MathHelper.getRandomUUID(random),
                 CitadelNameGenerator.generate("crypt", random), StructureType.CRYPT, archetype,

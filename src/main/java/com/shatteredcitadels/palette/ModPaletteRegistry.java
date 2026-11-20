@@ -7,6 +7,7 @@ import net.minecraft.block.BlockFalling;
 import net.minecraft.block.BlockLiquid;
 import net.minecraft.block.BlockStairs;
 import net.minecraft.block.material.Material;
+import net.minecraft.block.properties.IProperty;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.ResourceLocation;
@@ -16,26 +17,40 @@ import net.minecraftforge.fml.common.registry.ForgeRegistries;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.EnumMap;
+import java.util.LinkedHashMap;
 import java.util.List;
 import java.util.Locale;
 import java.util.Map;
+import java.util.Random;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
 /**
  * Resolves the five archetype palettes against the blocks that are actually registered.
  * Modded blocks are looked up only through {@link ForgeRegistries#BLOCKS}; nothing here
- * references a class of another mod, so a missing mod simply falls through to the next
- * alternative and finally to vanilla 1.12.2 blocks.
+ * references a class of another mod, so a missing mod simply drops its alternatives.
+ *
+ * <p>Every modded alternative of a slot that resolves becomes an <em>option</em>; each citadel
+ * picks one option per slot from its own seed ({@link #forCitadel}), so two citadels of the same
+ * archetype look different and use the blocks of whatever mods are installed. The vanilla
+ * alternative (always last) is used only when no modded alternative of the slot resolves.
+ *
+ * <p>Variant syntax: {@code modid:block}, {@code modid:block@meta},
+ * {@code modid:block[prop=value]}, {@code modid:block[*keyword*]} (every state whose property
+ * values contain the keyword) and the registry scan {@code modid:*keyword*}.
  */
 public final class ModPaletteRegistry {
 
-    private static final Pattern EXACT = Pattern.compile("[a-z0-9_.-]+:[a-z0-9_./-]+(@\\d{1,2})?");
-    private static final Pattern SCAN = Pattern.compile("([a-z0-9_.-]+):\\*([a-z0-9_]+)\\*");
-    /** Variants collected from one registry scan, to keep a coherent look. */
+    static final Pattern EXACT = Pattern.compile("[a-z0-9_.-]+:[a-z0-9_./-]+(@\\d{1,2})?");
+    static final Pattern PROPERTY = Pattern.compile("([a-z0-9_.-]+:[a-z0-9_./-]+)\\[([a-z0-9_]+)=([a-z0-9_]+)]");
+    static final Pattern PROPERTY_SCAN = Pattern.compile("([a-z0-9_.-]+:[a-z0-9_./-]+)\\[\\*([a-z0-9_]+)\\*]");
+    static final Pattern SCAN = Pattern.compile("([a-z0-9_.-]+):\\*([a-z0-9_]+)\\*");
+    /** Variants collected from one scan, to keep a coherent look. */
     private static final int MAX_SCAN_VARIANTS = 3;
+    /** Light blocks must at least stop hostile spawns (light 8+); 10 admits glow plastic. */
+    private static final int MIN_LIGHT = 10;
 
-    private static volatile Map<CitadelArchetype, BlockPalette> palettes = Collections.emptyMap();
+    private static volatile Map<CitadelArchetype, Resolved> resolved = Collections.emptyMap();
     private static volatile boolean initialised;
 
     private ModPaletteRegistry() {
@@ -43,23 +58,41 @@ public final class ModPaletteRegistry {
 
     /** Builds every palette. Call once all mods registered their blocks (load complete). */
     public static synchronized void init() {
-        Map<CitadelArchetype, BlockPalette> built = new EnumMap<>(CitadelArchetype.class);
+        Map<CitadelArchetype, Resolved> built = new EnumMap<>(CitadelArchetype.class);
+        int moddedOptions = 0;
         for (CitadelArchetype archetype : CitadelArchetype.values()) {
-            BlockPalette palette = build(archetype);
+            Resolved palette = build(archetype, true);
             built.put(archetype, palette);
-            ShatteredCitadelsMod.LOGGER.info("Palette {}: {}", archetype.key(), palette.getSources());
+            moddedOptions += palette.moddedOptionCount();
+            ShatteredCitadelsMod.LOGGER.info("Palette {}: {}", archetype.key(), palette.describe());
         }
-        palettes = Collections.unmodifiableMap(built);
+        resolved = Collections.unmodifiableMap(built);
         initialised = true;
+        ShatteredCitadelsMod.LOGGER.info("Palettes resolved: {} modded block options across {} archetypes",
+                moddedOptions, built.size());
     }
 
-    /** @return the resolved palette; built on demand if {@link #init()} has not run. Never null. */
+    /** @return the archetype's default look (first option of every slot). Never null. */
     public static BlockPalette get(CitadelArchetype archetype) {
+        return resolved(archetype).pick(null);
+    }
+
+    /** @return a palette whose per-slot options are rolled from the citadel's own seed. */
+    public static BlockPalette forCitadel(CitadelArchetype archetype, long seed) {
+        return resolved(archetype).pick(new Random(seed ^ 0x5DEECE66DL));
+    }
+
+    /** @return human-readable options of every slot, for {@code /citadel palettes}. */
+    public static String describe(CitadelArchetype archetype) {
+        return resolved(archetype).describe();
+    }
+
+    private static Resolved resolved(CitadelArchetype archetype) {
         if (!initialised) {
             init();
         }
-        BlockPalette palette = palettes.get(archetype);
-        return palette != null ? palette : build(archetype);
+        Resolved palette = resolved.get(archetype);
+        return palette != null ? palette : build(archetype, false);
     }
 
     /**
@@ -78,54 +111,73 @@ public final class ModPaletteRegistry {
 
     // ------------------------------------------------------------------ building
 
-    private static BlockPalette build(CitadelArchetype archetype) {
-        Map<PaletteSlot, List<IBlockState>> slots = new EnumMap<>(PaletteSlot.class);
-        Map<PaletteSlot, String> sources = new EnumMap<>(PaletteSlot.class);
+    private static Resolved build(CitadelArchetype archetype, boolean logRejections) {
+        Map<PaletteSlot, List<Option>> slots = new EnumMap<>(PaletteSlot.class);
         boolean modded = ConfigCache.get().isModdedPalettesEnabled();
         List<String> overrides = ConfigCache.get().getPaletteOverrides();
 
         for (PaletteSlot slot : PaletteSlot.values()) {
-            List<String> candidates = new ArrayList<>();
+            List<String> overrideLines = new ArrayList<>();
             String prefix = archetype.key() + "." + slot.key() + "=";
             for (String line : overrides) {
                 if (line.startsWith(prefix)) {
-                    candidates.add(line.substring(prefix.length()).trim());
+                    overrideLines.add(line.substring(prefix.length()).trim());
                 }
             }
-            String[] builtIn = archetype.getAlternatives(slot);
-            for (int i = 0; i < builtIn.length; i++) {
-                boolean isLast = i == builtIn.length - 1;
-                if (modded || isLast || isVanillaOnly(builtIn[i])) {
-                    candidates.add(builtIn[i]);
-                }
-            }
-
-            List<IBlockState> chosen = null;
-            String source = null;
-            for (String alternative : candidates) {
-                List<IBlockState> states = resolveAlternative(alternative, slot);
+            List<Option> options = new ArrayList<>();
+            // Config overrides win outright: the first one that resolves is the only option.
+            for (String alternative : overrideLines) {
+                List<IBlockState> states = resolveAlternative(alternative, slot, logRejections ? archetype : null);
                 if (!states.isEmpty()) {
-                    chosen = states;
-                    source = alternative;
+                    options.add(new Option(alternative, states, false));
                     break;
                 }
             }
-            if (chosen == null) {
+            if (options.isEmpty()) {
+                String[] builtIn = archetype.getAlternatives(slot);
+                List<Option> vanilla = new ArrayList<>();
+                for (String alternative : builtIn) {
+                    boolean vanillaOnly = isVanillaOnly(alternative);
+                    if (!modded && !vanillaOnly) {
+                        continue;
+                    }
+                    List<IBlockState> states = resolveAlternative(alternative, slot,
+                            logRejections && !vanillaOnly ? archetype : null);
+                    if (states.isEmpty()) {
+                        continue;
+                    }
+                    // A mixed group whose modded variants all failed is a vanilla option in disguise.
+                    boolean hasModdedBlock = containsModdedBlock(states);
+                    (hasModdedBlock ? options : vanilla).add(new Option(alternative, states, hasModdedBlock));
+                }
+                if (options.isEmpty() && !vanilla.isEmpty()) {
+                    options.add(vanilla.get(vanilla.size() - 1));
+                }
+            }
+            if (options.isEmpty()) {
                 ShatteredCitadelsMod.LOGGER.error("Palette {}.{} has no valid block, using stone bricks",
                         archetype.key(), slot.key());
-                chosen = Collections.singletonList(slot == PaletteSlot.STAIRS
-                        ? Blocks.STONE_BRICK_STAIRS.getDefaultState()
+                IBlockState safety = slot == PaletteSlot.STAIRS ? Blocks.STONE_BRICK_STAIRS.getDefaultState()
                         : slot == PaletteSlot.LIGHT ? Blocks.GLOWSTONE.getDefaultState()
-                        : Blocks.STONEBRICK.getDefaultState());
-                source = "built-in safety fallback";
+                        : Blocks.STONEBRICK.getDefaultState();
+                options.add(new Option("built-in safety fallback", Collections.singletonList(safety), false));
             }
-            slots.put(slot, Collections.unmodifiableList(chosen));
-            sources.put(slot, source);
+            slots.put(slot, Collections.unmodifiableList(options));
         }
-        return new BlockPalette(archetype, slots, sources);
+        return new Resolved(archetype, slots);
     }
 
-    private static boolean isVanillaOnly(String alternative) {
+    private static boolean containsModdedBlock(List<IBlockState> states) {
+        for (IBlockState state : states) {
+            ResourceLocation id = state.getBlock().getRegistryName();
+            if (id != null && !"minecraft".equals(id.getNamespace())) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    static boolean isVanillaOnly(String alternative) {
         for (String variant : alternative.split("\\|")) {
             if (!variant.trim().startsWith("minecraft:")) {
                 return false;
@@ -135,7 +187,7 @@ public final class ModPaletteRegistry {
     }
 
     /** @return valid states of every variant in the group, in order; empty if none is valid. */
-    private static List<IBlockState> resolveAlternative(String alternative, PaletteSlot slot) {
+    private static List<IBlockState> resolveAlternative(String alternative, PaletteSlot slot, CitadelArchetype logFor) {
         List<IBlockState> states = new ArrayList<>();
         for (String raw : alternative.split("\\|")) {
             String variant = raw.trim().toLowerCase(Locale.ROOT);
@@ -144,15 +196,67 @@ public final class ModPaletteRegistry {
             }
             Matcher scan = SCAN.matcher(variant);
             if (scan.matches()) {
-                states.addAll(scanRegistry(scan.group(1), scan.group(2), slot));
+                List<IBlockState> found = scanRegistry(scan.group(1), scan.group(2), slot);
+                if (found.isEmpty()) {
+                    reject(logFor, slot, variant, "no registered block matches");
+                }
+                states.addAll(found);
                 continue;
             }
-            IBlockState state = parseExact(variant);
-            if (state != null && isValidFor(slot, state)) {
-                states.add(state);
+            Matcher property = PROPERTY.matcher(variant);
+            Matcher propertyScan = PROPERTY_SCAN.matcher(variant);
+            List<IBlockState> candidates;
+            if (property.matches()) {
+                candidates = statesWithProperty(property.group(1), property.group(2), property.group(3));
+            } else if (propertyScan.matches()) {
+                candidates = statesWithValueContaining(propertyScan.group(1), propertyScan.group(2));
+            } else {
+                IBlockState exact = parseExact(variant);
+                candidates = exact == null ? Collections.<IBlockState>emptyList() : Collections.singletonList(exact);
+            }
+            if (candidates.isEmpty()) {
+                reject(logFor, slot, variant, "not registered (mod missing, block disabled in its config or wrong name)");
+                continue;
+            }
+            boolean any = false;
+            for (IBlockState state : candidates) {
+                if (isValidFor(slot, state)) {
+                    states.add(state);
+                    any = true;
+                    if (candidates.size() > 1 && states.size() >= MAX_SCAN_VARIANTS) {
+                        break;
+                    }
+                }
+            }
+            if (!any) {
+                reject(logFor, slot, variant, "unsuitable for slot: " + describeShape(candidates.get(0)));
             }
         }
         return states;
+    }
+
+    private static void reject(CitadelArchetype archetype, PaletteSlot slot, String variant, String reason) {
+        if (archetype != null) {
+            ShatteredCitadelsMod.LOGGER.info("Palette {}.{}: skipped {} - {}", archetype.key(), slot.key(), variant, reason);
+        }
+    }
+
+    @SuppressWarnings("deprecation")
+    private static String describeShape(IBlockState state) {
+        Block block = state.getBlock();
+        return "fullCube=" + state.isFullCube() + ", opaque=" + state.isOpaqueCube()
+                + ", tileEntity=" + block.hasTileEntity(state) + ", light=" + state.getLightValue()
+                + ", material=" + (state.getMaterial() == Material.GLASS ? "glass" : state.getMaterial().isSolid() ? "solid" : "other");
+    }
+
+    private static Block registered(String name) {
+        ResourceLocation id = new ResourceLocation(name);
+        // BLOCKS has air as its default value: containsKey is the only reliable existence check.
+        if (!ForgeRegistries.BLOCKS.containsKey(id)) {
+            return null;
+        }
+        Block block = ForgeRegistries.BLOCKS.getValue(id);
+        return block == null || block == Blocks.AIR ? null : block;
     }
 
     @SuppressWarnings("deprecation")
@@ -174,13 +278,8 @@ public final class ModPaletteRegistry {
                 return null;
             }
         }
-        ResourceLocation id = new ResourceLocation(name);
-        // BLOCKS has air as its default value: containsKey is the only reliable existence check.
-        if (!ForgeRegistries.BLOCKS.containsKey(id)) {
-            return null;
-        }
-        Block block = ForgeRegistries.BLOCKS.getValue(id);
-        if (block == null || block == Blocks.AIR) {
+        Block block = registered(name);
+        if (block == null) {
             return null;
         }
         try {
@@ -189,6 +288,57 @@ public final class ModPaletteRegistry {
             // Some modded blocks throw for unused metadata values.
             return null;
         }
+    }
+
+    /** @return the state of {@code name} whose property {@code key} has the value {@code value}. */
+    private static List<IBlockState> statesWithProperty(String name, String key, String value) {
+        Block block = registered(name);
+        if (block == null) {
+            return Collections.emptyList();
+        }
+        for (IBlockState state : block.getBlockState().getValidStates()) {
+            for (Map.Entry<IProperty<?>, Comparable<?>> entry : state.getProperties().entrySet()) {
+                if (entry.getKey().getName().equals(key) && value.equals(valueName(entry.getKey(), entry.getValue()))) {
+                    return Collections.singletonList(withDefaultsFor(block, key, state));
+                }
+            }
+        }
+        return Collections.emptyList();
+    }
+
+    /** @return distinct states of {@code name} that have a property value containing {@code keyword}. */
+    private static List<IBlockState> statesWithValueContaining(String name, String keyword) {
+        Block block = registered(name);
+        if (block == null) {
+            return Collections.emptyList();
+        }
+        Map<String, IBlockState> found = new LinkedHashMap<>();
+        for (IBlockState state : block.getBlockState().getValidStates()) {
+            for (Map.Entry<IProperty<?>, Comparable<?>> entry : state.getProperties().entrySet()) {
+                String value = valueName(entry.getKey(), entry.getValue());
+                if (value.contains(keyword) && !found.containsKey(entry.getKey().getName() + "=" + value)) {
+                    found.put(entry.getKey().getName() + "=" + value, withDefaultsFor(block, entry.getKey().getName(), state));
+                }
+            }
+        }
+        return new ArrayList<>(found.values());
+    }
+
+    /** Keeps only the selected property from {@code state}; every other property stays at its default. */
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static IBlockState withDefaultsFor(Block block, String key, IBlockState state) {
+        IBlockState result = block.getDefaultState();
+        for (Map.Entry<IProperty<?>, Comparable<?>> entry : state.getProperties().entrySet()) {
+            if (entry.getKey().getName().equals(key)) {
+                result = result.withProperty((IProperty) entry.getKey(), (Comparable) entry.getValue());
+            }
+        }
+        return result;
+    }
+
+    @SuppressWarnings({"unchecked", "rawtypes"})
+    private static String valueName(IProperty property, Comparable value) {
+        return property.getName(value).toLowerCase(Locale.ROOT);
     }
 
     private static List<IBlockState> scanRegistry(String modid, String keyword, PaletteSlot slot) {
@@ -231,18 +381,87 @@ public final class ModPaletteRegistry {
             case WALL:
             case PILLAR:
             case FLOOR:
-                return state.isFullCube() && state.isOpaqueCube() && !block.hasTileEntity(state);
+                // Some modded masonry (connected-texture blocks) reports isOpaqueCube() == false;
+                // a solid full cube without a tile entity is good enough for structure blocks.
+                return state.isFullCube() && material.isSolid() && material != Material.GLASS && !block.hasTileEntity(state);
             case ACCENT:
                 // Glass blocks report isFullCube() == false but fill the whole block space.
                 return (state.isFullCube() || material == Material.GLASS) && !block.hasTileEntity(state);
             case STAIRS:
                 return block instanceof BlockStairs;
             case LIGHT:
-                return state.isFullCube() && state.getLightValue() >= 12 && !block.hasTileEntity(state);
+                return (state.isFullCube() || material == Material.GLASS) && state.getLightValue() >= MIN_LIGHT
+                        && !block.hasTileEntity(state);
             case FURNITURE:
                 return material.isSolid() || material == Material.WOOD || material == Material.IRON;
             default:
                 return false;
+        }
+    }
+
+    // ------------------------------------------------------------------ resolved data
+
+    /** One resolved alternative: a coherent group of block variants for a slot. */
+    private static final class Option {
+        final String source;
+        final List<IBlockState> states;
+        final boolean modded;
+
+        Option(String source, List<IBlockState> states, boolean modded) {
+            this.source = source;
+            this.states = Collections.unmodifiableList(new ArrayList<>(states));
+            this.modded = modded;
+        }
+    }
+
+    /** Every option of every slot of one archetype. */
+    private static final class Resolved {
+        final CitadelArchetype archetype;
+        final Map<PaletteSlot, List<Option>> slots;
+
+        Resolved(CitadelArchetype archetype, Map<PaletteSlot, List<Option>> slots) {
+            this.archetype = archetype;
+            this.slots = slots;
+        }
+
+        BlockPalette pick(Random random) {
+            Map<PaletteSlot, List<IBlockState>> states = new EnumMap<>(PaletteSlot.class);
+            Map<PaletteSlot, String> sources = new EnumMap<>(PaletteSlot.class);
+            for (PaletteSlot slot : PaletteSlot.values()) {
+                List<Option> options = slots.get(slot);
+                Option option = random == null || options.size() == 1 ? options.get(0)
+                        : options.get(random.nextInt(options.size()));
+                states.put(slot, option.states);
+                sources.put(slot, option.source);
+            }
+            return new BlockPalette(archetype, states, sources);
+        }
+
+        int moddedOptionCount() {
+            int count = 0;
+            for (List<Option> options : slots.values()) {
+                for (Option option : options) {
+                    if (option.modded) {
+                        count++;
+                    }
+                }
+            }
+            return count;
+        }
+
+        String describe() {
+            StringBuilder out = new StringBuilder();
+            for (PaletteSlot slot : PaletteSlot.values()) {
+                List<Option> options = slots.get(slot);
+                if (out.length() > 0) {
+                    out.append("; ");
+                }
+                out.append(slot.key()).append('[').append(options.size()).append("]=");
+                for (int i = 0; i < options.size(); i++) {
+                    out.append(i == 0 ? "" : " / ").append(options.get(i).source);
+                }
+            }
+            return out.toString();
         }
     }
 }

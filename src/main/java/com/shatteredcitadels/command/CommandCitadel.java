@@ -115,11 +115,12 @@ public final class CommandCitadel extends CommandBase {
             created = CommonProxy.WORLD_GENERATOR.buildStandaloneCrypt(world, minX, minZ, random, clip, true);
         } else {
             boolean sky = "sky".equals(kind) || "sky_citadel".equals(kind);
+            boolean tower = "tower".equals(kind);
             CitadelArchetype archetype = sky ? CitadelArchetype.SKY_CITADEL : CitadelArchetype.byKey(kind);
-            if (archetype == null) {
+            if (archetype == null && !tower) {
                 throw new CommandException("Unknown type '" + kind + "'. Use: " + String.join(", ", kinds()));
             }
-            CitadelPlan plan = CommonProxy.WORLD_GENERATOR.planCitadel(world, minX, minZ, random, sky, archetype, true);
+            CitadelPlan plan = CommonProxy.WORLD_GENERATOR.planCitadel(world, minX, minZ, random, sky, tower ? Boolean.TRUE : null, archetype, true);
             if (plan == null) {
                 throw new CommandException("No room below the build limit here");
             }
@@ -279,6 +280,7 @@ public final class CommandCitadel extends CommandBase {
             kinds.add(archetype.key());
         }
         kinds.add("sky");
+        kinds.add("tower");
         kinds.add("dungeon");
         return kinds;
     }

@@ -27,6 +27,12 @@ public final class ConfigCache {
     private static final Pattern ENTITY_ID = Pattern.compile("[a-z0-9_.-]+:[a-z0-9_./-]+");
     private static final Pattern MOD_WILDCARD = Pattern.compile("[a-z0-9_.-]+:\\*");
 
+    /**
+     * Floors beyond this no longer raise mob and boss stats, so 20-floor towers stay as hard as the
+     * 14-floor Citadel Above the Clouds instead of growing ten-fold.
+     */
+    public static final int MAX_SCALING_FLOOR = 14;
+
     /** Upper bound for compounding multipliers, keeps attribute maths finite. */
     private static final double MAX_SCALING = 10_000.0D;
 
@@ -63,11 +69,16 @@ public final class ConfigCache {
         next.skyCitadelChance = clamp01(gen.skyCitadelChance);
         next.undergroundUnderCastleChance = clamp01(gen.undergroundUnderCastleChance);
         next.standaloneUndergroundDungeonChance = clamp01(gen.standaloneUndergroundDungeonChance);
-        int[] floors = orderedRange("castle_generation.minFloors/maxFloors", gen.minFloors, gen.maxFloors, 3, 7);
+        int[] floors = orderedRange("castle_generation.minFloors/maxFloors", gen.minFloors, gen.maxFloors, 2, 30);
         next.minFloors = floors[0];
         next.maxFloors = floors[1];
+        next.towerCitadelChance = clamp01(gen.towerCitadelChance);
+        int[] towerFloors = orderedRange("castle_generation.towerMinFloors/towerMaxFloors",
+                gen.towerMinFloors, gen.towerMaxFloors, 2, 30);
+        next.towerMinFloors = towerFloors[0];
+        next.towerMaxFloors = towerFloors[1];
         int[] skyFloors = orderedRange("castle_generation.skyCitadelMinFloors/skyCitadelMaxFloors",
-                gen.skyCitadelMinFloors, gen.skyCitadelMaxFloors, 10, 14);
+                gen.skyCitadelMinFloors, gen.skyCitadelMaxFloors, 6, 30);
         next.skyCitadelMinFloors = skyFloors[0];
         next.skyCitadelMaxFloors = skyFloors[1];
         Set<Integer> dims = new LinkedHashSet<>();
@@ -325,6 +336,9 @@ public final class ConfigCache {
         int maxFloors = 7;
         int skyCitadelMinFloors = 10;
         int skyCitadelMaxFloors = 14;
+        double towerCitadelChance = 0.30D;
+        int towerMinFloors = 12;
+        int towerMaxFloors = 30;
         Set<Integer> dimensionWhitelist = Collections.singleton(0);
 
         int wavesPerFloorMin = 2;
@@ -382,6 +396,9 @@ public final class ConfigCache {
             c.maxFloors = maxFloors;
             c.skyCitadelMinFloors = skyCitadelMinFloors;
             c.skyCitadelMaxFloors = skyCitadelMaxFloors;
+            c.towerCitadelChance = towerCitadelChance;
+            c.towerMinFloors = towerMinFloors;
+            c.towerMaxFloors = towerMaxFloors;
             c.dimensionWhitelist = dimensionWhitelist;
             c.wavesPerFloorMin = wavesPerFloorMin;
             c.wavesPerFloorMax = wavesPerFloorMax;
@@ -433,6 +450,14 @@ public final class ConfigCache {
         public int getMaxFloors() { return maxFloors; }
         public int getSkyCitadelMinFloors() { return skyCitadelMinFloors; }
         public int getSkyCitadelMaxFloors() { return skyCitadelMaxFloors; }
+        public double getTowerCitadelChance() { return towerCitadelChance; }
+        public int getTowerMinFloors() { return towerMinFloors; }
+        public int getTowerMaxFloors() { return towerMaxFloors; }
+
+        /** @return a tower floor count within the configured inclusive range (before the height cap). */
+        public int rollTowerFloorCount(Random random) {
+            return towerMinFloors + random.nextInt(towerMaxFloors - towerMinFloors + 1);
+        }
         public Set<Integer> getDimensionWhitelist() { return dimensionWhitelist; }
 
         public boolean isDimensionAllowed(int dimension) {
@@ -455,12 +480,16 @@ public final class ConfigCache {
 
         /** @param depth floor index for surface floors, |index| for crypt levels */
         public double waveMobHealthScale(int depth) {
-            return Math.min(MAX_SCALING, Math.pow(waveMobHealthMultiplierPerFloor, Math.max(0, depth)));
+            return Math.min(MAX_SCALING, Math.pow(waveMobHealthMultiplierPerFloor, scalingDepth(depth)));
         }
 
         public double waveMobDamageScale(int depth) {
-            return Math.min(MAX_SCALING, Math.pow(waveMobDamageMultiplierPerFloor, Math.max(0, depth)));
+            return Math.min(MAX_SCALING, Math.pow(waveMobDamageMultiplierPerFloor, scalingDepth(depth)));
         }
+        private int scalingDepth(int depth) {
+            return Math.max(0, Math.min(depth, MAX_SCALING_FLOOR));
+        }
+
         public boolean isAutoModMobScannerEnabled() { return enableAutoModMobScanner; }
         public Map<ResourceLocation, Integer> getManualMobTierOverrides() { return manualMobTierOverrides; }
 
@@ -521,7 +550,7 @@ public final class ConfigCache {
         }
 
         private double scale(double perFloor, int floor, boolean skyCitadelFinalBoss) {
-            int exponent = Math.max(0, floor - 1);
+            int exponent = Math.max(0, Math.min(floor, MAX_SCALING_FLOOR) - 1);
             double value = Math.pow(perFloor, exponent);
             if (skyCitadelFinalBoss) {
                 value *= skyCitadelBossMultiplier;
