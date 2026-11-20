@@ -40,7 +40,7 @@ public class LootTableItemsTest {
 
     @Test
     public void allChestLootTablesUseValidItems() throws IOException {
-        check("chests", 9);
+        check("chests", 12);
     }
 
     @Test

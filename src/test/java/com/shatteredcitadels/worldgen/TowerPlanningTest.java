@@ -4,6 +4,8 @@ import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.config.ModConfig;
 import org.junit.After;
 import org.junit.Test;
+import com.shatteredcitadels.palette.CitadelArchetype;
+import net.minecraft.world.gen.structure.StructureBoundingBox;
 
 import java.util.Random;
 
@@ -54,5 +56,20 @@ public class TowerPlanningTest {
         assertEquals(s.bossHealthScale(ConfigCache.MAX_SCALING_FLOOR, false), s.bossHealthScale(22, false), 1e-9);
         assertEquals(s.waveMobHealthScale(ConfigCache.MAX_SCALING_FLOOR), s.waveMobHealthScale(21), 1e-9);
         assertTrue(s.bossHealthScale(ConfigCache.MAX_SCALING_FLOOR, false) > s.bossHealthScale(7, false));
+    }
+
+    @Test
+    public void footprintsOfNeighbouringCatacombsDoNotIntersect() {
+        CitadelPlan a = new CitadelPlan(0, 0, 21, 70, 6, 12, false, CitadelArchetype.KEEPERS_CITADEL, 120, 3, 1L, 0, false, 0);
+        CitadelPlan far = new CitadelPlan(112, 0, 21, 70, 6, 12, false, CitadelArchetype.KEEPERS_CITADEL, 120, 3, 2L, 0, false, 0);
+        CitadelPlan near = new CitadelPlan(80, 0, 21, 70, 6, 12, false, CitadelArchetype.KEEPERS_CITADEL, 120, 3, 3L, 0, false, 0);
+        StructureBoundingBox fa = a.footprint();
+        int r = com.shatteredcitadels.worldgen.catacomb.CatacombBuilder.footprintRadius();
+        assertTrue(fa.minX <= a.centerX() - r && fa.maxX >= a.centerX() + r);
+        assertTrue(fa.minY <= a.baseY - 10 - 2 * 10);
+        org.junit.Assert.assertFalse(fa.intersectsWith(far.footprint()));
+        assertTrue(fa.intersectsWith(near.footprint()));
+        CitadelPlan plain = new CitadelPlan(0, 0, 21, 70, 6, 12, false, CitadelArchetype.KEEPERS_CITADEL, 120, 0, 1L, 0, false, 0);
+        assertEquals(20, plain.footprint().maxX - plain.footprint().minX);
     }
 }

@@ -75,6 +75,22 @@ public final class ModPaletteRegistry {
                 moddedOptions, built.size());
     }
 
+    /**
+     * Builds every palette without logging skipped variants and without asking the mod loader;
+     * for headless use (unit tests) where mods are not loaded.
+     */
+    public static synchronized void initWithoutLogging() {
+        if (initialised) {
+            return;
+        }
+        Map<CitadelArchetype, Resolved> built = new EnumMap<>(CitadelArchetype.class);
+        for (CitadelArchetype archetype : CitadelArchetype.values()) {
+            built.put(archetype, build(archetype, false));
+        }
+        resolved = Collections.unmodifiableMap(built);
+        initialised = true;
+    }
+
     /** @return the archetype's default look (first option of every slot). Never null. */
     public static BlockPalette get(CitadelArchetype archetype) {
         return resolved(archetype).pick(null);

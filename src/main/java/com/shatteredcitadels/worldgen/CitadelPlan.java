@@ -4,6 +4,7 @@ import com.shatteredcitadels.palette.BlockPalette;
 import com.shatteredcitadels.palette.CitadelArchetype;
 import com.shatteredcitadels.palette.ModPaletteRegistry;
 import com.shatteredcitadels.structure.CitadelInstance;
+import com.shatteredcitadels.worldgen.catacomb.CatacombBuilder;
 import com.shatteredcitadels.structure.CitadelNameGenerator;
 import com.shatteredcitadels.structure.StructureType;
 import net.minecraft.nbt.NBTTagCompound;
@@ -36,7 +37,7 @@ public final class CitadelPlan implements StructurePlan {
     public final CitadelArchetype archetype;
     /** Highest Y the spire reaches (Citadel Above the Clouds), or roof + battlements. */
     public final int spireTop;
-    /** Number of crypt levels below the citadel, 0 = none. */
+    /** Number of catacomb levels below the citadel, 0 = none (NBT key "crypt" for old saves). */
     public final int cryptLevels;
     public final long buildSeed;
     public final int dimension;
@@ -83,19 +84,36 @@ public final class CitadelPlan implements StructurePlan {
         return floorY(topFloorIndex()) + arenaHeight;
     }
 
-    /** @return Y of the floor of crypt level {@code level} (0 = shallowest). */
+    /** @return Y of the floor of catacomb level {@code level} (0 = shallowest). */
     public int cryptLevelY(int level) {
-        return baseY - 10 - level * CRYPT_LEVEL_HEIGHT;
+        return CatacombBuilder.levelY(baseY - 10, level);
+    }
+
+    public boolean hasCatacombs() {
+        return cryptLevels > 0 && !sky;
     }
 
     public int lowestY() {
-        return cryptLevels > 0 ? cryptLevelY(cryptLevels - 1) : baseY - 1 - CitadelBuilder.FOUNDATION_MAX_DEPTH;
+        return hasCatacombs() ? cryptLevelY(cryptLevels - 1) - CatacombBuilder.SANCTUM_DEPTH - 1
+                : baseY - 1 - CitadelBuilder.FOUNDATION_MAX_DEPTH;
     }
 
-    /** @return the tower itself (without wings). */
-    public StructureBoundingBox totalBounds() {
-        return new StructureBoundingBox(minX, Math.max(BlockWriter.MIN_Y, lowestY()), minZ,
+    /** @return the tower itself (without wings or catacombs): the protected part of the tower. */
+    public StructureBoundingBox towerBounds() {
+        return new StructureBoundingBox(minX, Math.max(BlockWriter.MIN_Y, baseY - 1 - CitadelBuilder.FOUNDATION_MAX_DEPTH), minZ,
                 maxX(), Math.min(BlockWriter.MAX_Y, Math.max(spireTop, roofY() + 3)), maxZ());
+    }
+
+    /** @return the tower plus the catacombs under it (without wings). */
+    public StructureBoundingBox totalBounds() {
+        StructureBoundingBox box = towerBounds();
+        if (hasCatacombs()) {
+            int r = CatacombBuilder.footprintRadius();
+            box = new StructureBoundingBox(Math.min(box.minX, centerX() - r), Math.max(BlockWriter.MIN_Y, lowestY()),
+                    Math.min(box.minZ, centerZ() - r), Math.max(box.maxX, centerX() + r), box.maxY,
+                    Math.max(box.maxZ, centerZ() + r));
+        }
+        return box;
     }
 
     // ------------------------------------------------------------------ StructurePlan
@@ -135,12 +153,10 @@ public final class CitadelPlan implements StructurePlan {
     void buildInto(BlockWriter writer, CitadelInstance record, Random random) {
         BlockPalette palette = ModPaletteRegistry.forCitadel(archetype, buildSeed);
         new CitadelBuilder(writer, this, palette, random, record).build();
-        if (cryptLevels > 0) {
-            int tier = sky ? 3 : 2;
-            new DungeonCryptBuilder(writer, palette, random, record, minX, minZ, width, tier)
-                    .sealEntrance(floorOffset)
-                    .build(cryptLevelY(0), cryptLevels, CitadelBuilder.shaftX(this), CitadelBuilder.shaftZ(this),
-                            floorY(0));
+        if (hasCatacombs()) {
+            new CatacombBuilder(writer, record, palette, random, 2).withSanctum()
+                    .build(centerX(), centerZ(), cryptLevelY(0), cryptLevels, CitadelBuilder.shaftX(this),
+                            CitadelBuilder.shaftZ(this), floorY(0));
         }
     }
 

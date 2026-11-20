@@ -139,7 +139,7 @@ public final class CitadelBuilder {
     }
 
     public void build() {
-        rec.addPart(p.totalBounds());
+        rec.addPart(p.towerBounds());
         buildFoundation();
         for (int f = 0; f < p.floors; f++) {
             buildShell(f);
@@ -152,7 +152,7 @@ public final class CitadelBuilder {
             buildStairs(f);
         }
         buildEntrance();
-        if (p.cryptLevels > 0) {
+        if (p.hasCatacombs()) {
             cutCryptHatch();
         }
         if (p.wings) {
@@ -403,15 +403,14 @@ public final class CitadelBuilder {
         int sx = shaftX(p);
         int sz = shaftZ(p);
         int y0 = p.floorY(0);
-        // Rim around the hatch; the ladder shaft itself is built by DungeonCryptBuilder.
-        for (int x = sx - 1; x <= sx + 1; x++) {
-            for (int z = sz - 1; z <= sz + 1; z++) {
-                if (x != sx || z != sz) {
+        // Rim around the stairwell; the spiral itself (3x3 well around a core) is built by CatacombBuilder.
+        for (int x = sx - 2; x <= sx + 2; x++) {
+            for (int z = sz - 2; z <= sz + 2; z++) {
+                if (Math.abs(x - sx) == 2 || Math.abs(z - sz) == 2) {
                     w.set(x, y0, z, pal.get(PaletteSlot.ACCENT, rand));
                 }
             }
         }
-        w.set(sx, y0, sz, air);
         reserve(0, sx - 2, sz - 2, sx + 2, sz + 2);
     }
 

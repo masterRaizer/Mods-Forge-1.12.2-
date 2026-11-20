@@ -1,7 +1,5 @@
 package com.shatteredcitadels.worldgen;
 
-import com.shatteredcitadels.block.BlockSealedGate;
-import com.shatteredcitadels.block.ModBlocks;
 import com.shatteredcitadels.palette.CitadelArchetype;
 import com.shatteredcitadels.palette.ModPaletteRegistry;
 import com.shatteredcitadels.structure.CitadelInstance;
@@ -31,9 +29,7 @@ public class CatacombBuilderTest {
     @BeforeClass
     public static void bootstrap() {
         Bootstrap.register();
-        if (ModBlocks.SEALED_GATE == null) {
-            ModBlocks.SEALED_GATE = new BlockSealedGate();
-        }
+        TestBlocks.install();
     }
 
     static CitadelInstance record() {
@@ -102,5 +98,79 @@ public class CatacombBuilderTest {
         assertTrue(required.contains(-1));
         assertTrue(required.contains(-2));
         assertTrue(!required.contains(-3));
+    }
+
+    @Test
+    public void sanctumRegisteredAsSideBoss() {
+        CitadelInstance rec = record();
+        BlockWriter writer = new BlockWriter(new Blueprint());
+        assertEquals(3, builder(writer, rec, 5L).withSanctum().build(0, 0, 54, 3, 0, 0, 64));
+        com.shatteredcitadels.structure.FloorData sanctum = rec.getFloor(-10);
+        assertNotNull(sanctum);
+        assertTrue(sanctum.isBossFloor() && sanctum.isSideBoss());
+        assertTrue(sanctum.hasArea());
+        assertEquals("mage_sanctum", sanctum.getZoneKey());
+        assertEquals(-3, sanctum.getRequiresFloor());
+        CitadelWorldGenerator.openUnguardedFloors(writer, rec);
+        org.junit.Assert.assertFalse(rec.getFloor(-10).isCleared());
+        int pedestalGates = 0;
+        for (CitadelInstance.GatePoint gate : rec.getGates()) {
+            if (gate.requiredFloor == -10) {
+                pedestalGates++;
+            }
+        }
+        assertTrue("pedestal gates " + pedestalGates, pedestalGates >= 4 * 5);
+    }
+
+    /** The sanctum digs below the deepest level, so a level that leaves no room for it is dropped. */
+    @Test
+    public void sanctumDepthLimitsLevels() {
+        CitadelInstance rec = record();
+        assertEquals(1, builder(new BlockWriter(new Blueprint()), rec, 6L).withSanctum().build(0, 0, 20, 3, 0, 0, 40));
+        assertNotNull(rec.getFloor(-10));
+        assertEquals(-1, rec.getFloor(-10).getRequiresFloor());
+    }
+
+    @Test
+    public void hallsHaveContent() {
+        int spiderCaves = 0;
+        int skeletonHalls = 0;
+        for (long seed = 10; seed < 16; seed++) {
+            BlockWriter writer = new BlockWriter(new Blueprint());
+            CatacombBuilder b = builder(writer, record(), seed);
+            b.build(0, 0, 54, 2, 0, 0, 64);
+            for (int k = 0; k < b.layouts().size(); k++) {
+                for (com.shatteredcitadels.worldgen.catacomb.CatacombLayout.Hall hall : b.layouts().get(k).halls()) {
+                    StructureBoundingBox box = b.hallBox(hall, CatacombBuilder.levelY(54, k));
+                    switch (hall.kind()) {
+                        case SPIDER_CAVE:
+                            spiderCaves++;
+                            assertTrue("webs in spider cave", count(writer, box, net.minecraft.init.Blocks.WEB) >= 1);
+                            break;
+                        case SKELETON_HALL:
+                            skeletonHalls++;
+                            assertTrue("bones in skeleton hall", count(writer, box, net.minecraft.init.Blocks.BONE_BLOCK) >= 1);
+                            break;
+                        default:
+                            break;
+                    }
+                }
+            }
+        }
+        assertTrue(spiderCaves > 0 && skeletonHalls > 0);
+    }
+
+    private static int count(BlockWriter writer, StructureBoundingBox box, net.minecraft.block.Block block) {
+        int n = 0;
+        for (int x = box.minX - 1; x <= box.maxX + 1; x++) {
+            for (int y = box.minY; y <= box.maxY; y++) {
+                for (int z = box.minZ - 1; z <= box.maxZ + 1; z++) {
+                    if (writer.get(x, y, z).getBlock() == block) {
+                        n++;
+                    }
+                }
+            }
+        }
+        return n;
     }
 }

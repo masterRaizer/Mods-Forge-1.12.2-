@@ -5,6 +5,7 @@ import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.palette.BlockPalette;
 import com.shatteredcitadels.palette.CitadelArchetype;
 import com.shatteredcitadels.palette.ModPaletteRegistry;
+import com.shatteredcitadels.worldgen.catacomb.CatacombBuilder;
 import com.shatteredcitadels.structure.CitadelInstance;
 import com.shatteredcitadels.structure.CitadelNameGenerator;
 import com.shatteredcitadels.structure.CitadelWorldSavedData;
@@ -170,8 +171,9 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         }
         int arenaHeight = 12 + random.nextInt(3);
         int spireTarget = 210 + random.nextInt(31);
-        boolean crypt = random.nextDouble() < config.getUndergroundUnderCastleChance();
-        int cryptLevels = crypt ? config.rollCryptLevels(random) : 0;
+        double catacombChance = floorOffset > 0 ? config.getCatacombCastleChance() : config.getCatacombTowerChance();
+        boolean crypt = !sky && random.nextDouble() < catacombChance;
+        int cryptLevels = crypt ? config.rollCatacombLevels(random) : 0;
         double archetypeRoll = random.nextDouble();
 
         int centerX = minX + width / 2;
@@ -206,8 +208,9 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         }
         int spireTop = sky ? Math.min(BlockWriter.MAX_Y, Math.max(spireTarget, roof + 6)) : roof + 4;
 
-        // Crypt levels must stay above the world floor.
-        while (cryptLevels > 0 && baseY - 10 - (cryptLevels - 1) * CitadelPlan.CRYPT_LEVEL_HEIGHT < BlockWriter.MIN_Y + 1) {
+        // Catacomb levels and the sanctum below the deepest must stay above the world floor.
+        while (cryptLevels > 0 && CatacombBuilder.levelY(baseY - 10, cryptLevels - 1) - CatacombBuilder.SANCTUM_DEPTH
+                < BlockWriter.MIN_Y + 1) {
             cryptLevels--;
         }
         CitadelArchetype archetype = forceArchetype != null ? forceArchetype

@@ -80,6 +80,13 @@ public final class ConfigCache {
         next.towerWingChance = clamp01(gen.towerWingChance);
         next.walledCastleChance = clamp01(gen.walledCastleChance);
         next.manorChance = clamp01(gen.manorChance);
+        next.catacombTowerChance = clamp01(gen.catacombTowerChance);
+        next.catacombCastleChance = clamp01(gen.catacombCastleChance);
+        next.catacombManorChance = clamp01(gen.catacombManorChance);
+        int[] catacombLevels = orderedRange("castle_generation.catacombMinLevels/catacombMaxLevels",
+                gen.catacombMinLevels, gen.catacombMaxLevels, 1, 3);
+        next.catacombMinLevels = catacombLevels[0];
+        next.catacombMaxLevels = catacombLevels[1];
         next.generationBudgetMs = clamp(gen.generationBudgetMs, 1, 40);
         int[] towerFloors = orderedRange("castle_generation.towerMinFloors/towerMaxFloors",
                 gen.towerMinFloors, gen.towerMaxFloors, 2, 30);
@@ -353,6 +360,11 @@ public final class ConfigCache {
         double towerWingChance = 0.65D;
         double walledCastleChance = 0.35D;
         double manorChance = 0.25D;
+        double catacombTowerChance = 0.5D;
+        double catacombCastleChance = 0.8D;
+        double catacombManorChance = 0.8D;
+        int catacombMinLevels = 2;
+        int catacombMaxLevels = 3;
         int generationBudgetMs = 5;
         int towerMinFloors = 12;
         int towerMaxFloors = 30;
@@ -422,6 +434,11 @@ public final class ConfigCache {
             c.towerWingChance = towerWingChance;
             c.walledCastleChance = walledCastleChance;
             c.manorChance = manorChance;
+            c.catacombTowerChance = catacombTowerChance;
+            c.catacombCastleChance = catacombCastleChance;
+            c.catacombManorChance = catacombManorChance;
+            c.catacombMinLevels = catacombMinLevels;
+            c.catacombMaxLevels = catacombMaxLevels;
             c.generationBudgetMs = generationBudgetMs;
             c.towerMinFloors = towerMinFloors;
             c.towerMaxFloors = towerMaxFloors;
@@ -488,6 +505,14 @@ public final class ConfigCache {
         public double getTowerWingChance() { return towerWingChance; }
         public double getWalledCastleChance() { return walledCastleChance; }
         public double getManorChance() { return manorChance; }
+        public double getCatacombTowerChance() { return catacombTowerChance; }
+        public double getCatacombCastleChance() { return catacombCastleChance; }
+        public double getCatacombManorChance() { return catacombManorChance; }
+
+        /** @return a catacomb level count within the configured inclusive range. */
+        public int rollCatacombLevels(Random random) {
+            return catacombMinLevels + random.nextInt(catacombMaxLevels - catacombMinLevels + 1);
+        }
         public int getGenerationBudgetMs() { return generationBudgetMs; }
         public int getTowerMinFloors() { return towerMinFloors; }
         public int getTowerMaxFloors() { return towerMaxFloors; }

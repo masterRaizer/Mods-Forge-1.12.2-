@@ -28,6 +28,7 @@ public class BlueprintTest {
     @BeforeClass
     public static void bootstrap() {
         Bootstrap.register();
+        TestBlocks.install();
     }
 
     @Test
@@ -142,5 +143,34 @@ public class BlueprintTest {
         assertEquals("great_hall", copy.getZoneKey());
         assertEquals(0, copy.getRequiresFloor());
         assertEquals(Integer.MIN_VALUE, FloorData.readFromNBT(yard.writeToNBT()).getRequiresFloor());
+    }
+
+    @Test
+    public void manorWithCatacombsRegistersLevels() {
+        ManorPlan plan = new ManorPlan(-39, -43, 70, 5L, 0, 2);
+        CitadelInstance manor = plan.build(new BlockWriter(new Blueprint()));
+        for (int zone = 0; zone <= 7; zone++) {
+            assertNotNull("zone " + zone, manor.getFloor(zone));
+        }
+        assertNotNull(manor.getFloor(-1));
+        assertNotNull(manor.getFloor(-2));
+        assertNotNull(manor.getFloor(-10));
+        StructureBoundingBox footprint = plan.footprint();
+        FloorData deepest = manor.getFloor(-10);
+        assertTrue(footprint.minY <= deepest.getMinY());
+        assertTrue(footprint.isVecInside(new BlockPos(-39 + 54, 40, -43 + 70)));
+    }
+
+    @Test
+    public void plansRoundTripCatacombLevels() {
+        ManorPlan manor = new ManorPlan(-39, -43, 70, 5L, 0, 3);
+        assertEquals(3, ((ManorPlan) StructurePlans.read(manor.writeToNBT())).catacombLevels);
+        NBTTagCompound legacy = manor.writeToNBT();
+        legacy.removeTag("catacombs");
+        assertEquals(0, ManorPlan.read(legacy).catacombLevels);
+        CitadelPlan tower = new CitadelPlan(0, 0, 21, 70, 6, 12, false, CitadelArchetype.KEEPERS_CITADEL, 120, 3, 9L, 0,
+                true, 0);
+        assertEquals(tower.writeToNBT(), StructurePlans.read(tower.writeToNBT()).writeToNBT());
+        assertEquals(3, ((CitadelPlan) StructurePlans.read(tower.writeToNBT())).cryptLevels);
     }
 }

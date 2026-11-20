@@ -1,6 +1,8 @@
 package com.shatteredcitadels.worldgen;
 
 import com.shatteredcitadels.ShatteredCitadelsMod;
+import com.shatteredcitadels.config.ConfigCache;
+import com.shatteredcitadels.worldgen.catacomb.CatacombBuilder;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
@@ -48,7 +50,13 @@ public final class ManorPlanner {
         if (!ignoreTerrain && !CastlePlanner.isLandSite(world, centerX, centerZ, halfX, halfZ)) {
             return null;
         }
+        int levels = random.nextDouble() < ConfigCache.get().getCatacombManorChance()
+                ? ConfigCache.get().rollCatacombLevels(random) : 0;
+        int top = ManorBuilder.cellarY(baseY) - 10;
+        while (levels > 0 && CatacombBuilder.levelY(top, levels - 1) - CatacombBuilder.SANCTUM_DEPTH < BlockWriter.MIN_Y + 1) {
+            levels--;
+        }
         return new ManorPlan(centerX - halfX, centerZ - ManorBuilder.DEPTH / 2, baseY, random.nextLong(),
-                world.provider.getDimension());
+                world.provider.getDimension(), levels);
     }
 }

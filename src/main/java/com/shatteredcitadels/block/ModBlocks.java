@@ -2,6 +2,7 @@ package com.shatteredcitadels.block;
 
 import com.shatteredcitadels.Reference;
 import com.shatteredcitadels.tile.TileEntityBossAltar;
+import com.shatteredcitadels.tile.TileEntityMageSigil;
 import com.shatteredcitadels.tile.TileEntityTrialSpawner;
 import net.minecraft.block.Block;
 import net.minecraft.item.Item;
@@ -23,6 +24,7 @@ public final class ModBlocks {
     public static Block SEALED_GATE;
     public static Item SEALED_GATE_ITEM;
     public static Block VASE;
+    public static Block MAGE_SIGIL;
     public static Item VASE_ITEM;
 
     private ModBlocks() {
@@ -44,6 +46,11 @@ public final class ModBlocks {
                 .setRegistryName(Reference.MODID, "sealed_gate")
                 .setTranslationKey(Reference.MODID + ".sealed_gate");
         event.getRegistry().register(SEALED_GATE);
+        MAGE_SIGIL = new BlockMageSigil()
+                .setRegistryName(TileEntityMageSigil.ID)
+                .setTranslationKey(Reference.MODID + ".mage_sigil");
+        event.getRegistry().register(MAGE_SIGIL);
+        GameRegistry.registerTileEntity(TileEntityMageSigil.class, TileEntityMageSigil.ID);
         VASE = new BlockVase()
                 .setRegistryName(Reference.MODID, "vase")
                 .setTranslationKey(Reference.MODID + ".vase");

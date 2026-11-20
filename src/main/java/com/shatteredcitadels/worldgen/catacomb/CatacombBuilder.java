@@ -60,6 +60,14 @@ public class CatacombBuilder {
     protected int z0;
     protected int levelCount;
     protected final List<CatacombLayout> layouts = new ArrayList<>();
+    private boolean sanctumEnabled;
+
+    /** Floor index of the mage's sanctum. */
+    public static final int SANCTUM_FLOOR = -10;
+    /** The sanctum's floor lies this far below its level's floor. */
+    public static final int SANCTUM_DEPTH = 6;
+    /** Sanctum ceiling height above its level's floor. */
+    private static final int SANCTUM_TOP = 8;
 
     public CatacombBuilder(BlockWriter w, CitadelInstance rec, BlockPalette surface, Random rand, int baseTier) {
         this.w = w;
@@ -92,8 +100,27 @@ public class CatacombBuilder {
      * @param entranceTopY y of the structure floor the spiral starts in (its first step replaces it)
      * @return levels built; 0 (and nothing registered) when not even one fits
      */
+    /** The deepest level gets the guardian mage's sanctum. */
+    public CatacombBuilder withSanctum() {
+        this.sanctumEnabled = true;
+        return this;
+    }
+
+    public List<CatacombLayout> layouts() {
+        return java.util.Collections.unmodifiableList(layouts);
+    }
+
+    /** Interior of a hall (corridor height) on the level whose floor is {@code yL}. */
+    public StructureBoundingBox hallBox(CatacombLayout.Hall hall, int yL) {
+        return new StructureBoundingBox(cellX(hall.ci0) + 1, yL + 1, cellZ(hall.cj0) + 1,
+                cellX(hall.ci1) + 3, yL + CORRIDOR_HEIGHT, cellZ(hall.cj1) + 3);
+    }
+
     public int build(int centreX, int centreZ, int topLevelY, int levels, int entranceX, int entranceZ, int entranceTopY) {
         int count = fittingLevels(topLevelY, levels);
+        while (sanctumEnabled && count > 0 && levelY(topLevelY, count - 1) - SANCTUM_DEPTH < MIN_FLOOR_Y) {
+            count--;
+        }
         if (count == 0) {
             return 0;
         }
@@ -146,14 +173,14 @@ public class CatacombBuilder {
         return count;
     }
 
-    /** Task 4 hook: the deepest level holds the mage's sanctum. */
+    /** The deepest level holds the mage's sanctum when enabled. */
     protected boolean hasSanctum(boolean deepest) {
-        return false;
+        return sanctumEnabled && deepest;
     }
 
-    /** Extra depth dug below the deepest level (the sanctum); 0 here. */
+    /** Extra depth dug below the deepest level (the sanctum). */
     protected int extraDepth() {
-        return 0;
+        return sanctumEnabled ? SANCTUM_DEPTH : 0;
     }
 
     // ------------------------------------------------------------------ geometry
@@ -237,17 +264,395 @@ public class CatacombBuilder {
         }
     }
 
-    /** Hook for themed halls (Task 4 fills them); here a few vases and a spawner. */
+    // ------------------------------------------------------------------ halls
+
+    /** Furnishes a carved hall according to its kind. */
     protected void buildHall(CatacombLayout.Hall hall, int level, int yL) {
-        int xa = cellX(hall.ci0) + 1;
-        int za = cellZ(hall.cj0) + 1;
-        int xb = cellX(hall.ci1) + 3;
-        int zb = cellZ(hall.cj1) + 3;
-        spawner(new BlockPos((xa + xb) / 2, yL + 1, (za + zb) / 2), level, RoomTag.OSSUARY);
-        vases(xa, za, xb, zb, yL, 2 + rand.nextInt(3));
-        if (rand.nextBoolean()) {
-            chest(new BlockPos(xa, yL + 1, za), EnumFacing.SOUTH, level);
+        StructureBoundingBox box = hallBox(hall, yL);
+        switch (hall.kind()) {
+            case CRYPT:
+                cryptHall(box, level, yL);
+                break;
+            case SPIDER_CAVE:
+                spiderCave(box, level, yL);
+                break;
+            case SKELETON_HALL:
+                skeletonHall(box, level, yL);
+                break;
+            case STOREROOM:
+            case GUARD_POST:
+                livingRoom(box, level, yL, hall.kind() == CatacombLayout.HallKind.STOREROOM ? RoomTag.PANTRY : RoomTag.BEDROOM);
+                break;
+            case SANCTUM:
+                sanctum(hall, box, level, yL);
+                break;
+            default:
+                break;
         }
+    }
+
+    private IBlockState slab() {
+        return Blocks.STONE_SLAB.getDefaultState().withProperty(net.minecraft.block.BlockStoneSlab.VARIANT,
+                net.minecraft.block.BlockStoneSlab.EnumType.SMOOTHBRICK);
+    }
+
+    /** Two-block stone coffin with a slab lid, along z. */
+    private void sarcophagus(int x, int z, int yL) {
+        for (int dz = 0; dz <= 1; dz++) {
+            w.set(x, yL + 1, z + dz, cat.pillar());
+            w.set(x, yL + 2, z + dz, slab());
+        }
+    }
+
+    /** True if the wall block at (x, z) is masonry (not a doorway). */
+    private boolean solidWall(int x, int y, int z) {
+        return w.isSolid(x, y, z);
+    }
+
+    private void cryptHall(StructureBoundingBox box, int level, int yL) {
+        int midX = (box.minX + box.maxX) / 2;
+        for (int x = box.minX + 1; x <= box.maxX - 1; x += 3) {
+            if (Math.abs(x - midX) <= 1) {
+                continue;
+            }
+            for (int z = box.minZ + 1; z + 1 <= box.maxZ - 1; z += 4) {
+                sarcophagus(x, z, yL);
+            }
+        }
+        // Wall tombs in the two long walls.
+        for (int z = box.minZ + 1; z <= box.maxZ - 1; z += 3) {
+            for (int x : new int[]{box.minX - 1, box.maxX + 1}) {
+                if (solidWall(x, yL + 1, z) && solidWall(x, yL + 3, z)) {
+                    w.set(x, yL + 1, z, cat.bone());
+                    w.set(x, yL + 2, z, rand.nextBoolean()
+                            ? Blocks.SKULL.getDefaultState().withProperty(BlockSkull.FACING, EnumFacing.UP) : air);
+                }
+            }
+        }
+        spawner(new BlockPos(midX, yL + 1, (box.minZ + box.maxZ) / 2), level, RoomTag.OSSUARY);
+        vases(box.minX, box.minZ, box.maxX, box.maxZ, yL, 2 + rand.nextInt(3));
+        if (rand.nextBoolean()) {
+            chest(new BlockPos(box.minX, yL + 1, box.maxZ), EnumFacing.EAST, level);
+        }
+    }
+
+    private void spiderCave(StructureBoundingBox box, int level, int yL) {
+        IBlockState coarse = Blocks.DIRT.getDefaultState().withProperty(net.minecraft.block.BlockDirt.VARIANT,
+                net.minecraft.block.BlockDirt.DirtType.COARSE_DIRT);
+        for (int x = box.minX; x <= box.maxX; x++) {
+            for (int z = box.minZ; z <= box.maxZ; z++) {
+                int r = rand.nextInt(4);
+                w.set(x, yL, z, r == 0 ? coarse : r == 1 ? Blocks.MOSSY_COBBLESTONE.getDefaultState() : cat.floor(rand));
+                // A cave ceiling: higher and uneven.
+                int top = yL + CORRIDOR_HEIGHT + rand.nextInt(3);
+                for (int y = yL + CORRIDOR_HEIGHT + 1; y <= top; y++) {
+                    w.set(x, y, z, air);
+                }
+                w.set(x, top + 1, z, rand.nextBoolean() ? Blocks.STONE.getDefaultState() : Blocks.COBBLESTONE.getDefaultState());
+                if (rand.nextInt(4) == 0) {
+                    w.set(x, top, z, Blocks.WEB.getDefaultState());
+                }
+                boolean edge = x == box.minX || x == box.maxX || z == box.minZ || z == box.maxZ;
+                if (edge && rand.nextInt(5) == 0 && w.get(x, yL + 1, z).getBlock() == Blocks.AIR) {
+                    w.set(x, yL + 1, z, Blocks.WEB.getDefaultState());
+                }
+            }
+        }
+        // Egg clutches: clay vases in little groups.
+        if (ModBlocks.VASE != null) {
+            for (int g = 0; g < 2; g++) {
+                int cx = box.minX + 1 + rand.nextInt(Math.max(1, box.maxX - box.minX - 1));
+                int cz = box.minZ + 1 + rand.nextInt(Math.max(1, box.maxZ - box.minZ - 1));
+                for (int i = 0; i < 3; i++) {
+                    int x = cx + rand.nextInt(3) - 1;
+                    int z = cz + rand.nextInt(3) - 1;
+                    if (box.isVecInside(new BlockPos(x, yL + 1, z)) && w.get(x, yL + 1, z).getBlock() == Blocks.AIR) {
+                        w.set(x, yL + 1, z, ModBlocks.VASE.getDefaultState().withProperty(BlockVase.VARIANT, BlockVase.Variant.CLAY));
+                    }
+                }
+            }
+        }
+        spawner(new BlockPos((box.minX + box.maxX) / 2, yL + 1, (box.minZ + box.maxZ) / 2), level, RoomTag.UNDERGROUND_LAIR);
+        if (box.maxX - box.minX >= 8 || box.maxZ - box.minZ >= 8) {
+            spawner(new BlockPos(box.minX + 2, yL + 1, box.maxZ - 2), level, RoomTag.UNDERGROUND_LAIR);
+        }
+    }
+
+    private void skeletonHall(StructureBoundingBox box, int level, int yL) {
+        boolean alongX = box.maxX - box.minX >= box.maxZ - box.minZ;
+        int lo = alongX ? box.minZ : box.minX;
+        int hi = alongX ? box.maxZ : box.maxX;
+        int lineA = lo + (hi - lo) / 3;
+        int lineB = hi - (hi - lo) / 3;
+        int from = alongX ? box.minX + 1 : box.minZ + 1;
+        int to = alongX ? box.maxX - 1 : box.maxZ - 1;
+        for (int t = from; t <= to; t += 3) {
+            for (int line : new int[]{lineA, lineB}) {
+                int x = alongX ? t : line;
+                int z = alongX ? line : t;
+                for (int y = yL + 1; y <= yL + CORRIDOR_HEIGHT; y++) {
+                    w.set(x, y, z, cat.pillar());
+                }
+            }
+        }
+        // Ossuary: one long wall faced with bone and skulls.
+        int wall = rand.nextBoolean() ? lo - 1 : hi + 1;
+        for (int t = (alongX ? box.minX : box.minZ); t <= (alongX ? box.maxX : box.maxZ); t++) {
+            int x = alongX ? t : wall;
+            int z = alongX ? wall : t;
+            for (int y = yL + 1; y <= yL + CORRIDOR_HEIGHT; y++) {
+                if (solidWall(x, y, z)) {
+                    w.set(x, y, z, cat.bone());
+                }
+            }
+            int fx = alongX ? t : (wall < lo ? lo : hi);
+            int fz = alongX ? (wall < lo ? lo : hi) : t;
+            if (rand.nextInt(3) == 0 && w.get(fx, yL + 1, fz).getBlock() == Blocks.AIR) {
+                w.set(fx, yL + 1, fz, Blocks.SKULL.getDefaultState().withProperty(BlockSkull.FACING, EnumFacing.UP));
+            }
+        }
+        // Tomb rows between the colonnades.
+        for (int t = from + 1; t + 1 <= to; t += 4) {
+            int mid = (lineA + lineB) / 2;
+            if (alongX) {
+                w.set(t, yL + 1, mid, cat.pillar());
+                w.set(t + 1, yL + 1, mid, cat.pillar());
+                w.set(t, yL + 2, mid, slab());
+                w.set(t + 1, yL + 2, mid, slab());
+            } else {
+                sarcophagus(mid, t, yL);
+            }
+        }
+        spawner(new BlockPos(alongX ? (box.minX + box.maxX) / 2 : lineA + 1, yL + 1, alongX ? lineA + 1 : (box.minZ + box.maxZ) / 2),
+                level, RoomTag.OSSUARY);
+        vases(box.minX, box.minZ, box.maxX, box.maxZ, yL, 1 + rand.nextInt(3));
+    }
+
+    private void livingRoom(StructureBoundingBox box, int level, int yL, RoomTag tag) {
+        com.shatteredcitadels.worldgen.RoomFurnisher furnisher = new com.shatteredcitadels.worldgen.RoomFurnisher(
+                new com.shatteredcitadels.worldgen.RoomFurnisher.Site() {
+                    @Override
+                    public boolean free(int x, int y, int z) {
+                        return box.isVecInside(new BlockPos(x, box.minY, z)) && w.get(x, y, z).getBlock() == Blocks.AIR;
+                    }
+
+                    @Override
+                    public IBlockState get(int x, int y, int z) {
+                        return w.get(x, y, z);
+                    }
+
+                    @Override
+                    public boolean set(int x, int y, int z, IBlockState state) {
+                        return w.set(x, y, z, state);
+                    }
+
+                    @Override
+                    public void chest(BlockPos pos, EnumFacing facing, ResourceLocation lootTable) {
+                        StructurePieces.chest(w, rec, pos, facing, lootTable, rand.nextLong());
+                    }
+
+                    @Override
+                    public void afterPlace(BlockPos pos, com.shatteredcitadels.worldgen.Blueprint.TileAction action) {
+                        w.afterPlace(pos, action);
+                    }
+                }, rand, surface, BlockVase.Variant.DARK);
+        furnisher.furnish(tag, box.minX, box.minZ, box.maxX, box.maxZ, yL);
+        furnisher.abandon(box.minX, box.minZ, box.maxX, box.maxZ, yL, CORRIDOR_HEIGHT);
+        spawner(new BlockPos((box.minX + box.maxX) / 2, yL + 1, (box.minZ + box.maxZ) / 2), level, RoomTag.GUARD_ROOM);
+    }
+
+    // ------------------------------------------------------------------ sanctum
+
+    /**
+     * The guardian mage's library: dug {@link #SANCTUM_DEPTH} below the level, reached by one
+     * sealed doorway and a flight of stairs; bookshelves, a dais with the hidden sigil and sealed
+     * reward pedestals around it.
+     */
+    private void sanctum(CatacombLayout.Hall hall, StructureBoundingBox box, int level, int yL) {
+        int fy = yL - SANCTUM_DEPTH;
+        int top = yL + SANCTUM_TOP;
+        int a = box.minX;
+        int b = box.maxX;
+        int c = box.minZ;
+        int d = box.maxZ;
+        // Shell: floor, walls and ceiling around the taller, deeper room.
+        for (int x = a - 1; x <= b + 1; x++) {
+            for (int z = c - 1; z <= d + 1; z++) {
+                boolean edge = x == a - 1 || x == b + 1 || z == c - 1 || z == d + 1;
+                w.set(x, fy, z, cat.floor(rand));
+                w.set(x, top, z, cat.ceiling());
+                for (int y = fy + 1; y < top; y++) {
+                    if (edge) {
+                        if (y <= yL || y > yL + CORRIDOR_HEIGHT || solidWall(x, y, z)) {
+                            w.set(x, y, z, cat.wall(rand));
+                        }
+                    } else {
+                        w.set(x, y, z, air);
+                    }
+                }
+            }
+        }
+        int[] door = sanctumDoor(hall);
+        EnumFacing out = EnumFacing.byIndex(door[2]);
+        EnumFacing in = out.getOpposite();
+        // The doorway plane on the sanctum side and its three lanes.
+        int planeX = out == EnumFacing.WEST ? a - 1 : out == EnumFacing.EAST ? b + 1 : 0;
+        int planeZ = out == EnumFacing.NORTH ? c - 1 : out == EnumFacing.SOUTH ? d + 1 : 0;
+        List<int[]> lanes = new ArrayList<>();
+        for (int t = 1; t <= 3; t++) {
+            if (out.getAxis() == EnumFacing.Axis.X) {
+                lanes.add(new int[]{planeX, cellZ(door[1]) + t});
+            } else {
+                lanes.add(new int[]{cellX(door[0]) + t, planeZ});
+            }
+        }
+        // Landing and a flight down to the sanctum floor.
+        for (int[] lane : lanes) {
+            for (int y = yL + 1; y <= yL + CORRIDOR_HEIGHT; y++) {
+                w.set(lane[0], y, lane[1], air);
+            }
+            for (int step = 1; step <= SANCTUM_DEPTH + 1; step++) {
+                int x = lane[0] + in.getXOffset() * step;
+                int z = lane[1] + in.getZOffset() * step;
+                int surfaceY = yL - (step - 1);
+                for (int y = fy + 1; y < surfaceY; y++) {
+                    w.set(x, y, z, cat.wall(rand));
+                }
+                w.set(x, surfaceY, z, step == 1 ? cat.floor(rand) : stair(out));
+            }
+        }
+        // Sealed doorway: opens when the deepest level is cleared.
+        if (ConfigCache.get().isLockFloorsUntilCleared() && ModBlocks.SEALED_GATE != null) {
+            for (int[] lane : lanes) {
+                for (int y = yL + 1; y <= yL + CORRIDOR_HEIGHT; y++) {
+                    seal(lane[0], y, lane[1], -levelCount);
+                }
+            }
+        }
+
+        int cx = (a + b) / 2;
+        int cz = (c + d) / 2;
+        // Bookshelf walls, except around the stairs.
+        for (int x = a; x <= b; x++) {
+            for (int z = c; z <= d; z++) {
+                boolean edge = x == a || x == b || z == c || z == d;
+                if (!edge || nearLanes(lanes, x, z, in, 3)) {
+                    continue;
+                }
+                for (int y = fy + 1; y <= fy + 5; y++) {
+                    w.set(x, y, z, Blocks.BOOKSHELF.getDefaultState());
+                }
+            }
+        }
+        // Four great pillars with lights.
+        int q = (b - a) / 4;
+        for (int[] p : new int[][]{{a + q, c + q}, {b - q, c + q}, {a + q, d - q}, {b - q, d - q}}) {
+            for (int y = fy + 1; y < top; y++) {
+                w.set(p[0], y, p[1], y == fy + 6 ? surface.get(com.shatteredcitadels.palette.PaletteSlot.LIGHT) : cat.pillar());
+            }
+        }
+        // Freestanding stacks, each with a teleport anchor on its inner side.
+        List<BlockPos> anchors = new ArrayList<>();
+        int r = Math.max(5, (b - a) / 2 - 3);
+        for (int i = 0; i < 8; i++) {
+            double angle = Math.PI * 2 * i / 8 + Math.PI / 8;
+            int sx = cx + (int) Math.round(Math.cos(angle) * r);
+            int sz = cz + (int) Math.round(Math.sin(angle) * r);
+            if (nearLanes(lanes, sx, sz, in, 4)) {
+                continue;
+            }
+            for (int y = fy + 1; y <= fy + 3; y++) {
+                w.set(sx, y, sz, Blocks.BOOKSHELF.getDefaultState());
+            }
+            int ax = sx + Integer.signum(cx - sx);
+            int az = sz + Integer.signum(cz - sz);
+            if (w.get(ax, fy + 1, az).getBlock() == Blocks.AIR) {
+                anchors.add(new BlockPos(ax, fy + 1, az));
+            }
+        }
+        // Dais with the sigil hidden under its centre.
+        for (int x = cx - 3; x <= cx + 3; x++) {
+            for (int z = cz - 3; z <= cz + 3; z++) {
+                w.set(x, fy + 1, z, Math.abs(x - cx) == 3 || Math.abs(z - cz) == 3 ? cat.accent() : Blocks.QUARTZ_BLOCK.getDefaultState());
+            }
+        }
+        w.set(cx - 3, fy + 2, cz - 3, Blocks.ENCHANTING_TABLE.getDefaultState());
+        w.set(cx + 3, fy + 2, cz + 3, Blocks.ENCHANTING_TABLE.getDefaultState());
+        w.set(cx + 3, fy + 2, cz - 3, Blocks.BREWING_STAND.getDefaultState());
+        w.set(cx - 3, fy + 2, cz + 3, Blocks.BREWING_STAND.getDefaultState());
+        w.set(a + 1, fy + 1, c + 1, Blocks.CAULDRON.getDefaultState());
+        w.set(b - 1, fy + 1, d - 1, Blocks.CAULDRON.getDefaultState());
+        for (int y = top - 2; y < top; y++) {
+            w.set(cx, y, cz, Blocks.IRON_BARS.getDefaultState());
+        }
+        w.set(cx, top - 3, cz, surface.get(com.shatteredcitadels.palette.PaletteSlot.LIGHT));
+        // Pedestals: a pillar, a chest and a ring of sealed gates that wait for the mage's death.
+        int[][] spots = {{0, -5}, {0, 5}, {-5, 0}, {5, 0}, {-5, -5}, {5, 5}};
+        int pedestals = 4 + rand.nextInt(3);
+        for (int i = 0; i < pedestals; i++) {
+            int px = cx + spots[i][0];
+            int pz = cz + spots[i][1];
+            w.set(px, fy + 1, pz, Blocks.QUARTZ_BLOCK.getDefaultState().withProperty(net.minecraft.block.BlockQuartz.VARIANT,
+                    net.minecraft.block.BlockQuartz.EnumType.LINES_Y));
+            EnumFacing facing = EnumFacing.getFacingFromVector(cx - px, 0, cz - pz);
+            BlockPos chestPos = new BlockPos(px, fy + 2, pz);
+            StructurePieces.chest(w, rec, chestPos, facing, i == 0 ? ModLootTables.MAGE_PEDESTAL_FOLIO : ModLootTables.MAGE_PEDESTAL,
+                    rand.nextLong());
+            if (ModBlocks.SEALED_GATE != null) {
+                for (EnumFacing side : EnumFacing.HORIZONTALS) {
+                    seal(px + side.getXOffset(), fy + 2, pz + side.getZOffset(), SANCTUM_FLOOR);
+                }
+                seal(px, fy + 3, pz, SANCTUM_FLOOR);
+            }
+        }
+        StructureBoundingBox area = new StructureBoundingBox(a, fy, c, b, top, d);
+        if (ModBlocks.MAGE_SIGIL != null) {
+            BlockPos sigil = new BlockPos(cx, fy, cz);
+            w.set(sigil, ModBlocks.MAGE_SIGIL.getDefaultState());
+            List<BlockPos> anchorCopy = new ArrayList<>(anchors);
+            java.util.UUID id = rec.getCitadelId();
+            w.afterPlace(sigil, (world, at) -> {
+                net.minecraft.tileentity.TileEntity tile = world.getTileEntity(at);
+                if (tile instanceof com.shatteredcitadels.tile.TileEntityMageSigil) {
+                    ((com.shatteredcitadels.tile.TileEntityMageSigil) tile).configure(id, SANCTUM_FLOOR, area, anchorCopy);
+                }
+            });
+        }
+        rec.addFloor(SANCTUM_FLOOR, fy, top, 5, 0, true)
+                .setSideBoss(true)
+                .setArea(a, c, b, d)
+                .setZoneKey("mage_sanctum")
+                .setRequiresFloor(-levelCount);
+    }
+
+    private static boolean nearLanes(List<int[]> lanes, int x, int z, EnumFacing in, int depth) {
+        for (int[] lane : lanes) {
+            for (int step = 0; step <= depth; step++) {
+                int lx = lane[0] + in.getXOffset() * step;
+                int lz = lane[1] + in.getZOffset() * step;
+                if (Math.abs(lx - x) <= 1 && Math.abs(lz - z) <= 1) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
+    /** @return {ci, cj, facing index} of the sanctum's single doorway (towards the corridor). */
+    private int[] sanctumDoor(CatacombLayout.Hall hall) {
+        CatacombLayout layout = layouts.get(layouts.size() - 1);
+        for (int i = hall.ci0; i <= hall.ci1; i++) {
+            for (int j = hall.cj0; j <= hall.cj1; j++) {
+                for (EnumFacing dir : DIRS) {
+                    int ni = i + dir.getXOffset();
+                    int nj = j + dir.getZOffset();
+                    if (!hall.contains(ni, nj) && layout.link(i, j, dir)) {
+                        return new int[]{i, j, dir.getIndex()};
+                    }
+                }
+            }
+        }
+        return new int[]{hall.ci0, hall.cj0, EnumFacing.NORTH.getIndex()};
     }
 
     // ------------------------------------------------------------------ corridors
@@ -429,7 +834,7 @@ public class CatacombBuilder {
     }
 
     protected ResourceLocation lootFor(int level) {
-        return ModLootTables.UNDERGROUND_CRYPT;
+        return level == levelCount - 1 && levelCount > 1 ? ModLootTables.CATACOMB_DEEP : ModLootTables.UNDERGROUND_CRYPT;
     }
 
     protected void vases(int xa, int za, int xb, int zb, int yL, int count) {

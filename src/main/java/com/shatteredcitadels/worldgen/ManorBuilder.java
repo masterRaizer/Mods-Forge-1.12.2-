@@ -12,6 +12,7 @@ import com.shatteredcitadels.spawner.SpawnerContext;
 import com.shatteredcitadels.spawner.SpawnerSource;
 import com.shatteredcitadels.structure.CitadelInstance;
 import com.shatteredcitadels.structure.RoomTag;
+import com.shatteredcitadels.worldgen.catacomb.CatacombBuilder;
 import net.minecraft.block.Block;
 import net.minecraft.block.BlockCarpet;
 import net.minecraft.block.BlockCauldron;
@@ -195,6 +196,17 @@ final class ManorBuilder {
         zoneDoors();
         shortcuts();
         decorateRooms();
+        if (plan.catacombLevels > 0) {
+            // Catacombs under the main block, reached by a spiral at the north end of the cellar corridor.
+            int c = (servants.x0 + servants.x1) / 2;
+            new CatacombBuilder(w, rec, pal, rand, 3).withSanctum()
+                    .build(x(54), z(70), plan.catacombTopY(), plan.catacombLevels, x(c), z(servants.z0 + 3), cellarY(y0));
+        }
+    }
+
+    /** @return y of the cellar floor under the servants' wing. */
+    static int cellarY(int baseY) {
+        return baseY - FH;
     }
 
     // ------------------------------------------------------------------ coordinates
@@ -543,7 +555,7 @@ final class ManorBuilder {
 
     private void cellar() {
         // Wine cellar under the servants' wing, reached by the corridor stairs from the ground floor.
-        int yc = y0 - FH;
+        int yc = cellarY(y0);
         for (int lx = servants.x0; lx <= servants.x1; lx++) {
             for (int lz = servants.z0; lz <= servants.z1; lz++) {
                 boolean edge = lx == servants.x0 || lx == servants.x1 || lz == servants.z0 || lz == servants.z1;

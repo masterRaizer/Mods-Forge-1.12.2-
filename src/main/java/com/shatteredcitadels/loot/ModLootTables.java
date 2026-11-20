@@ -22,6 +22,9 @@ public final class ModLootTables {
     public static final ResourceLocation PANTRY = id("chests/pantry");
     public static final ResourceLocation BEDROOM = id("chests/bedroom");
     public static final ResourceLocation SMELTERY = id("chests/smeltery");
+    public static final ResourceLocation CATACOMB_DEEP = id("chests/catacomb_deep");
+    public static final ResourceLocation MAGE_PEDESTAL = id("chests/mage_pedestal");
+    public static final ResourceLocation MAGE_PEDESTAL_FOLIO = id("chests/mage_pedestal_folio");
     public static final ResourceLocation VASE_LOW = id("vases/low");
     public static final ResourceLocation VASE_MID = id("vases/mid");
     public static final ResourceLocation VASE_HIGH = id("vases/high");
@@ -43,7 +46,7 @@ public final class ModLootTables {
         registered = true;
         LootFunctionManager.registerFunction(new LootFunctionLoreBook.Serializer());
         for (ResourceLocation table : new ResourceLocation[]{FLOOR_TIER_1_2, FLOOR_TIER_3_4, FLOOR_TIER_5_PLUS,
-                UNDERGROUND_CRYPT, BOSS_CHEST_NORMAL, BOSS_CHEST_SKY, PANTRY, BEDROOM, SMELTERY,
+                UNDERGROUND_CRYPT, CATACOMB_DEEP, MAGE_PEDESTAL, MAGE_PEDESTAL_FOLIO, BOSS_CHEST_NORMAL, BOSS_CHEST_SKY, PANTRY, BEDROOM, SMELTERY,
                 VASE_LOW, VASE_MID, VASE_HIGH}) {
             LootTableList.register(table);
         }

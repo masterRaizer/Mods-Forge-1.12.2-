@@ -154,6 +154,36 @@ public final class ModConfig {
         @Config.RangeDouble(min = 0.0D, max = 1.0D)
         public double manorChance = 0.25D;
 
+        @Config.Name("catacombTowerChance")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.catacombTowerChance")
+        @Config.Comment("Chance that a tower has catacombs below it (spiral stair, 2-3 wide levels, the guardian mage's sanctum).")
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double catacombTowerChance = 0.5D;
+
+        @Config.Name("catacombCastleChance")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.catacombCastleChance")
+        @Config.Comment("Chance that the keep of a walled castle has catacombs below it.")
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double catacombCastleChance = 0.8D;
+
+        @Config.Name("catacombManorChance")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.catacombManorChance")
+        @Config.Comment("Chance that a gothic manor has catacombs below its cellar.")
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double catacombManorChance = 0.8D;
+
+        @Config.Name("catacombMinLevels")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.catacombMinLevels")
+        @Config.Comment("Minimum catacomb levels (about 95 x 95 blocks each, 10 blocks apart).")
+        @Config.RangeInt(min = 1, max = 3)
+        public int catacombMinLevels = 2;
+
+        @Config.Name("catacombMaxLevels")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.catacombMaxLevels")
+        @Config.Comment("Maximum catacomb levels; fewer are built when the ground is too shallow.")
+        @Config.RangeInt(min = 1, max = 3)
+        public int catacombMaxLevels = 3;
+
         @Config.Name("generationBudgetMs")
         @Config.LangKey("config.shatteredcitadels.castle_generation.generationBudgetMs")
         @Config.Comment({
