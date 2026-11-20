@@ -6,6 +6,7 @@ import com.shatteredcitadels.palette.ModPaletteRegistry;
 import com.shatteredcitadels.structure.CitadelInstance;
 import com.shatteredcitadels.structure.CitadelNameGenerator;
 import com.shatteredcitadels.structure.StructureType;
+import com.shatteredcitadels.worldgen.catacomb.CatacombBuilder;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
@@ -13,11 +14,16 @@ import net.minecraft.world.gen.structure.StructureBoundingBox;
 
 import java.util.Random;
 
-/** Standalone crypt with a ruined shrine on the surface. */
+/**
+ * Standalone crypt: a ruined shrine on the surface and a spiral down to a small catacomb level
+ * whose hall holds a boss altar. {@code levels} is kept for old saves and no longer used.
+ */
 public final class CryptPlan implements StructurePlan {
 
     public static final String KIND = "crypt";
+    /** Former crypt size; the plan's anchor is still minX + 11, minZ + 11. */
     public static final int SIZE = 21;
+    private static final int HALF = CatacombBuilder.FRAGMENT_CELLS * CatacombBuilder.CELL / 2 + 1;
 
     public final int minX;
     public final int minZ;
@@ -53,7 +59,10 @@ public final class CryptPlan implements StructurePlan {
 
     @Override
     public StructureBoundingBox footprint() {
-        return new StructureBoundingBox(minX, BlockWriter.MIN_Y, minZ, minX + SIZE - 1, surfaceY + 4, minZ + SIZE - 1);
+        int cx = minX + 11;
+        int cz = minZ + 11;
+        return new StructureBoundingBox(cx - HALF - 1, Math.max(BlockWriter.MIN_Y, topLevelY() - 1), cz - HALF - 1,
+                cx + HALF + 1, surfaceY + 4, cz + HALF + 1);
     }
 
     @Override
@@ -65,11 +74,10 @@ public final class CryptPlan implements StructurePlan {
         BlockPalette palette = ModPaletteRegistry.forCitadel(archetype, random.nextLong());
         CitadelInstance record = new CitadelInstance(MathHelper.getRandomUUID(random),
                 CitadelNameGenerator.generate("crypt", random), StructureType.CRYPT, archetype,
-                dimension, new BlockPos(minX, topLevelY, minZ),
-                new StructureBoundingBox(minX, topLevelY, minZ, minX + SIZE - 1, surfaceY + 4, minZ + SIZE - 1));
-        DungeonCryptBuilder builder = new DungeonCryptBuilder(writer, palette, random, record, minX, minZ, SIZE, 1);
-        builder.buildSurfaceRuin(cx, surfaceY, cz);
-        return builder.build(topLevelY, levels, cx, cz, surfaceY, true) == 0 ? null : record;
+                dimension, new BlockPos(minX, topLevelY, minZ), footprint());
+        CatacombBuilder builder = new CatacombBuilder(writer, record, palette, random, 1);
+        builder.buildSurfaceShrine(cx, surfaceY, cz);
+        return builder.buildFragment(cx, cz, topLevelY, true, surfaceY) == 0 ? null : record;
     }
 
     @Override
@@ -95,6 +103,6 @@ public final class CryptPlan implements StructurePlan {
 
     @Override
     public String describe() {
-        return "crypt, " + levels + " levels at " + minX + "," + surfaceY + "," + minZ;
+        return "crypt at " + minX + "," + surfaceY + "," + minZ;
     }
 }

@@ -127,6 +127,10 @@ public final class CommandCitadel extends CommandBase {
             plan = CommonProxy.WORLD_GENERATOR.planCrypt(world, minX, minZ, random, true);
         } else if ("castle".equals(kind)) {
             plan = CastlePlanner.plan(world, chunkX, chunkZ, random, null, true);
+        } else if ("fragment".equals(kind)) {
+            int y = Math.max(12, Math.min(40, world.getHeight((chunkX << 4) + 8, (chunkZ << 4) + 8) - 20));
+            plan = new com.shatteredcitadels.worldgen.catacomb.FragmentPlan((chunkX << 4) + 8, (chunkZ << 4) + 8, y,
+                    random.nextLong(), world.provider.getDimension());
         } else if ("manor".equals(kind)) {
             plan = ManorPlanner.plan(world, chunkX, chunkZ, random, true);
         } else {
@@ -298,6 +302,7 @@ public final class CommandCitadel extends CommandBase {
         kinds.add("castle");
         kinds.add("manor");
         kinds.add("dungeon");
+        kinds.add("fragment");
         return kinds;
     }
 

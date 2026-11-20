@@ -1,6 +1,7 @@
 package com.shatteredcitadels.worldgen;
 
 import com.shatteredcitadels.ShatteredCitadelsMod;
+import com.shatteredcitadels.worldgen.catacomb.FragmentPlan;
 import net.minecraft.nbt.NBTTagCompound;
 
 /** Reads saved {@link StructurePlan}s back by their kind. */
@@ -21,6 +22,8 @@ public final class StructurePlans {
                 return CastlePlan.read(tag);
             case ManorPlan.KIND:
                 return ManorPlan.read(tag);
+            case FragmentPlan.KIND:
+                return FragmentPlan.read(tag);
             default:
                 ShatteredCitadelsMod.LOGGER.warn("Dropping saved structure job of unknown kind '{}'", kind);
                 return null;

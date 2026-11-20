@@ -20,7 +20,6 @@ public final class CitadelPlan implements StructurePlan {
     public static final String KIND = "citadel";
     public static final int FLOOR_HEIGHT = 8;
     /** Floor slab, 4 blocks of headroom, ceiling slab. */
-    public static final int CRYPT_LEVEL_HEIGHT = 6;
     /** How far wings and their annexes may reach out of the tower, in blocks. */
     public static final int WING_REACH = 24;
 

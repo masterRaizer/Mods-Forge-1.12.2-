@@ -173,4 +173,51 @@ public class BlueprintTest {
         assertEquals(tower.writeToNBT(), StructurePlans.read(tower.writeToNBT()).writeToNBT());
         assertEquals(3, ((CitadelPlan) StructurePlans.read(tower.writeToNBT())).cryptLevels);
     }
+
+    @Test
+    public void fragmentRoundTripAndNoParts() {
+        com.shatteredcitadels.worldgen.catacomb.FragmentPlan plan =
+                new com.shatteredcitadels.worldgen.catacomb.FragmentPlan(200, -300, 30, 11L, 0);
+        StructurePlan copy = StructurePlans.read(plan.writeToNBT());
+        assertEquals(plan.describe(), copy.describe());
+        CitadelInstance fragment = copy.build(new BlockWriter(new Blueprint()));
+        assertNotNull(fragment);
+        assertNotNull(fragment.getFloor(-1));
+        assertTrue(fragment.getSpawnerPoints().size() >= 1);
+        assertTrue("buried fragments stay minable", fragment.getParts().isEmpty());
+        assertTrue(copy.footprint().isVecInside(new BlockPos(200, 31, -300)));
+    }
+
+    @Test
+    public void shrineFragmentHasAltarAndPart() {
+        CryptPlan plan = new CryptPlan(100, 100, 70, 1, CitadelArchetype.KEEPERS_CITADEL, 12L, 0);
+        CitadelInstance crypt = plan.build(new BlockWriter(new Blueprint()));
+        assertNotNull(crypt);
+        assertNotNull(crypt.getBossArenaBounds());
+        assertTrue(crypt.getParts().size() >= 1);
+        assertNotNull(crypt.getFloor(-1));
+    }
+
+    @Test
+    public void fragmentRegionPicksAtMostOneChunk() {
+        int found = 0;
+        for (int region = 0; region < 40; region++) {
+            int inRegion = 0;
+            int rx = region % 8 - 4;
+            int rz = region / 8 - 2;
+            for (int cx = rx * 10; cx < rx * 10 + 10; cx++) {
+                for (int cz = rz * 10; cz < rz * 10 + 10; cz++) {
+                    com.shatteredcitadels.worldgen.catacomb.FragmentPlan plan =
+                            com.shatteredcitadels.worldgen.catacomb.VanillaDungeonReplacer.fragmentAt(99L, cx, cz, 10, 0.6D, 0);
+                    if (plan != null) {
+                        inRegion++;
+                        assertTrue(plan.levelY >= 12 && plan.levelY <= 40);
+                    }
+                }
+            }
+            assertTrue(inRegion <= 1);
+            found += inRegion;
+        }
+        assertTrue("about 60 % of 40 regions", found >= 15 && found <= 35);
+    }
 }

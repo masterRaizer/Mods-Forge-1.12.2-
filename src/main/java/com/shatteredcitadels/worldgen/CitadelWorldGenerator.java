@@ -326,8 +326,7 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
             return null;
         }
         int surfaceY = Math.max(MIN_BASE_Y + 12, top.getY() - 1);
-        int levels = ConfigCache.get().rollCryptLevels(random);
         CitadelArchetype archetype = random.nextBoolean() ? CitadelArchetype.KEEPERS_CITADEL : CitadelArchetype.OBSIDIAN_BASTILLE;
-        return new CryptPlan(minX, minZ, surfaceY, levels, archetype, random.nextLong(), world.provider.getDimension());
+        return new CryptPlan(minX, minZ, surfaceY, 1, archetype, random.nextLong(), world.provider.getDimension());
     }
 }

@@ -146,7 +146,7 @@ public class CatacombBuilder {
         for (int k = 0; k < count; k++) {
             int yL = levelY(topLevelY, k);
             CatacombLayout layout = layouts.get(k);
-            registerLevel(k, yL);
+            registerLevel(k, yL, CELLS);
             shellLevel(layout, yL);
             carveLevel(layout, yL);
             for (CatacombLayout.Hall hall : layout.halls()) {
@@ -177,6 +177,82 @@ public class CatacombBuilder {
         return count;
     }
 
+    /** Cells per side of a fragment (35 blocks). */
+    public static final int FRAGMENT_CELLS = 7;
+
+    /**
+     * One small level: a themed hall and a few corridors, no sanctum. A shrine fragment gets a
+     * spiral up to a ruined shrine at {@code surfaceY}, a boss altar in its hall and protection;
+     * a buried one (the replacement of a vanilla spawner dungeon) has neither, like the original.
+     *
+     * @return 1, or 0 when the level would sit below y 6
+     */
+    public int buildFragment(int centreX, int centreZ, int levelY, boolean shrine, int surfaceY) {
+        if (levelY < MIN_FLOOR_Y) {
+            return 0;
+        }
+        levelCount = 1;
+        int middle = FRAGMENT_CELLS / 2;
+        x0 = centreX - 2 - middle * CELL;
+        z0 = centreZ - 2 - middle * CELL;
+        CatacombLayout layout = CatacombLayout.generate(rand.nextLong(), FRAGMENT_CELLS, middle, middle, false, false);
+        layouts.add(layout);
+        registerLevel(0, levelY, FRAGMENT_CELLS);
+        shellLevel(layout, levelY);
+        carveLevel(layout, levelY);
+        for (CatacombLayout.Hall hall : layout.halls()) {
+            if (hall.kind() != CatacombLayout.HallKind.STAIR) {
+                buildHall(hall, 0, levelY);
+                if (shrine) {
+                    bossChamber(hallBox(hall, levelY), levelY);
+                }
+            }
+        }
+        dressCorridors(layout, 0, levelY);
+        if (shrine) {
+            spiral(centreX, centreZ, surfaceY, levelY);
+            rec.addPart(new StructureBoundingBox(x0 - 1, levelY - 1, z0 - 1, x0 + CELL * FRAGMENT_CELLS,
+                    levelY + CORRIDOR_HEIGHT + 4, z0 + CELL * FRAGMENT_CELLS));
+            rec.addPart(new StructureBoundingBox(centreX - 3, levelY + CORRIDOR_HEIGHT + 4, centreZ - 3, centreX + 3,
+                    surfaceY + 4, centreZ + 3));
+        }
+        return 1;
+    }
+
+    /** Boss altar in a corner of the hall; the hall becomes the arena. */
+    private void bossChamber(StructureBoundingBox box, int yL) {
+        BlockPos altar = new BlockPos(box.minX + 1, yL, box.minZ + 1);
+        w.set(altar.up(), air);
+        StructurePieces.bossAltar(w, altar, rec);
+        StructureBoundingBox arena = new StructureBoundingBox(box.minX - 1, yL, box.minZ - 1, box.maxX + 1,
+                yL + CORRIDOR_HEIGHT + 3, box.maxZ + 1);
+        rec.setBossArena(arena, altar.up());
+        rec.addRoom(arena, RoomTag.BOSS_ARENA, -1);
+    }
+
+    /** Small ruined shrine around a fragment's spiral, centred on (cx, surfaceY, cz). */
+    public void buildSurfaceShrine(int cx, int surfaceY, int cz) {
+        for (int x = cx - 3; x <= cx + 3; x++) {
+            for (int z = cz - 3; z <= cz + 3; z++) {
+                w.set(x, surfaceY, z, cat.wall(rand));
+                w.clear(x, surfaceY + 1, z, x, surfaceY + 4, z);
+                w.fillDown(x, z, surfaceY - 1, cat.wall(rand), 4);
+                boolean edge = Math.abs(x - cx) == 3 || Math.abs(z - cz) == 3;
+                if (edge) {
+                    int height = rand.nextInt(4);
+                    for (int y = 1; y <= height; y++) {
+                        w.set(x, surfaceY + y, z, cat.wall(rand));
+                    }
+                }
+            }
+        }
+        int[][] corners = {{cx - 3, cz - 3}, {cx + 3, cz - 3}, {cx - 3, cz + 3}, {cx + 3, cz + 3}};
+        for (int[] c : corners) {
+            w.fill(c[0], surfaceY + 1, c[1], c[0], surfaceY + 4, c[1], surface.get(com.shatteredcitadels.palette.PaletteSlot.PILLAR));
+        }
+        rec.addRoom(new StructureBoundingBox(cx - 3, surfaceY, cz - 3, cx + 3, surfaceY + 4, cz + 3), RoomTag.ENTRANCE_HALL, 0);
+    }
+
     /** The deepest level holds the mage's sanctum when enabled. */
     protected boolean hasSanctum(boolean deepest) {
         return sanctumEnabled && deepest;
@@ -197,10 +273,10 @@ public class CatacombBuilder {
         return z0 + cj * CELL;
     }
 
-    private void registerLevel(int k, int yL) {
+    private void registerLevel(int k, int yL, int cells) {
         int tier = FloorData.clampDifficulty(baseTier + 1 + k);
         FloorData floor = rec.addFloor(-(k + 1), yL, yL + LEVEL_STEP - 1, tier, ConfigCache.get().rollWaveCount(rand), false)
-                .setArea(x0, z0, x0 + CELL * CELLS - 1, z0 + CELL * CELLS - 1)
+                .setArea(x0, z0, x0 + CELL * cells - 1, z0 + CELL * cells - 1)
                 .setZoneKey("catacombs_level_" + (k + 1));
         if (k > 0) {
             floor.setRequiresFloor(-k);

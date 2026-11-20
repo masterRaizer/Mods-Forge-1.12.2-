@@ -85,23 +85,22 @@ public final class ModConfig {
         @Config.RangeDouble(min = 0.0D, max = 1.0D)
         public double skyCitadelChance = 0.06D;
 
-        @Config.Name("undergroundUnderCastleChance")
-        @Config.LangKey("config.shatteredcitadels.castle_generation.undergroundUnderCastleChance")
-        @Config.Comment("Chance that a dangerous underground dungeon is generated beneath a citadel.")
+        @Config.Name("replaceVanillaDungeons")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.replaceVanillaDungeons")
+        @Config.Comment("Replace the vanilla cobblestone spawner dungeons with buried catacomb fragments (Overworld).")
+        public boolean replaceVanillaDungeons = true;
+
+        @Config.Name("fragmentRegionChunks")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.fragmentRegionChunks")
+        @Config.Comment("Side of the square region (in chunks) that holds at most one buried catacomb fragment.")
+        @Config.RangeInt(min = 4, max = 64)
+        public int fragmentRegionChunks = 10;
+
+        @Config.Name("fragmentChance")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.fragmentChance")
+        @Config.Comment("Chance that a region gets its buried catacomb fragment.")
         @Config.RangeDouble(min = 0.0D, max = 1.0D)
-        public double undergroundUnderCastleChance = 0.35D;
-
-        @Config.Name("cryptMinLevels")
-        @Config.LangKey("config.shatteredcitadels.castle_generation.cryptMinLevels")
-        @Config.Comment("Minimum levels of an underground crypt (each level is 6 blocks tall).")
-        @Config.RangeInt(min = 1, max = 8)
-        public int cryptMinLevels = 3;
-
-        @Config.Name("cryptMaxLevels")
-        @Config.LangKey("config.shatteredcitadels.castle_generation.cryptMaxLevels")
-        @Config.Comment("Maximum levels of an underground crypt; shortened automatically above bedrock.")
-        @Config.RangeInt(min = 1, max = 8)
-        public int cryptMaxLevels = 5;
+        public double fragmentChance = 0.6D;
 
         @Config.Name("standaloneUndergroundDungeonChance")
         @Config.LangKey("config.shatteredcitadels.castle_generation.standaloneUndergroundDungeonChance")

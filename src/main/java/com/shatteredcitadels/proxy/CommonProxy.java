@@ -40,6 +40,8 @@ public class CommonProxy {
         // Same discriminators on both physical sides.
         NetworkHandler.init();
         ModLootTables.register();
+        net.minecraftforge.common.MinecraftForge.TERRAIN_GEN_BUS.register(
+                com.shatteredcitadels.worldgen.catacomb.VanillaDungeonReplacer.class);
         CustomAdvancementTriggers.register();
         QuestlineInstaller.install(event.getModConfigurationDirectory());
     }

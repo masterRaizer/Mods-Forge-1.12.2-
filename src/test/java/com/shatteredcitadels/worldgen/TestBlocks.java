@@ -17,6 +17,9 @@ final class TestBlocks {
         if (ModBlocks.SEALED_GATE == null) {
             ModBlocks.SEALED_GATE = new BlockSealedGate();
         }
+        if (ModBlocks.TRIAL_SPAWNER == null) {
+            ModBlocks.TRIAL_SPAWNER = new com.shatteredcitadels.block.BlockTrialSpawner();
+        }
         if (ModBlocks.VASE == null) {
             ModBlocks.VASE = new BlockVase();
         }
