@@ -1,12 +1,26 @@
 package com.shatteredcitadels.tile;
 
 import com.shatteredcitadels.Reference;
+import com.shatteredcitadels.entity.EntityGuardianMage;
+import com.shatteredcitadels.structure.CitadelInstance;
+import com.shatteredcitadels.structure.CitadelWorldSavedData;
+import com.shatteredcitadels.structure.FloorData;
+import com.shatteredcitadels.structure.MageSanctum;
+import net.minecraft.entity.Entity;
+import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.init.SoundEvents;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.nbt.NBTTagList;
 import net.minecraft.nbt.NBTUtil;
 import net.minecraft.tileentity.TileEntity;
+import net.minecraft.util.EnumParticleTypes;
+import net.minecraft.util.ITickable;
 import net.minecraft.util.ResourceLocation;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.math.AxisAlignedBB;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.WorldServer;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraftforge.common.util.Constants;
 
@@ -19,7 +33,10 @@ import java.util.UUID;
  * Hidden under the dais of a catacomb sanctum. Knows its structure, the sanctum floor, the sanctum
  * area and the teleport anchors of the guardian mage, and whether the mage was already summoned.
  */
-public class TileEntityMageSigil extends TileEntity {
+public class TileEntityMageSigil extends TileEntity implements ITickable {
+
+    /** A summoned mage that vanished (killed by a command, lost to a bug) is summoned again after this long. */
+    private static final int LOST_MAGE_TICKS = 600;
 
     public static final ResourceLocation ID = new ResourceLocation(Reference.MODID, "mage_sigil");
 
@@ -29,6 +46,64 @@ public class TileEntityMageSigil extends TileEntity {
     private final List<BlockPos> anchors = new ArrayList<>();
     private boolean spawned;
     private UUID mageId;
+    private int missingTicks;
+
+    /** True when the mage should appear now. */
+    public static boolean shouldSpawn(boolean spawned, boolean unlocked, boolean bossDefeated, boolean playerInside,
+                                      boolean mageAlive) {
+        return !spawned && unlocked && !bossDefeated && playerInside && !mageAlive;
+    }
+
+    @Override
+    public void update() {
+        if (world.isRemote || world.getTotalWorldTime() % 20 != 0 || structureId == null || area == null
+                || !(world instanceof WorldServer)) {
+            return;
+        }
+        WorldServer server = (WorldServer) world;
+        CitadelInstance rec = CitadelWorldSavedData.get(world).getById(structureId);
+        FloorData floor = rec == null ? null : rec.getFloor(floorIndex);
+        if (floor == null) {
+            return;
+        }
+        List<EntityPlayer> inside = playersInside();
+        boolean playerInside = !inside.isEmpty();
+        Entity mage = mageId == null ? null : server.getEntityFromUuid(mageId);
+        boolean mageAlive = mage != null && mage.isEntityAlive();
+        if (spawned && !mageAlive && !floor.isBossDefeated() && playerInside) {
+            missingTicks += 20;
+            if (missingTicks >= LOST_MAGE_TICKS) {
+                spawned = false;
+                missingTicks = 0;
+            }
+        } else {
+            missingTicks = 0;
+        }
+        if (shouldSpawn(spawned, rec.isUnlocked(floor), floor.isBossDefeated(), playerInside, mageAlive)) {
+            summon(server, inside);
+        }
+    }
+
+    private List<EntityPlayer> playersInside() {
+        AxisAlignedBB box = new AxisAlignedBB(area.minX, area.minY, area.minZ, area.maxX + 1, area.maxY + 1, area.maxZ + 1);
+        return world.getEntitiesWithinAABB(EntityPlayer.class, box, p -> p != null && !p.isSpectator() && p.isEntityAlive());
+    }
+
+    private void summon(WorldServer server, List<EntityPlayer> witnesses) {
+        EntityGuardianMage mage = new EntityGuardianMage(server);
+        mage.setLocationAndAngles(pos.getX() + 0.5D, pos.getY() + 2, pos.getZ() + 0.5D, server.rand.nextFloat() * 360.0F, 0.0F);
+        mage.setHomeArea(area, anchors, structureId, floorIndex);
+        mage.onInitialSpawn(server.getDifficultyForLocation(pos), null);
+        if (!server.spawnEntity(mage)) {
+            return;
+        }
+        server.spawnParticle(EnumParticleTypes.PORTAL, mage.posX, mage.posY + 1.0D, mage.posZ, 80, 0.6D, 1.0D, 0.6D, 0.3D);
+        server.playSound(null, pos, SoundEvents.ENTITY_ELDER_GUARDIAN_CURSE, SoundCategory.HOSTILE, 2.0F, 0.7F);
+        setSpawned(true, mage.getUniqueID());
+        for (EntityPlayer player : witnesses) {
+            MageSanctum.title((EntityPlayerMP) player, "shatteredcitadels.mage.title", "shatteredcitadels.mage.subtitle");
+        }
+    }
 
     public void configure(UUID structureId, int floorIndex, StructureBoundingBox area, List<BlockPos> anchors) {
         this.structureId = structureId;

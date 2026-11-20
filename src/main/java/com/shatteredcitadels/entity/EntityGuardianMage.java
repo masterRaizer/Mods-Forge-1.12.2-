@@ -390,6 +390,14 @@ public class EntityGuardianMage extends EntityMob {
     }
 
     @Override
+    public void onDeath(DamageSource cause) {
+        super.onDeath(cause);
+        if (!world.isRemote && structureId != null && world instanceof WorldServer) {
+            com.shatteredcitadels.structure.MageSanctum.onMageDefeated((WorldServer) world, structureId, floorIndex, getPosition());
+        }
+    }
+
+    @Override
     protected void dropFewItems(boolean wasRecentlyHit, int lootingModifier) {
         if (ModItems.GUARDIAN_STAFF != null) {
             entityDropItem(new ItemStack(ModItems.GUARDIAN_STAFF), 0.5F);
