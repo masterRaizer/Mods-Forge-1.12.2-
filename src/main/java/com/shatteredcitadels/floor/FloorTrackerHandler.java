@@ -9,6 +9,7 @@ import com.shatteredcitadels.network.PacketSyncFloorHud;
 import com.shatteredcitadels.structure.CitadelInstance;
 import com.shatteredcitadels.structure.CitadelWorldSavedData;
 import com.shatteredcitadels.structure.FloorData;
+import com.shatteredcitadels.structure.SealedGates;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.util.math.BlockPos;
@@ -143,6 +144,8 @@ public final class FloorTrackerHandler {
         if (citadel == null) {
             return FloorHudState.NONE;
         }
+        // Gates that waited in unloaded chunks open as soon as someone is inside again.
+        SealedGates.reconcile(player.world, citadel);
         return FloorHudState.of(citadel, citadel.floorAt(MathHelper.floor(player.posY)));
     }
 

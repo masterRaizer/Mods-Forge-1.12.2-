@@ -35,20 +35,24 @@ public class LootTableItemsTest {
 
     @Test
     public void allSpawnerLootTablesUseValidItems() throws IOException {
-        check("spawner");
+        check("spawner", 6);
     }
 
     @Test
     public void allChestLootTablesUseValidItems() throws IOException {
-        check("chests");
+        check("chests", 9);
     }
 
-    private static void check(String folder) throws IOException {
+    @Test
+    public void allVaseLootTablesUseValidItems() throws IOException {
+        check("vases", 3);
+    }
+
+    private static void check(String folder, int expectedFiles) throws IOException {
         File dir = new File("src/main/resources/assets/shatteredcitadels/loot_tables/" + folder);
         File[] files = dir.listFiles((d, name) -> name.endsWith(".json"));
         assertNotNull(files);
-        assertTrue(files.length >= 6);
-        assertEquals(6, files.length);
+        assertEquals(expectedFiles, files.length);
         for (File file : files) {
             JsonObject root = new JsonParser().parse(new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8))
                     .getAsJsonObject();

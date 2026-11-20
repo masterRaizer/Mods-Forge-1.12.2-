@@ -148,4 +148,37 @@ public class CitadelPersistenceTest {
         assertNull(CitadelNameGenerator.parseKeys("Plain Name"));
         assertNull(CitadelNameGenerator.parseKeys("@name:crypt:9:0"));
     }
+
+    @Test
+    public void gatesAndPlayerPlacedBlocksSurviveSaving() throws IOException {
+        UUID id = UUID.randomUUID();
+        CitadelInstance c = new CitadelInstance(id, "", StructureType.CITADEL, CitadelArchetype.KEEPERS_CITADEL, 0,
+                new BlockPos(0, 64, 0), new StructureBoundingBox(0, 40, 0, 26, 160, 26));
+        c.addFloor(0, 64, 71, 1, 2, false);
+        c.addFloor(1, 72, 85, 2, 1, true);
+        c.addGate(new BlockPos(3, 72, 4), 0, 42);
+        c.addGate(new BlockPos(3, 50, 4), -1, 7);
+        c.markPlayerPlaced(new BlockPos(5, 65, 5));
+        assertTrue(!c.isConquered());
+
+        ByteArrayOutputStream out = new ByteArrayOutputStream();
+        CompressedStreamTools.writeCompressed(c.writeToNBT(), out);
+        CitadelInstance read = CitadelInstance.readFromNBT(
+                CompressedStreamTools.readCompressed(new ByteArrayInputStream(out.toByteArray())));
+        assertNotNull(read);
+        assertEquals(2, read.getGates().size());
+        CitadelInstance.GatePoint gate = read.getGates().get(0);
+        assertEquals(new BlockPos(3, 72, 4), gate.pos);
+        assertEquals(0, gate.requiredFloor);
+        assertEquals(42, gate.restoreStateId);
+        assertEquals(-1, read.getGates().get(1).requiredFloor);
+        assertTrue(read.isPlayerPlaced(new BlockPos(5, 65, 5)));
+        assertTrue(read.consumePlayerPlaced(new BlockPos(5, 65, 5)));
+        assertTrue(!read.isPlayerPlaced(new BlockPos(5, 65, 5)));
+
+        read.getFloor(1).setBossDefeated(true);
+        assertTrue(read.isConquered());
+        read.removeGate(gate);
+        assertEquals(1, read.getGates().size());
+    }
 }

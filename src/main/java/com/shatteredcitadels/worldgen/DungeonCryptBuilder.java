@@ -1,5 +1,7 @@
 package com.shatteredcitadels.worldgen;
 
+import com.shatteredcitadels.block.BlockVase;
+import com.shatteredcitadels.block.ModBlocks;
 import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.config.MobTiers;
 import com.shatteredcitadels.loot.ModLootTables;
@@ -11,6 +13,7 @@ import com.shatteredcitadels.spawner.WaveSpawnerHooks;
 import com.shatteredcitadels.structure.CitadelInstance;
 import com.shatteredcitadels.structure.FloorData;
 import com.shatteredcitadels.structure.RoomTag;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockBone;
 import net.minecraft.block.BlockChest;
 import net.minecraft.block.BlockDispenser;
@@ -65,6 +68,8 @@ public final class DungeonCryptBuilder {
 
     private final IBlockState[] wallVariants;
     private final IBlockState air = Blocks.AIR.getDefaultState();
+    /** Seal the ladder from the citadel's ground floor until floor 0 is cleared. */
+    private boolean sealEntrance;
 
     /** Per level: open[i][j] true = air at grid cell (x0 + i, z0 + j). */
     private boolean[][][] open;
@@ -93,6 +98,12 @@ public final class DungeonCryptBuilder {
                 Blocks.COBBLESTONE.getDefaultState(),
                 Blocks.MOSSY_COBBLESTONE.getDefaultState()
         };
+    }
+
+    /** The ladder from the citadel's ground floor stays sealed until floor 0 is cleared. */
+    public DungeonCryptBuilder sealEntrance() {
+        this.sealEntrance = true;
+        return this;
     }
 
     /**
@@ -374,6 +385,18 @@ public final class DungeonCryptBuilder {
         for (int y = bottom; y <= yL; y++) {
             w.set(x, y, z, ladder);
         }
+        // The way down to level k+1 opens once level k is cleared.
+        seal(x, yL, z, -(k + 1));
+    }
+
+    private void seal(int x, int y, int z, int requiredFloor) {
+        if (!ConfigCache.get().isLockFloorsUntilCleared()) {
+            return;
+        }
+        IBlockState replaced = w.get(x, y, z);
+        if (w.set(x, y, z, ModBlocks.SEALED_GATE.getDefaultState())) {
+            rec.addGate(new BlockPos(x, y, z), requiredFloor, Block.getStateId(replaced));
+        }
     }
 
     private void buildEntranceShaft(int si, int sj, int topLevelY, int shaftTopY) {
@@ -404,6 +427,9 @@ public final class DungeonCryptBuilder {
                 }
             }
             w.set(x, y, z, ladder);
+        }
+        if (sealEntrance) {
+            seal(x, shaftTopY, z, 0);
         }
     }
 
@@ -525,6 +551,7 @@ public final class DungeonCryptBuilder {
                     placeChest(new BlockPos(ccx, yL + 1, ccz));
                     break;
             }
+            placeVases(minX, minZ, maxX, maxZ, yL, 1 + rand.nextInt(2));
         }
         // Cobwebs in some dead ends.
         boolean[][] o = open[k];
@@ -620,6 +647,19 @@ public final class DungeonCryptBuilder {
             ((TileEntityLockableLoot) tile).setLootTable(ModLootTables.UNDERGROUND_CRYPT, rand.nextLong());
         }
         rec.addChestPoint(pos);
+    }
+
+    private void placeVases(int minX, int minZ, int maxX, int maxZ, int yL, int count) {
+        for (int attempt = 0; attempt < count * 4 && count > 0; attempt++) {
+            int x = rand.nextBoolean() ? (rand.nextBoolean() ? minX : maxX) : minX + rand.nextInt(maxX - minX + 1);
+            int z = x == minX || x == maxX ? minZ + rand.nextInt(maxZ - minZ + 1) : (rand.nextBoolean() ? minZ : maxZ);
+            if (w.inside(x, yL + 1, z) && w.get(x, yL + 1, z).getBlock() == Blocks.AIR && w.isSolid(x, yL, z)) {
+                BlockVase.Variant variant = rand.nextInt(10) == 0 ? BlockVase.Variant.GILDED : BlockVase.Variant.DARK;
+                if (w.set(x, yL + 1, z, ModBlocks.VASE.getDefaultState().withProperty(BlockVase.VARIANT, variant))) {
+                    count--;
+                }
+            }
+        }
     }
 
     private IBlockState wall() {

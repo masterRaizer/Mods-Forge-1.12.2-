@@ -1,5 +1,6 @@
 package com.shatteredcitadels.worldgen;
 
+import com.shatteredcitadels.block.BlockVase;
 import com.shatteredcitadels.block.ModBlocks;
 import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.config.MobTiers;
@@ -14,6 +15,7 @@ import com.shatteredcitadels.structure.CitadelInstance;
 import com.shatteredcitadels.structure.FloorData;
 import com.shatteredcitadels.structure.RoomTag;
 import com.shatteredcitadels.tile.TileEntityBossAltar;
+import net.minecraft.block.Block;
 import net.minecraft.block.BlockChest;
 import net.minecraft.block.material.Material;
 import net.minecraft.block.state.IBlockState;
@@ -23,6 +25,7 @@ import net.minecraft.tileentity.TileEntityLockableLoot;
 import net.minecraft.util.EnumFacing;
 import net.minecraft.util.ResourceLocation;
 import net.minecraft.util.math.BlockPos;
+import net.minecraft.world.World;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 
 import java.util.ArrayList;
@@ -46,7 +49,8 @@ public final class CitadelBuilder {
     private static final int SW = 3;
 
     private static final RoomTag[] ROOM_ROTATION = {
-            RoomTag.GUARD_ROOM, RoomTag.LIBRARY, RoomTag.BARRACKS, RoomTag.TREASURY
+            RoomTag.GUARD_ROOM, RoomTag.PANTRY, RoomTag.LIBRARY, RoomTag.BEDROOM,
+            RoomTag.BARRACKS, RoomTag.SMELTERY, RoomTag.TREASURY
     };
 
     private final BlockWriter w;
@@ -68,6 +72,7 @@ public final class CitadelBuilder {
 
     /** {floor, minX, minZ, maxX, maxZ} areas decor must not touch (stairs, holes, shafts). */
     private final List<int[]> reserved = new ArrayList<>();
+    private final RoomFurnisher furnisher;
 
     public CitadelBuilder(BlockWriter writer, CitadelPlan plan, BlockPalette palette, Random random,
                           CitadelInstance record) {
@@ -86,6 +91,42 @@ public final class CitadelBuilder {
         this.cx = plan.centerX();
         this.cz = plan.centerZ();
         this.mid = plan.width / 2;
+        this.furnisher = new RoomFurnisher(new RoomFurnisher.Site() {
+            @Override
+            public boolean free(int x, int y, int z) {
+                return placeable(Math.floorDiv(y - p.floorY(0), CitadelPlan.FLOOR_HEIGHT), x, y, z);
+            }
+
+            @Override
+            public IBlockState get(int x, int y, int z) {
+                return w.get(x, y, z);
+            }
+
+            @Override
+            public boolean set(int x, int y, int z, IBlockState state) {
+                return w.set(x, y, z, state);
+            }
+
+            @Override
+            public void chest(BlockPos pos, EnumFacing facing, ResourceLocation lootTable) {
+                if (placeable(Math.floorDiv(pos.getY() - p.floorY(0), CitadelPlan.FLOOR_HEIGHT), pos.getX(), pos.getY(), pos.getZ())) {
+                    placeChest(pos, facing, lootTable);
+                }
+            }
+
+            @Override
+            public World world() {
+                return w.getWorld();
+            }
+        }, random, palette, vaseVariant(plan.archetype));
+    }
+
+    /** Clay in stone keeps, dark glaze in nether and techno halls, gilded (rare) elsewhere. */
+    static BlockVase.Variant vaseVariant(CitadelArchetype archetype) {
+        if (archetype == CitadelArchetype.OBSIDIAN_BASTILLE || archetype == CitadelArchetype.TECHNO_ARCANE_SPIRE) {
+            return BlockVase.Variant.DARK;
+        }
+        return archetype == CitadelArchetype.SKY_CITADEL ? BlockVase.Variant.GILDED : BlockVase.Variant.CLAY;
     }
 
     /** X/Z of the ladder shaft that leads from the ground floor into the crypt. */
@@ -290,6 +331,28 @@ public final class CitadelBuilder {
         int maxZ = Math.max(sz, sz + dz * STAIR_STEPS + lz) + 1;
         reserve(f, minX, minZ, maxX, maxZ);
         reserve(f + 1, minX, minZ, maxX, maxZ);
+        if (ConfigCache.get().isLockFloorsUntilCleared()) {
+            sealStairwell(f, sx, sz, dx, dz, lx, lz);
+        }
+    }
+
+    /**
+     * Seals the opening the staircase cuts into the slab of floor f+1 (steps 4-6) and its top step
+     * (step 7, flush with the slab) with sealed gates that open once floor f is cleared.
+     */
+    private void sealStairwell(int f, int sx, int sz, int dx, int dz, int lx, int lz) {
+        int y = p.floorY(f + 1);
+        IBlockState gate = ModBlocks.SEALED_GATE.getDefaultState();
+        for (int k = 4; k < STAIR_STEPS + 1; k++) {
+            for (int l = 0; l < 2; l++) {
+                int x = sx + dx * k + lx * l;
+                int z = sz + dz * k + lz * l;
+                IBlockState replaced = w.get(x, y, z);
+                if (w.set(x, y, z, gate)) {
+                    rec.addGate(new BlockPos(x, y, z), f, Block.getStateId(replaced));
+                }
+            }
+        }
     }
 
     private void buildEntrance() {
@@ -351,10 +414,10 @@ public final class CitadelBuilder {
                 w.set(qx, y0 + CitadelPlan.FLOOR_HEIGHT, qz, pal.get(PaletteSlot.LIGHT));
             }
 
-            // Furniture in the room corners.
+            // Furniture in the room corners (lived-in rooms are furnished below instead).
             int[][] corners = {{b[0], b[1]}, {b[2], b[1]}, {b[0], b[3]}, {b[2], b[3]}};
             for (int[] c : corners) {
-                if (rand.nextFloat() < 0.6F && placeable(f, c[0], y0 + 1, c[1])) {
+                if (!RoomFurnisher.isLivedIn(tag) && rand.nextFloat() < 0.6F && placeable(f, c[0], y0 + 1, c[1])) {
                     w.set(c[0], y0 + 1, c[1], pal.get(PaletteSlot.FURNITURE, rand));
                 }
             }
@@ -376,6 +439,12 @@ public final class CitadelBuilder {
                     placeSpawner(new BlockPos(sx, y0 + 1, sz), f, tier, tag);
                 }
             }
+
+            if (RoomFurnisher.isLivedIn(tag)) {
+                furnisher.furnish(tag, b[0], b[1], b[2], b[3], y0);
+            }
+            furnisher.vases(b[0], b[1], b[2], b[3], y0, 1 + rand.nextInt(hall ? 2 : 3));
+            furnisher.abandon(b[0], b[1], b[2], b[3], y0, CitadelPlan.FLOOR_HEIGHT);
         }
     }
 

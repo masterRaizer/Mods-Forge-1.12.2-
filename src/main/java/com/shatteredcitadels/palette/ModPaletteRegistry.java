@@ -12,6 +12,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.util.ResourceLocation;
 import net.minecraftforge.fluids.IFluidBlock;
+import net.minecraftforge.fml.common.Loader;
 import net.minecraftforge.fml.common.registry.ForgeRegistries;
 
 import java.util.ArrayList;
@@ -52,6 +53,8 @@ public final class ModPaletteRegistry {
 
     private static volatile Map<CitadelArchetype, Resolved> resolved = Collections.emptyMap();
     private static volatile boolean initialised;
+    private static final java.util.Set<String> LOGGED_REJECTIONS = java.util.Collections.newSetFromMap(
+            new java.util.concurrent.ConcurrentHashMap<String, Boolean>());
 
     private ModPaletteRegistry() {
     }
@@ -93,6 +96,30 @@ public final class ModPaletteRegistry {
         }
         Resolved palette = resolved.get(archetype);
         return palette != null ? palette : build(archetype, false);
+    }
+
+    private static final Map<String, IBlockState> DECOR_CACHE = new java.util.concurrent.ConcurrentHashMap<>();
+    private static final IBlockState NO_DECOR = Blocks.AIR.getDefaultState();
+
+    /**
+     * Resolves room decor (furniture, appliances, storage). Each alternative may use any variant
+     * syntax of this class; the first one that yields a placeable block wins. Results are cached.
+     *
+     * @return the block state, or null if no alternative resolves (mod missing)
+     */
+    public static IBlockState resolveDecor(String... alternatives) {
+        for (String alternative : alternatives) {
+            IBlockState cached = DECOR_CACHE.get(alternative);
+            if (cached == null) {
+                List<IBlockState> states = resolveAlternative(alternative, PaletteSlot.FURNITURE, null);
+                cached = states.isEmpty() ? NO_DECOR : states.get(0);
+                DECOR_CACHE.put(alternative, cached);
+            }
+            if (cached != NO_DECOR) {
+                return cached;
+            }
+        }
+        return null;
     }
 
     /**
@@ -215,7 +242,7 @@ public final class ModPaletteRegistry {
                 candidates = exact == null ? Collections.<IBlockState>emptyList() : Collections.singletonList(exact);
             }
             if (candidates.isEmpty()) {
-                reject(logFor, slot, variant, "not registered (mod missing, block disabled in its config or wrong name)");
+                reject(logFor, slot, variant, "not registered (disabled in the mod's config or wrong name)");
                 continue;
             }
             boolean any = false;
@@ -235,8 +262,16 @@ public final class ModPaletteRegistry {
         return states;
     }
 
+    /**
+     * Logs a skipped variant only when its mod is installed: then the name is wrong, the block is
+     * disabled in that mod's config or unsuitable, which is worth knowing. Missing mods stay quiet.
+     */
     private static void reject(CitadelArchetype archetype, PaletteSlot slot, String variant, String reason) {
-        if (archetype != null) {
+        int colon = variant.indexOf(':');
+        if (archetype == null || colon <= 0 || !Loader.isModLoaded(variant.substring(0, colon))) {
+            return;
+        }
+        if (LOGGED_REJECTIONS.add(archetype.key() + "." + slot.key() + "=" + variant)) {
             ShatteredCitadelsMod.LOGGER.info("Palette {}.{}: skipped {} - {}", archetype.key(), slot.key(), variant, reason);
         }
     }

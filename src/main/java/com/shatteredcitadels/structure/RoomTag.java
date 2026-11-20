@@ -14,7 +14,10 @@ public enum RoomTag {
     GOBLIN_DEN,
     UNDERGROUND_LAIR,
     OSSUARY,
-    TRAP_CORRIDOR;
+    TRAP_CORRIDOR,
+    PANTRY,
+    BEDROOM,
+    SMELTERY;
 
     public static RoomTag byName(String name) {
         for (RoomTag tag : values()) {

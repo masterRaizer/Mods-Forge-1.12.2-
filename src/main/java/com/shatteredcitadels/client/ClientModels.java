@@ -1,6 +1,7 @@
 package com.shatteredcitadels.client;
 
 import com.shatteredcitadels.Reference;
+import com.shatteredcitadels.block.BlockVase;
 import com.shatteredcitadels.block.ModBlocks;
 import com.shatteredcitadels.item.ModItems;
 import net.minecraft.client.renderer.block.model.ModelResourceLocation;
@@ -30,6 +31,16 @@ public final class ClientModels {
         if (ModBlocks.BOSS_ALTAR_ITEM != null) {
             ModelLoader.setCustomModelResourceLocation(ModBlocks.BOSS_ALTAR_ITEM, 0,
                     new ModelResourceLocation(ModBlocks.BOSS_ALTAR_ITEM.getRegistryName(), "inventory"));
+        }
+        if (ModBlocks.SEALED_GATE_ITEM != null) {
+            ModelLoader.setCustomModelResourceLocation(ModBlocks.SEALED_GATE_ITEM, 0,
+                    new ModelResourceLocation(ModBlocks.SEALED_GATE_ITEM.getRegistryName(), "inventory"));
+        }
+        if (ModBlocks.VASE_ITEM != null) {
+            for (BlockVase.Variant variant : BlockVase.Variant.values()) {
+                ModelLoader.setCustomModelResourceLocation(ModBlocks.VASE_ITEM, variant.ordinal(),
+                        new ModelResourceLocation(ModBlocks.VASE_ITEM.getRegistryName(), "variant=" + variant.getName()));
+            }
         }
         if (ModBlocks.TRIAL_SPAWNER_ITEM != null) {
             ModelLoader.setCustomModelResourceLocation(ModBlocks.TRIAL_SPAWNER_ITEM, 0,

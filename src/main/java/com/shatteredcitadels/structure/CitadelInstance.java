@@ -37,6 +37,9 @@ public final class CitadelInstance {
     private final TreeMap<Integer, FloorData> floors = new TreeMap<>();
     private final List<SpawnerPoint> spawnerPoints = new ArrayList<>();
     private final List<BlockPos> chestPoints = new ArrayList<>();
+    private final List<GatePoint> gates = new ArrayList<>();
+    /** Blocks placed by players inside the structure: always breakable again. */
+    private final java.util.Set<Long> playerPlaced = new java.util.HashSet<>();
     private final List<TaggedRoom> rooms = new ArrayList<>();
     private boolean hasCrypt;
 
@@ -68,6 +71,44 @@ public final class CitadelInstance {
 
     public void addSpawnerPoint(BlockPos pos, int floorIndex, int tier) {
         spawnerPoints.add(new SpawnerPoint(pos.toImmutable(), floorIndex, tier));
+    }
+
+    /**
+     * @param requiredFloor floor whose clearing opens this gate
+     * @param restoreStateId {@code Block.getStateId} of the block the gate replaced
+     */
+    public void addGate(BlockPos pos, int requiredFloor, int restoreStateId) {
+        gates.add(new GatePoint(pos.toImmutable(), requiredFloor, restoreStateId));
+    }
+
+    public void removeGate(GatePoint gate) {
+        gates.remove(gate);
+    }
+
+    public List<GatePoint> getGates() { return Collections.unmodifiableList(gates); }
+
+    public void markPlayerPlaced(BlockPos pos) {
+        playerPlaced.add(pos.toLong());
+    }
+
+    /** @return true (and forgets the position) if a player placed the block at {@code pos}. */
+    public boolean consumePlayerPlaced(BlockPos pos) {
+        return playerPlaced.remove(pos.toLong());
+    }
+
+    public boolean isPlayerPlaced(BlockPos pos) {
+        return playerPlaced.contains(pos.toLong());
+    }
+
+    /** @return true once the structure's boss is defeated: gates open and protection lifts. */
+    public boolean isConquered() {
+        for (FloorData floor : floors.values()) {
+            // Crypt bosses live on a regular level: the altar marks whichever floor holds the arena.
+            if (floor.isBossDefeated()) {
+                return true;
+            }
+        }
+        return false;
     }
 
     public void addChestPoint(BlockPos pos) {
@@ -197,6 +238,20 @@ public final class CitadelInstance {
             chests.appendTag(c);
         }
         tag.setTag("chests", chests);
+        NBTTagList gateList = new NBTTagList();
+        for (GatePoint gate : gates) {
+            NBTTagCompound g = new NBTTagCompound();
+            g.setLong("pos", gate.pos.toLong());
+            g.setInteger("floor", gate.requiredFloor);
+            g.setInteger("restore", gate.restoreStateId);
+            gateList.appendTag(g);
+        }
+        tag.setTag("gates", gateList);
+        NBTTagList placedList = new NBTTagList();
+        for (Long pos : playerPlaced) {
+            placedList.appendTag(new net.minecraft.nbt.NBTTagLong(pos));
+        }
+        tag.setTag("placed", placedList);
         NBTTagList roomList = new NBTTagList();
         for (TaggedRoom room : rooms) {
             NBTTagCompound r = new NBTTagCompound();
@@ -244,6 +299,18 @@ public final class CitadelInstance {
         for (int i = 0; i < chests.tagCount(); i++) {
             instance.addChestPoint(BlockPos.fromLong(chests.getCompoundTagAt(i).getLong("pos")));
         }
+        NBTTagList gateList = tag.getTagList("gates", Constants.NBT.TAG_COMPOUND);
+        for (int i = 0; i < gateList.tagCount(); i++) {
+            NBTTagCompound g = gateList.getCompoundTagAt(i);
+            instance.addGate(BlockPos.fromLong(g.getLong("pos")), g.getInteger("floor"), g.getInteger("restore"));
+        }
+        NBTTagList placedList = tag.getTagList("placed", Constants.NBT.TAG_LONG);
+        for (int i = 0; i < placedList.tagCount(); i++) {
+            net.minecraft.nbt.NBTBase entry = placedList.get(i);
+            if (entry instanceof net.minecraft.nbt.NBTTagLong) {
+                instance.playerPlaced.add(((net.minecraft.nbt.NBTTagLong) entry).getLong());
+            }
+        }
         NBTTagList roomList = tag.getTagList("rooms", Constants.NBT.TAG_COMPOUND);
         for (int i = 0; i < roomList.tagCount(); i++) {
             NBTTagCompound r = roomList.getCompoundTagAt(i);
@@ -263,6 +330,19 @@ public final class CitadelInstance {
     }
 
     // ------------------------------------------------------------------ value types
+
+    /** A sealed gate placed at generation; removed from the record once opened. */
+    public static final class GatePoint {
+        public final BlockPos pos;
+        public final int requiredFloor;
+        public final int restoreStateId;
+
+        GatePoint(BlockPos pos, int requiredFloor, int restoreStateId) {
+            this.pos = pos;
+            this.requiredFloor = requiredFloor;
+            this.restoreStateId = restoreStateId;
+        }
+    }
 
     public static final class SpawnerPoint {
         public final BlockPos pos;

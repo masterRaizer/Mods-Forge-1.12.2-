@@ -100,6 +100,9 @@ public final class ConfigCache {
         next.stuckMobTimeoutSeconds = clamp(waves.stuckMobTimeoutSeconds, 30, 3600);
         parseBlacklist(waves.mobBlacklist, next);
         next.enableAutoModMobScanner = waves.enableAutoModMobScanner;
+        next.lockFloorsUntilCleared = waves.lockFloorsUntilCleared;
+        next.unbreakableCitadels = waves.unbreakableCitadels;
+        next.vaseMobChance = clamp01(waves.vaseMobChance);
         next.manualMobTierOverrides = parseTierOverrides(waves.manualMobTierOverrides);
 
         next.bossPoolByTier = parseBossPool(boss.bossPoolByTier);
@@ -351,6 +354,9 @@ public final class ConfigCache {
         Set<ResourceLocation> blacklistedEntities = Collections.emptySet();
         Set<String> blacklistedMods = Collections.emptySet();
         boolean enableAutoModMobScanner = true;
+        boolean lockFloorsUntilCleared = true;
+        boolean unbreakableCitadels = true;
+        double vaseMobChance = 0.12D;
         Map<ResourceLocation, Integer> manualMobTierOverrides = Collections.emptyMap();
 
         Map<Integer, List<ResourceLocation>> bossPoolByTier = Collections.emptyMap();
@@ -410,6 +416,9 @@ public final class ConfigCache {
             c.blacklistedEntities = blacklistedEntities;
             c.blacklistedMods = blacklistedMods;
             c.enableAutoModMobScanner = enableAutoModMobScanner;
+            c.lockFloorsUntilCleared = lockFloorsUntilCleared;
+            c.unbreakableCitadels = unbreakableCitadels;
+            c.vaseMobChance = vaseMobChance;
             c.manualMobTierOverrides = manualMobTierOverrides;
             c.bossPoolByTier = bossPoolByTier;
             c.resolvedBossPoolByTier = resolvedBossPoolByTier;
@@ -491,6 +500,9 @@ public final class ConfigCache {
         }
 
         public boolean isAutoModMobScannerEnabled() { return enableAutoModMobScanner; }
+        public boolean isLockFloorsUntilCleared() { return lockFloorsUntilCleared; }
+        public boolean isUnbreakableCitadels() { return unbreakableCitadels; }
+        public double getVaseMobChance() { return vaseMobChance; }
         public Map<ResourceLocation, Integer> getManualMobTierOverrides() { return manualMobTierOverrides; }
 
         public int rollWaveCount(Random random) {

@@ -1,0 +1,10 @@
+{
+  "variants": {
+    "normal": {
+      "model": "shatteredcitadels:sealed_gate"
+    },
+    "inventory": {
+      "model": "shatteredcitadels:sealed_gate"
+    }
+  }
+}

@@ -223,6 +223,28 @@ public final class ModConfig {
         @Config.Comment("Scan hostile mobs of installed mods and assign tiers from their health, damage, armor and XP.")
         public boolean enableAutoModMobScanner = true;
 
+        @Config.Name("lockFloorsUntilCleared")
+        @Config.LangKey("config.shatteredcitadels.spawner_and_waves.lockFloorsUntilCleared")
+        @Config.Comment({
+                "Seal the stairwell to the next floor (and the ladder to the next crypt level) with an unbreakable",
+                "gate until every wave of the current floor is defeated. Applies to newly generated citadels."
+        })
+        public boolean lockFloorsUntilCleared = true;
+
+        @Config.Name("unbreakableCitadels")
+        @Config.LangKey("config.shatteredcitadels.spawner_and_waves.unbreakableCitadels")
+        @Config.Comment({
+                "Citadel walls, floors and ceilings cannot be broken by players, explosions or mobs until the",
+                "citadel's boss is defeated. Chests, furniture, vases and cobwebs stay breakable; creative ignores it."
+        })
+        public boolean unbreakableCitadels = true;
+
+        @Config.Name("vaseMobChance")
+        @Config.LangKey("config.shatteredcitadels.spawner_and_waves.vaseMobChance")
+        @Config.Comment("Chance that a smashed vase releases a mob of the floor's tier.")
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double vaseMobChance = 0.12D;
+
         @Config.Name("manualMobTierOverrides")
         @Config.LangKey("config.shatteredcitadels.spawner_and_waves.manualMobTierOverrides")
         @Config.Comment({

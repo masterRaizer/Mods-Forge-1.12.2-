@@ -8,6 +8,7 @@ import com.shatteredcitadels.palette.ModPaletteRegistry;
 import com.shatteredcitadels.structure.CitadelInstance;
 import com.shatteredcitadels.structure.CitadelNameGenerator;
 import com.shatteredcitadels.structure.CitadelWorldSavedData;
+import com.shatteredcitadels.structure.FloorData;
 import com.shatteredcitadels.structure.StructureType;
 import net.minecraft.block.material.Material;
 import net.minecraft.util.math.BlockPos;
@@ -186,6 +187,29 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
     }
 
     /**
+     * A floor without any wave spawner (none fit, or the placer failed) has nothing to clear: it is
+     * marked cleared right away and its sealed gates are removed again, so no way stays locked.
+     */
+    static void openUnguardedFloors(BlockWriter writer, CitadelInstance record) {
+        java.util.Set<Integer> guarded = new java.util.HashSet<>();
+        for (CitadelInstance.SpawnerPoint point : record.getSpawnerPoints()) {
+            guarded.add(point.floorIndex);
+        }
+        for (FloorData floor : record.getFloors().values()) {
+            if (floor.isBossFloor() || guarded.contains(floor.getIndex())) {
+                continue;
+            }
+            floor.setCleared(true);
+            for (CitadelInstance.GatePoint gate : new java.util.ArrayList<>(record.getGates())) {
+                if (gate.requiredFloor == floor.getIndex()) {
+                    writer.set(gate.pos, net.minecraft.block.Block.getStateById(gate.restoreStateId));
+                    record.removeGate(gate);
+                }
+            }
+        }
+    }
+
+    /**
      * @return the floor count shortened (never below {@code minFloors}) so the roof, battlements and
      * corner lights stay below {@link BlockWriter#MAX_Y}.
      */
@@ -269,9 +293,11 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         if (plan.cryptLevels > 0) {
             int tier = plan.sky ? 3 : 2;
             new DungeonCryptBuilder(writer, palette, buildRandom, record, plan.minX, plan.minZ, plan.width, tier)
+                    .sealEntrance()
                     .build(plan.cryptLevelY(0), plan.cryptLevels, CitadelBuilder.shaftX(plan), CitadelBuilder.shaftZ(plan),
                             plan.floorY(0));
         }
+        openUnguardedFloors(writer, record);
         data.register(record);
         ShatteredCitadelsMod.LOGGER.info("Generated {} #{} ({}, {} floors, crypt levels {}) at {} y={}..{}: {} blocks, {} clipped",
                 record.getType(), record.getCitadelId(), plan.archetype.key(), plan.floors, plan.cryptLevels,
@@ -311,6 +337,7 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         if (built == 0) {
             return null;
         }
+        openUnguardedFloors(writer, record);
         data.register(record);
         ShatteredCitadelsMod.LOGGER.info("Generated CRYPT #{} ({} levels) at {}: {} blocks, {} clipped",
                 record.getCitadelId(), built, record.getOrigin(), writer.getWritten(), writer.getRejected());

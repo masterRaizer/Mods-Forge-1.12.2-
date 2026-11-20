@@ -14,6 +14,7 @@ import com.shatteredcitadels.loot.ModLootTables;
 import com.shatteredcitadels.structure.CitadelInstance;
 import com.shatteredcitadels.structure.CitadelWorldSavedData;
 import com.shatteredcitadels.structure.FloorData;
+import com.shatteredcitadels.structure.SealedGates;
 import net.minecraft.block.Block;
 import net.minecraft.block.state.IBlockState;
 import net.minecraft.entity.Entity;
@@ -377,6 +378,7 @@ public class TileEntityBossAltar extends TileEntity implements ITickable {
                 top.setRemainingMobs(0);
             }
             CitadelWorldSavedData.get(world).markDirty();
+            SealedGates.openAll(world, citadel);
             removeMinions(server, citadel.getBossArenaBounds());
             ITextComponent line = new TextComponentTranslation("shatteredcitadels.boss.defeated", BossFactory.bossName(citadel));
             line.getStyle().setColor(TextFormatting.GOLD);

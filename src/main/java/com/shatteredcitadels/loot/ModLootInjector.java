@@ -65,6 +65,27 @@ public final class ModLootInjector {
             {"draconicevolution:awakened_core", -1, 1, 1, 2}, {"draconicevolution:draconic_ingot", -1, 1, 3, 4},
             {"draconicevolution:wyvern_core", -1, 1, 2, 3}, {"gobber2:gobber2_ingot_end", -1, 3, 6, 4}
     };
+    /** Food of the pack's mods for pantries. */
+    private static final Object[][] PANTRY = {
+            {"futuremc:sweet_berries", -1, 2, 6, 6}, {"futuremc:honey_bottle", -1, 1, 2, 3},
+            {"ironapples:iron_apple", -1, 1, 1, 2}, {"ironapple:iron_apple", -1, 1, 1, 2},
+            {"aquaculture:food", 0, 1, 3, 3}, {"artifacts:everlasting_beef", -1, 1, 1, 1}
+    };
+    /** Personal trinkets for bedrooms. */
+    private static final Object[][] BEDROOM = {
+            {"xat:poison_stone", -1, 1, 1, 1}, {"xat:dwarf_ring", -1, 1, 1, 1}, {"xat:weightless_stone", -1, 1, 1, 1},
+            {"artifacts:lucky_horseshoe", -1, 1, 1, 1}, {"artifacts:cloud_in_a_bottle", -1, 1, 1, 1},
+            {"gobber2:gobber2_ingot", -1, 1, 2, 3}
+    };
+    /** Ores and ingots of the pack's tech mods for smelting workshops and vases. */
+    private static final Object[][] SMELTERY = {
+            {"tconstruct:ingots", 0, 1, 4, 6}, {"tconstruct:ingots", 1, 1, 4, 6}, {"tconstruct:ingots", 4, 1, 3, 4},
+            {"thermalfoundation:material", 128, 2, 6, 6}, {"thermalfoundation:material", 129, 2, 6, 6},
+            {"thermalfoundation:material", 131, 1, 4, 4}, {"mekanism:ingot", 1, 2, 5, 5}, {"mekanism:ingot", 0, 1, 3, 4},
+            {"immersiveengineering:metal", 0, 1, 4, 4}, {"enderio:item_alloy_ingot", 0, 1, 3, 4},
+            {"taiga:karmesine_ingot", -1, 1, 2, 2}, {"taiga:ovium_ingot", -1, 1, 2, 2}
+    };
+
     /** Low-floor rare find (lowFloorRareLootChance). */
     private static final Object[][] RARE_FIND = {
             {"minecraft:diamond", -1, 1, 2, 6}, {"minecraft:emerald", -1, 1, 3, 6}, {"minecraft:golden_apple", -1, 1, 1, 4},
@@ -91,6 +112,16 @@ public final class ModLootInjector {
                 addPool(event, "shatteredcitadels_modded", BOSS, 2, new LootCondition[0], false);
             } else if (ModLootTables.BOSS_CHEST_SKY.equals(name)) {
                 addPool(event, "shatteredcitadels_modded", BOSS_SKY, 3, new LootCondition[0], false);
+            } else if (ModLootTables.PANTRY.equals(name)) {
+                addPool(event, "shatteredcitadels_modded", PANTRY, 2, new LootCondition[0], false);
+            } else if (ModLootTables.BEDROOM.equals(name)) {
+                addPool(event, "shatteredcitadels_modded", BEDROOM, 1, new LootCondition[]{new RandomChance(0.35F)}, false);
+            } else if (ModLootTables.SMELTERY.equals(name)) {
+                addPool(event, "shatteredcitadels_modded", SMELTERY, 3, new LootCondition[0], false);
+            } else if (ModLootTables.VASE_MID.equals(name)) {
+                addPool(event, "shatteredcitadels_modded", SMELTERY, 1, new LootCondition[]{new RandomChance(0.25F)}, false);
+            } else if (ModLootTables.VASE_HIGH.equals(name)) {
+                addPool(event, "shatteredcitadels_modded", TIER_5_PLUS, 1, new LootCondition[]{new RandomChance(0.3F)}, false);
             }
         } catch (RuntimeException e) {
             ShatteredCitadelsMod.LOGGER.error("Could not extend loot table {}; it stays as defined in JSON", name, e);

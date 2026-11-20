@@ -1,0 +1,13 @@
+{
+  "variants": {
+    "variant=clay": {
+      "model": "shatteredcitadels:vase_clay"
+    },
+    "variant=dark": {
+      "model": "shatteredcitadels:vase_dark"
+    },
+    "variant=gilded": {
+      "model": "shatteredcitadels:vase_gilded"
+    }
+  }
+}

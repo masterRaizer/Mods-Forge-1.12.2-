@@ -1,0 +1,7 @@
+{
+  "parent": "shatteredcitadels:block/vase",
+  "textures": {
+    "side": "shatteredcitadels:blocks/vase_gilded",
+    "top": "shatteredcitadels:blocks/vase_gilded_top"
+  }
+}

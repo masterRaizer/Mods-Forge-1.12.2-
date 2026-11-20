@@ -19,6 +19,12 @@ public final class ModLootTables {
     public static final ResourceLocation UNDERGROUND_CRYPT = id("chests/underground_crypt");
     public static final ResourceLocation BOSS_CHEST_NORMAL = id("chests/boss_chest_normal");
     public static final ResourceLocation BOSS_CHEST_SKY = id("chests/boss_chest_sky_citadel");
+    public static final ResourceLocation PANTRY = id("chests/pantry");
+    public static final ResourceLocation BEDROOM = id("chests/bedroom");
+    public static final ResourceLocation SMELTERY = id("chests/smeltery");
+    public static final ResourceLocation VASE_LOW = id("vases/low");
+    public static final ResourceLocation VASE_MID = id("vases/mid");
+    public static final ResourceLocation VASE_HIGH = id("vases/high");
 
     private static boolean registered;
 
@@ -37,7 +43,8 @@ public final class ModLootTables {
         registered = true;
         LootFunctionManager.registerFunction(new LootFunctionLoreBook.Serializer());
         for (ResourceLocation table : new ResourceLocation[]{FLOOR_TIER_1_2, FLOOR_TIER_3_4, FLOOR_TIER_5_PLUS,
-                UNDERGROUND_CRYPT, BOSS_CHEST_NORMAL, BOSS_CHEST_SKY}) {
+                UNDERGROUND_CRYPT, BOSS_CHEST_NORMAL, BOSS_CHEST_SKY, PANTRY, BEDROOM, SMELTERY,
+                VASE_LOW, VASE_MID, VASE_HIGH}) {
             LootTableList.register(table);
         }
     }
@@ -45,5 +52,10 @@ public final class ModLootTables {
     /** @param difficulty floor difficulty 1-6 */
     public static ResourceLocation forFloor(int difficulty) {
         return difficulty <= 2 ? FLOOR_TIER_1_2 : difficulty <= 4 ? FLOOR_TIER_3_4 : FLOOR_TIER_5_PLUS;
+    }
+
+    /** @param difficulty floor difficulty 1-6, plus 2 for gilded vases */
+    public static ResourceLocation forVase(int difficulty) {
+        return difficulty <= 2 ? VASE_LOW : difficulty <= 4 ? VASE_MID : VASE_HIGH;
     }
 }
