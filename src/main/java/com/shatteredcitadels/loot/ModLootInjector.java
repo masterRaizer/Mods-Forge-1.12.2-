@@ -86,11 +86,27 @@ public final class ModLootInjector {
             {"taiga:karmesine_ingot", -1, 1, 2, 2}, {"taiga:ovium_ingot", -1, 1, 2, 2}
     };
 
+    /** Magic loot of the pack's mods for the guardian mage's pedestals and the deepest catacomb level. */
+    private static final Object[][] MAGE = {
+            {"artifacts:night_vision_goggles", -1, 1, 1, 2}, {"artifacts:lucky_horseshoe", -1, 1, 1, 2},
+            {"artifacts:cloud_in_a_bottle", -1, 1, 1, 2}, {"artifacts:everlasting_beef", -1, 1, 1, 1},
+            {"artifacts:magma_stone", -1, 1, 1, 2}, {"artifacts:obsidian_skull", -1, 1, 1, 2},
+            {"xat:poison_stone", -1, 1, 1, 2}, {"xat:dragons_eye", -1, 1, 1, 1}, {"xat:weightless_stone", -1, 1, 1, 2},
+            {"xat:dwarf_ring", -1, 1, 1, 2}, {"xat:fairy_ring", -1, 1, 1, 2}, {"xat:inertia_null_stone", -1, 1, 1, 1},
+            {"mowziesmobs:ice_crystal", -1, 1, 1, 1}, {"mowziesmobs:wrought_helmet", -1, 1, 1, 1},
+            {"mowziesmobs:barako_mask", -1, 1, 1, 1}, {"mowziesmobs:earth_talisman", -1, 1, 1, 1},
+            {"gobber2:gobber2_ingot_end", -1, 1, 3, 3}, {"gobber2:gobber2_ingot_nether", -1, 1, 3, 3},
+            {"ironapples:diamond_apple", -1, 1, 1, 2}, {"ironapples:iron_apple", -1, 1, 2, 2}
+    };
+
     /** Low-floor rare find (lowFloorRareLootChance). */
     private static final Object[][] RARE_FIND = {
             {"minecraft:diamond", -1, 1, 2, 6}, {"minecraft:emerald", -1, 1, 3, 6}, {"minecraft:golden_apple", -1, 1, 1, 4},
             {"gobber2:gobber2_ingot", -1, 1, 2, 3}, {"tconstruct:ingots", 0, 1, 1, 3}
     };
+
+    private static final Set<String> MISSING_LOGGED = java.util.Collections.newSetFromMap(
+            new java.util.concurrent.ConcurrentHashMap<>());
 
     private ModLootInjector() {
     }
@@ -118,6 +134,11 @@ public final class ModLootInjector {
                 addPool(event, "shatteredcitadels_modded", BEDROOM, 1, new LootCondition[]{new RandomChance(0.35F)}, false);
             } else if (ModLootTables.SMELTERY.equals(name)) {
                 addPool(event, "shatteredcitadels_modded", SMELTERY, 3, new LootCondition[0], false);
+            } else if (ModLootTables.MAGE_PEDESTAL.equals(name) || ModLootTables.MAGE_PEDESTAL_FOLIO.equals(name)) {
+                addPool(event, "shatteredcitadels_modded", MAGE, 1, new LootCondition[]{new RandomChance(0.6F)}, false);
+            } else if (ModLootTables.CATACOMB_DEEP.equals(name)) {
+                addPool(event, "shatteredcitadels_modded", UNDERGROUND, 1, new LootCondition[0], false);
+                addPool(event, "shatteredcitadels_mage", MAGE, 1, new LootCondition[]{new RandomChance(0.3F)}, false);
             } else if (ModLootTables.VASE_MID.equals(name)) {
                 addPool(event, "shatteredcitadels_modded", SMELTERY, 1, new LootCondition[]{new RandomChance(0.25F)}, false);
             } else if (ModLootTables.VASE_HIGH.equals(name)) {
@@ -140,7 +161,14 @@ public final class ModLootInjector {
             Item item = ForgeRegistries.ITEMS.getValue(id);
             int meta = (Integer) candidate[1];
             String entryName = id + (meta >= 0 ? "#" + meta : "");
-            if (item == null || item == Items.AIR || !used.add(entryName)) {
+            if (item == null || item == Items.AIR) {
+                // Worth knowing when the mod is installed: the name is wrong or the item is disabled.
+                if (net.minecraftforge.fml.common.Loader.isModLoaded(id.getNamespace()) && MISSING_LOGGED.add(entryName)) {
+                    ShatteredCitadelsMod.LOGGER.info("Loot: {} is not registered by {}; skipped", entryName, id.getNamespace());
+                }
+                continue;
+            }
+            if (!used.add(entryName)) {
                 continue;
             }
             List<LootFunction> functions = new ArrayList<>();

@@ -26,7 +26,8 @@ public class LootTableItemsTest {
     /** Our own items are registered by Forge at runtime, not in this unit test. */
     private static final Set<String> MOD_ITEMS = new HashSet<>(java.util.Arrays.asList(
             "shatteredcitadels:crown_shard", "shatteredcitadels:cloudspire_aegis",
-            "shatteredcitadels:goblin_forge_heart", "shatteredcitadels:architect_blade"));
+            "shatteredcitadels:goblin_forge_heart", "shatteredcitadels:architect_blade", "shatteredcitadels:guardian_staff",
+            "shatteredcitadels:guardian_folio", "shatteredcitadels:ashen_sight_ring"));
 
     @BeforeClass
     public static void bootstrap() {
@@ -75,5 +76,18 @@ public class LootTableItemsTest {
                 }
             }
         }
+    }
+
+    /** One pedestal always holds the Guardian Folio: its first pool rolls once and has only the folio. */
+    @Test
+    public void folioPedestalAlwaysHoldsTheFolio() throws IOException {
+        File file = new File("src/main/resources/assets/shatteredcitadels/loot_tables/chests/mage_pedestal_folio.json");
+        JsonObject root = new JsonParser().parse(new String(Files.readAllBytes(file.toPath()), StandardCharsets.UTF_8))
+                .getAsJsonObject();
+        JsonObject first = root.getAsJsonArray("pools").get(0).getAsJsonObject();
+        assertEquals(1, first.get("rolls").getAsInt());
+        JsonArray entries = first.getAsJsonArray("entries");
+        assertEquals(1, entries.size());
+        assertEquals("shatteredcitadels:guardian_folio", entries.get(0).getAsJsonObject().get("name").getAsString());
     }
 }

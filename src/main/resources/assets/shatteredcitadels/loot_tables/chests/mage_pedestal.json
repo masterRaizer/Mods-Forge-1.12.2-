@@ -98,6 +98,37 @@
           ]
         }
       ]
+    },
+    {
+      "name": "relics",
+      "rolls": 1,
+      "entries": [
+        {
+          "type": "item",
+          "name": "shatteredcitadels:ashen_sight_ring",
+          "weight": 4
+        },
+        {
+          "type": "item",
+          "name": "shatteredcitadels:crown_shard",
+          "weight": 1
+        },
+        {
+          "type": "item",
+          "name": "shatteredcitadels:cloudspire_aegis",
+          "weight": 1
+        },
+        {
+          "type": "item",
+          "name": "shatteredcitadels:goblin_forge_heart",
+          "weight": 1
+        },
+        {
+          "type": "empty",
+          "weight": 5,
+          "entryName": "no_relic"
+        }
+      ]
     }
   ]
 }

@@ -42,6 +42,12 @@ public final class RelicEffects {
     private static final float AEGIS_BOLT_DAMAGE = 8.0F;
     private static final int TICK_INTERVAL = 10;
     private static final int REPAIR_INTERVAL = 40;
+    /** Guardian Folio: magic damage taken x0.8. */
+    private static final float FOLIO_MAGIC_FACTOR = 0.8F;
+    /** Ring of Ashen Sight: damage from undead x0.85; night vision below this Y or in the dark. */
+    private static final float RING_UNDEAD_FACTOR = 0.85F;
+    private static final int RING_DEPTH_Y = 40;
+    private static final int RING_DARK_LIGHT = 5;
 
     private RelicEffects() {
     }
@@ -64,6 +70,10 @@ public final class RelicEffects {
             player.removePotionEffect(MobEffects.WITHER);
         }
         updateFlight(player, RelicEquipment.isActive(player, ModItems.CLOUDSPIRE_AEGIS));
+        if (ModItems.ASHEN_SIGHT_RING != null && RelicEquipment.isActive(player, ModItems.ASHEN_SIGHT_RING)
+                && (player.posY < RING_DEPTH_Y || player.world.getLight(player.getPosition()) < RING_DARK_LIGHT)) {
+            player.addPotionEffect(new PotionEffect(MobEffects.NIGHT_VISION, 220, 0, true, false));
+        }
         if (RelicEquipment.isActive(player, ModItems.GOBLIN_FORGE_HEART)) {
             player.addPotionEffect(new PotionEffect(MobEffects.HASTE, 220, 2, true, false));
             if (player.ticksExisted % REPAIR_INTERVAL == 0) {
@@ -134,6 +144,25 @@ public final class RelicEffects {
         if ((potion == MobEffects.SLOWNESS || potion == MobEffects.WITHER)
                 && RelicEquipment.isActive((EntityPlayer) event.getEntityLiving(), ModItems.CROWN_SHARD)) {
             event.setResult(Event.Result.DENY);
+        }
+    }
+
+    /** Folio and ring: lighter magic and undead damage. */
+    @SubscribeEvent
+    public static void onHurtByMagicOrUndead(LivingHurtEvent event) {
+        if (!(event.getEntityLiving() instanceof EntityPlayer) || event.getEntityLiving().world.isRemote
+                || ModItems.GUARDIAN_FOLIO == null) {
+            return;
+        }
+        EntityPlayer player = (EntityPlayer) event.getEntityLiving();
+        if (event.getSource().isMagicDamage() && RelicEquipment.isActive(player, ModItems.GUARDIAN_FOLIO)) {
+            event.setAmount(event.getAmount() * FOLIO_MAGIC_FACTOR);
+        }
+        Entity attacker = event.getSource().getTrueSource();
+        if (attacker instanceof EntityLivingBase
+                && ((EntityLivingBase) attacker).getCreatureAttribute() == net.minecraft.entity.EnumCreatureAttribute.UNDEAD
+                && RelicEquipment.isActive(player, ModItems.ASHEN_SIGHT_RING)) {
+            event.setAmount(event.getAmount() * RING_UNDEAD_FACTOR);
         }
     }
 
