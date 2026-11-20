@@ -31,6 +31,8 @@ public final class FloorData {
     private String zoneKey = "";
     /** Floor that must be cleared before this one's spawners wake up; MIN_VALUE = none. */
     private int requiresFloor = Integer.MIN_VALUE;
+    /** Optional side boss (catacomb mage): its defeat never conquers the structure. */
+    private boolean sideBoss;
 
     public FloorData(int index, int minY, int maxY, int difficultyTier, int totalWaves, boolean bossFloor) {
         this.index = index;
@@ -95,6 +97,13 @@ public final class FloorData {
         return this;
     }
 
+    public boolean isSideBoss() { return sideBoss; }
+
+    public FloorData setSideBoss(boolean sideBoss) {
+        this.sideBoss = sideBoss;
+        return this;
+    }
+
     public FloorData setCourtyard(boolean courtyard) {
         this.courtyard = courtyard;
         return this;
@@ -147,6 +156,9 @@ public final class FloorData {
         if (requiresFloor != Integer.MIN_VALUE) {
             tag.setInteger("requires", requiresFloor);
         }
+        if (sideBoss) {
+            tag.setBoolean("sideBoss", true);
+        }
         return tag;
     }
 
@@ -164,6 +176,7 @@ public final class FloorData {
         floor.courtyard = tag.getBoolean("courtyard");
         floor.zoneKey = tag.getString("zone");
         floor.requiresFloor = tag.hasKey("requires") ? tag.getInteger("requires") : Integer.MIN_VALUE;
+        floor.sideBoss = tag.getBoolean("sideBoss");
         return floor;
     }
 }

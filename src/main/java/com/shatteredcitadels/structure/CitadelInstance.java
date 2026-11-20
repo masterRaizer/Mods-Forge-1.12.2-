@@ -127,7 +127,7 @@ public final class CitadelInstance {
     public boolean isConquered() {
         for (FloorData floor : floors.values()) {
             // Crypt bosses live on a regular level: the altar marks whichever floor holds the arena.
-            if (floor.isBossDefeated()) {
+            if (floor.isBossDefeated() && !floor.isSideBoss()) {
                 return true;
             }
         }

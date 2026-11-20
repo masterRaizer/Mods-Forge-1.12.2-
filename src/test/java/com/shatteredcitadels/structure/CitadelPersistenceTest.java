@@ -181,4 +181,19 @@ public class CitadelPersistenceTest {
         read.removeGate(gate);
         assertEquals(1, read.getGates().size());
     }
+
+    @Test
+    public void sideBossFloorDoesNotConquer() {
+        CitadelInstance c = new CitadelInstance(UUID.randomUUID(), "Test", StructureType.CITADEL, CitadelArchetype.KEEPERS_CITADEL, 0,
+                new BlockPos(0, 64, 0), new StructureBoundingBox(0, 5, 0, 30, 120, 30));
+        c.addFloor(3, 85, 92, 4, 1, true);
+        FloorData sanctum = c.addFloor(-10, 20, 34, 5, 0, true).setSideBoss(true);
+        sanctum.setBossDefeated(true);
+        org.junit.Assert.assertFalse(c.isConquered());
+        CitadelInstance copy = CitadelInstance.readFromNBT(c.writeToNBT());
+        assertTrue(copy.getFloor(-10).isSideBoss());
+        org.junit.Assert.assertFalse(copy.isConquered());
+        c.getFloor(3).setBossDefeated(true);
+        assertTrue(c.isConquered());
+    }
 }
