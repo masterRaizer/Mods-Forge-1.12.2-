@@ -80,6 +80,14 @@ public final class ModPaletteRegistry {
         return resolved(archetype).pick(null);
     }
 
+    /**
+     * @return the archetype's default look resolved on the spot without logging skipped variants;
+     * works before the palettes are initialised (tests, early callers).
+     */
+    public static BlockPalette quiet(CitadelArchetype archetype) {
+        return build(archetype, false).pick(null);
+    }
+
     /** @return a palette whose per-slot options are rolled from the citadel's own seed. */
     public static BlockPalette forCitadel(CitadelArchetype archetype, long seed) {
         return resolved(archetype).pick(new Random(seed ^ 0x5DEECE66DL));
