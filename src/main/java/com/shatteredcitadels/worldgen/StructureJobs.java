@@ -212,8 +212,8 @@ public final class StructureJobs extends WorldSavedData {
                 current.done.add(ChunkPos.asLong(currentPart.chunkX, currentPart.chunkZ));
                 markDirty();
                 if (current.done.size() >= current.blueprint.parts().size()) {
-                    ShatteredCitadelsMod.LOGGER.info("Finished writing {} ({} chunks)", current.plan.describe(),
-                            current.done.size());
+                    ShatteredCitadelsMod.LOGGER.info("Finished writing {} ({} chunks, {} blocks repaired)",
+                            current.plan.describe(), current.done.size(), current.repaired);
                     jobs.remove(current);
                 }
                 current = null;
@@ -357,16 +357,40 @@ public final class StructureJobs extends WorldSavedData {
                     put(world, chunk, cursor, state, false);
                     break;
                 case 2:
-                    if (index >= part.fills.size()) {
+                    // Read every plain block back through the chunk itself. Some performance mods
+                    // change how chunks store their sections; whatever did not stick is rewritten
+                    // through Chunk#setBlockState, which they all support.
+                    if (index >= part.positions.size()) {
                         stage = 3;
+                        index = 0;
+                        continue;
+                    }
+                    int check = part.positions.getInt(index);
+                    IBlockState expected = Block.getStateById(part.states.getInt(index));
+                    index++;
+                    if (expected.getBlock().hasTileEntity(expected)) {
+                        break;
+                    }
+                    cursor.setPos((part.chunkX << 4) | (check & 15), check >>> 8, (part.chunkZ << 4) | ((check >>> 4) & 15));
+                    if (chunk.getBlockState(cursor) != expected) {
+                        chunk.setBlockState(cursor.toImmutable(), expected);
+                        if (current.repaired++ == 0) {
+                            ShatteredCitadelsMod.LOGGER.warn("Direct chunk writes did not stick at {} ({}); rewriting such blocks "
+                                    + "through the chunk", cursor.toImmutable(), current.plan.describe());
+                        }
+                    }
+                    break;
+                case 3:
+                    if (index >= part.fills.size()) {
+                        stage = 4;
                         index = 0;
                         continue;
                     }
                     fill(world, chunk, part.fills.get(index++), cursor);
                     break;
-                case 3:
+                case 4:
                     if (index >= part.actions.size()) {
-                        stage = 4;
+                        stage = 5;
                         index = 0;
                         continue;
                     }
@@ -416,10 +440,12 @@ public final class StructureJobs extends WorldSavedData {
             if (state.getMaterial() == Material.AIR) {
                 return;
             }
-            section = new ExtendedBlockStorage(y >> 4 << 4, world.provider.hasSkyLight());
-            sections[y >> 4] = section;
+            // Let the chunk create the section itself: some mods hand out a copy of the section
+            // array, so a section stored into it by hand would be lost.
+            chunk.setBlockState(pos.toImmutable(), state);
+        } else {
+            section.set(pos.getX() & 15, y & 15, pos.getZ() & 15, state);
         }
-        section.set(pos.getX() & 15, y & 15, pos.getZ() & 15, state);
         if (state.getLightValue() > 0 || old.getLightValue() > 0) {
             lightChanges.add(pos.toImmutable());
         }
@@ -435,7 +461,21 @@ public final class StructureJobs extends WorldSavedData {
         chunk.markDirty();
         PlayerChunkMapEntry entry = world.getPlayerChunkMap().getEntry(chunk.x, chunk.z);
         if (entry != null && entry.isSentToPlayers()) {
-            entry.sendPacket(new SPacketChunkData(chunk, 65535));
+            // Section updates (as vanilla sends for many block changes) rather than a whole-chunk
+            // packet: the client keeps its chunk and just receives every section, new ones included.
+            int mask = 0;
+            ExtendedBlockStorage[] sections = chunk.getBlockStorageArray();
+            for (int i = 0; i < sections.length; i++) {
+                if (sections[i] != Chunk.NULL_BLOCK_STORAGE) {
+                    mask |= 1 << i;
+                }
+            }
+            if (mask == 65535) {
+                entry.sendPacket(new SPacketChunkData(chunk, 0x00FF));
+                entry.sendPacket(new SPacketChunkData(chunk, 0xFF00));
+            } else if (mask != 0) {
+                entry.sendPacket(new SPacketChunkData(chunk, mask));
+            }
         }
     }
 
@@ -560,6 +600,8 @@ public final class StructureJobs extends WorldSavedData {
         Future<BuildResult> future;
         Blueprint blueprint;
         long lastReadyTick;
+        /** Blocks a direct section write did not keep, rewritten through the chunk (see verify stage). */
+        int repaired;
 
         Job(StructurePlan plan, UUID citadelId, LongOpenHashSet done) {
             this.plan = plan;
