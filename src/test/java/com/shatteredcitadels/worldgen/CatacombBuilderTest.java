@@ -173,4 +173,14 @@ public class CatacombBuilderTest {
         }
         return n;
     }
+
+    /** Only the levels and the stair shaft are protected: the ground around the structure stays diggable. */
+    @Test
+    public void surfaceAboveCatacombsIsNotProtected() {
+        CitadelInstance rec = record();
+        builder(new BlockWriter(new Blueprint()), rec, 7L).build(0, 0, 54, 2, 0, 0, 64);
+        assertTrue(rec.isInPart(new BlockPos(30, 50, 30)));
+        assertTrue(rec.isInPart(new BlockPos(0, 62, 0)));
+        org.junit.Assert.assertFalse(rec.isInPart(new BlockPos(30, 63, 30)));
+    }
 }

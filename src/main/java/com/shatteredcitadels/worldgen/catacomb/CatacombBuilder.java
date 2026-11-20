@@ -168,8 +168,12 @@ public class CatacombBuilder {
                 sealSpiralTop(cx, cz, yL, -(k + 1));
             }
         }
+        // Protected: the levels (up to level 0's ceiling, plus the spider caves' raised ceilings) and
+        // the entrance shaft. The ground above stays diggable.
         int bottom = levelY(topLevelY, count - 1) - extraDepth();
-        rec.addPart(new StructureBoundingBox(x0 - 1, bottom - 1, z0 - 1, x0 + CELL * CELLS, entranceTopY, z0 + CELL * CELLS));
+        int levelsTop = levelY(topLevelY, 0) + CORRIDOR_HEIGHT + 4;
+        rec.addPart(new StructureBoundingBox(x0 - 1, bottom - 1, z0 - 1, x0 + CELL * CELLS, levelsTop, z0 + CELL * CELLS));
+        rec.addPart(new StructureBoundingBox(entranceX - 2, levelsTop, entranceZ - 2, entranceX + 2, entranceTopY, entranceZ + 2));
         return count;
     }
 
