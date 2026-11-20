@@ -214,6 +214,15 @@ public final class CitadelInstance {
         return best;
     }
 
+    /** @return true unless the floor waits for another floor that is not cleared yet. */
+    public boolean isUnlocked(FloorData floor) {
+        if (floor == null || floor.getRequiresFloor() == Integer.MIN_VALUE) {
+            return true;
+        }
+        FloorData required = floors.get(floor.getRequiresFloor());
+        return required == null || required.isCleared();
+    }
+
     /** @return true if floor 0 of this structure is a castle courtyard. */
     public boolean hasCourtyard() {
         FloorData ground = floors.get(0);

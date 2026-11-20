@@ -79,6 +79,7 @@ public final class ConfigCache {
         next.towerCitadelChance = clamp01(gen.towerCitadelChance);
         next.towerWingChance = clamp01(gen.towerWingChance);
         next.walledCastleChance = clamp01(gen.walledCastleChance);
+        next.manorChance = clamp01(gen.manorChance);
         next.generationBudgetMs = clamp(gen.generationBudgetMs, 1, 40);
         int[] towerFloors = orderedRange("castle_generation.towerMinFloors/towerMaxFloors",
                 gen.towerMinFloors, gen.towerMaxFloors, 2, 30);
@@ -351,6 +352,7 @@ public final class ConfigCache {
         double towerCitadelChance = 0.30D;
         double towerWingChance = 0.65D;
         double walledCastleChance = 0.35D;
+        double manorChance = 0.25D;
         int generationBudgetMs = 5;
         int towerMinFloors = 12;
         int towerMaxFloors = 30;
@@ -419,6 +421,7 @@ public final class ConfigCache {
             c.towerCitadelChance = towerCitadelChance;
             c.towerWingChance = towerWingChance;
             c.walledCastleChance = walledCastleChance;
+            c.manorChance = manorChance;
             c.generationBudgetMs = generationBudgetMs;
             c.towerMinFloors = towerMinFloors;
             c.towerMaxFloors = towerMaxFloors;
@@ -484,6 +487,7 @@ public final class ConfigCache {
         public double getTowerCitadelChance() { return towerCitadelChance; }
         public double getTowerWingChance() { return towerWingChance; }
         public double getWalledCastleChance() { return walledCastleChance; }
+        public double getManorChance() { return manorChance; }
         public int getGenerationBudgetMs() { return generationBudgetMs; }
         public int getTowerMinFloors() { return towerMinFloors; }
         public int getTowerMaxFloors() { return towerMaxFloors; }

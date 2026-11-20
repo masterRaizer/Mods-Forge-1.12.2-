@@ -372,6 +372,7 @@ public final class CommandShatteredCitadels extends CommandBase {
             kinds.add("sky");
             kinds.add("tower");
             kinds.add("castle");
+            kinds.add("manor");
             kinds.add("crypt");
             return getListOfStringsMatchingLastWord(args, kinds);
         }

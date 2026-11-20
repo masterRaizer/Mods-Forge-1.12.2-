@@ -208,7 +208,40 @@ public enum CitadelArchetype {
                     "quark:duskbound_lantern",
                     "minecraft:sea_lantern")
             .slot(PaletteSlot.FURNITURE,
-                    "minecraft:bookshelf|minecraft:end_rod"));
+                    "minecraft:bookshelf|minecraft:end_rod")),
+
+    /** 6) Gothic manor: dark slate and blackstone, dark oak, dim light. */
+    GOTHIC_MANOR("Gothic Manor", spec()
+            .slot(PaletteSlot.WALL,
+                    "quark:world_stone_bricks[variant=stone_slate_bricks]|quark:world_stone_bricks[variant=stone_slate_bricks]|quark:slate[variant=stone_slate_smooth]",
+                    "nb:black_stone_bricks|nb:black_stone_bricks|nb:polished_black_stone",
+                    "quark:world_stone_bricks[variant=stone_basalt_bricks]|quark:world_stone_bricks[variant=stone_andesite_bricks]",
+                    "minecraft:stonebrick@0|minecraft:stonebrick@2|minecraft:stonebrick@1")
+            .slot(PaletteSlot.PILLAR,
+                    "quark:basalt[variant=stone_basalt_smooth]",
+                    "nb:polished_basalt",
+                    "nb:smooth_basalt",
+                    "minecraft:stonebrick@3")
+            .slot(PaletteSlot.FLOOR,
+                    "quark:world_stone_pavement[variant=stone_slate_pavement]",
+                    "nb:polished_black_stone",
+                    "minecraft:planks@5")
+            .slot(PaletteSlot.STAIRS,
+                    "quark:stone_slate_bricks_stairs",
+                    "nb:black_stone_brick_stairs",
+                    "minecraft:dark_oak_stairs")
+            .slot(PaletteSlot.ACCENT,
+                    "quark:world_stone_carved[variant=stone_slate_carved]",
+                    "nb:chisled_polished_black_stone",
+                    "nb:gilded_blackstone",
+                    "minecraft:stonebrick@3")
+            .slot(PaletteSlot.LIGHT,
+                    "quark:blaze_lantern",
+                    "nb:shroom_light",
+                    "minecraft:glowstone")
+            .slot(PaletteSlot.FURNITURE,
+                    "cfm:*chair*|cfm:*table*|cfm:*cabinet*",
+                    "minecraft:bookshelf|minecraft:bookshelf|minecraft:crafting_table"));
 
     private final String displayName;
     private final Map<PaletteSlot, String[]> alternatives;

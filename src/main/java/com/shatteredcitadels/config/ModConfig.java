@@ -145,6 +145,15 @@ public final class ModConfig {
         @Config.RangeDouble(min = 0.0D, max = 1.0D)
         public double walledCastleChance = 0.35D;
 
+        @Config.Name("manorChance")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.manorChance")
+        @Config.Comment({
+                "Chance that a citadel site becomes a gothic manor (~110 x 140 blocks): zones cleared in order",
+                "(forecourt, great hall, library, servants' wing, garden, guest wing, gallery, throne room)."
+        })
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double manorChance = 0.25D;
+
         @Config.Name("generationBudgetMs")
         @Config.LangKey("config.shatteredcitadels.castle_generation.generationBudgetMs")
         @Config.Comment({

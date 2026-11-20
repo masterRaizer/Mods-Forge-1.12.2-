@@ -19,6 +19,8 @@ public final class StructurePlans {
                 return CryptPlan.read(tag);
             case CastlePlan.KIND:
                 return CastlePlan.read(tag);
+            case ManorPlan.KIND:
+                return ManorPlan.read(tag);
             default:
                 ShatteredCitadelsMod.LOGGER.warn("Dropping saved structure job of unknown kind '{}'", kind);
                 return null;

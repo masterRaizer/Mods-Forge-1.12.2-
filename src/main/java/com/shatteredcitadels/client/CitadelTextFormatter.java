@@ -33,7 +33,10 @@ public final class CitadelTextFormatter {
     }
 
     /** "Floor 3 / 6 — Difficulty: High (Tier III)" or "Crypt -2 — Danger: Deadly". */
-    public static String bannerSubtitle(int floorIndex, int surfaceFloors, int tier, boolean hasCourtyard) {
+    public static String bannerSubtitle(int floorIndex, int surfaceFloors, int tier, boolean hasCourtyard, String zoneKey) {
+        if (zoneKey != null && !zoneKey.isEmpty()) {
+            return I18n.format("shatteredcitadels.hud.banner.zone", zoneName(zoneKey), difficulty(tier), roman(tier));
+        }
         if (floorIndex < 0) {
             return I18n.format("shatteredcitadels.hud.banner.crypt", floorIndex, difficulty(tier));
         }
@@ -42,6 +45,10 @@ public final class CitadelTextFormatter {
         }
         return I18n.format("shatteredcitadels.hud.banner.floor", displayFloor(floorIndex, hasCourtyard),
                 displayTotal(surfaceFloors, hasCourtyard), difficulty(tier), roman(tier));
+    }
+
+    public static String zoneName(String zoneKey) {
+        return I18n.format("shatteredcitadels.zone." + zoneKey);
     }
 
     /** Keep floors of walled castles are numbered from 1: floor 0 is the courtyard. */
@@ -54,7 +61,10 @@ public final class CitadelTextFormatter {
     }
 
     /** "Floor 3/6 · High (III)" or "Crypt -2 · Deadly (V)". */
-    public static String plaqueFloor(int floorIndex, int surfaceFloors, int tier, boolean hasCourtyard) {
+    public static String plaqueFloor(int floorIndex, int surfaceFloors, int tier, boolean hasCourtyard, String zoneKey) {
+        if (zoneKey != null && !zoneKey.isEmpty()) {
+            return I18n.format("shatteredcitadels.hud.plaque.zone", zoneName(zoneKey), difficulty(tier), roman(tier));
+        }
         if (floorIndex < 0) {
             return I18n.format("shatteredcitadels.hud.plaque.crypt", floorIndex, difficulty(tier), roman(tier));
         }

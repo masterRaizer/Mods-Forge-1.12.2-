@@ -11,7 +11,9 @@ public enum StructureType {
     /** Standalone underground crypt reached from a surface entrance. */
     CRYPT,
     /** Curtain wall, moat and courtyard (floor 0) around a keep (floors 1..n). */
-    WALLED_CASTLE;
+    WALLED_CASTLE,
+    /** Gothic manor: named zones (floor indices) cleared in route order, boss in the throne room. */
+    MANOR;
 
     public static StructureType byName(String name) {
         for (StructureType type : values()) {

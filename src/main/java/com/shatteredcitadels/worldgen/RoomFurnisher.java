@@ -249,6 +249,15 @@ public final class RoomFurnisher {
 
     // ------------------------------------------------------------------ shared decor
 
+    /** Places one loot chest against a wall of the room, facing into it. */
+    public void chestAgainstWall(int minX, int minZ, int maxX, int maxZ, int y0, ResourceLocation lootTable) {
+        List<int[]> walls = wallCells(minX, minZ, maxX, maxZ, y0 + 1);
+        if (!walls.isEmpty()) {
+            int[] c = walls.get(0);
+            site.chest(new BlockPos(c[0], y0 + 1, c[2]), EnumFacing.byHorizontalIndex(c[3]), lootTable);
+        }
+    }
+
     /** Places up to {@code count} vases along the walls of the room. */
     public void vases(int minX, int minZ, int maxX, int maxZ, int y0, int count) {
         List<int[]> walls = wallCells(minX, minZ, maxX, maxZ, y0 + 1);

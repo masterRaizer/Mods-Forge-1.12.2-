@@ -89,8 +89,11 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
                             chunkX, chunkZ);
                     return;
                 }
-                plan = buildRandom.nextDouble() < config.getWalledCastleChance()
-                        ? CastlePlanner.plan(world, chunkX, chunkZ, buildRandom, null, false) : null;
+                double typeRoll = buildRandom.nextDouble();
+                plan = typeRoll < config.getWalledCastleChance()
+                        ? CastlePlanner.plan(world, chunkX, chunkZ, buildRandom, null, false)
+                        : typeRoll < config.getWalledCastleChance() + config.getManorChance()
+                        ? ManorPlanner.plan(world, chunkX, chunkZ, buildRandom, false) : null;
                 if (plan == null) {
                     // No castle (not rolled, or too much water or mountain around): a citadel tower still fits here.
                     plan = planCitadel(world, (chunkX << 4) + 1, (chunkZ << 4) + 1, new Random(buildSeed ^ 0x51ED270B27L),

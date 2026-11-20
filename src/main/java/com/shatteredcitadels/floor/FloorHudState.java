@@ -39,6 +39,8 @@ public final class FloorHudState {
     private final boolean bossDefeated;
     /** The structure is a walled castle: floor 0 is its courtyard, keep floors are numbered from 1. */
     private final boolean hasCourtyard;
+    /** Named zone (manor), shown instead of a floor number; empty otherwise. */
+    private final String zoneKey;
 
     public FloorHudState(boolean inside, UUID citadelId, String citadelName, String archetypeKey, boolean skyCitadel,
                          boolean undergroundOnly, int floorIndex, int surfaceFloors, int undergroundLevels,
@@ -46,13 +48,13 @@ public final class FloorHudState {
                          boolean bossFloor, boolean bossDefeated) {
         this(inside, citadelId, citadelName, archetypeKey, skyCitadel, undergroundOnly, floorIndex, surfaceFloors,
                 undergroundLevels, difficultyTier, activeWave, totalWaves, remainingMobs, cleared, bossFloor, bossDefeated,
-                false);
+                false, "");
     }
 
     public FloorHudState(boolean inside, UUID citadelId, String citadelName, String archetypeKey, boolean skyCitadel,
                          boolean undergroundOnly, int floorIndex, int surfaceFloors, int undergroundLevels,
                          int difficultyTier, int activeWave, int totalWaves, int remainingMobs, boolean cleared,
-                         boolean bossFloor, boolean bossDefeated, boolean hasCourtyard) {
+                         boolean bossFloor, boolean bossDefeated, boolean hasCourtyard, String zoneKey) {
         this.inside = inside;
         this.citadelId = citadelId == null ? new UUID(0L, 0L) : citadelId;
         this.citadelName = clampName(citadelName);
@@ -70,6 +72,7 @@ public final class FloorHudState {
         this.bossFloor = bossFloor;
         this.bossDefeated = bossDefeated;
         this.hasCourtyard = hasCourtyard;
+        this.zoneKey = clampName(zoneKey);
     }
 
     /** @return the HUD state for a player standing on {@code floor} of {@code citadel}. */
@@ -81,7 +84,7 @@ public final class FloorHudState {
                 citadel.isSkyCitadel(), citadel.isUnderground(), floor.getIndex(), citadel.getSurfaceFloorCount(),
                 citadel.getUndergroundLevelCount(), floor.getDifficultyTier(), floor.getActiveWave(),
                 floor.getTotalWaves(), floor.getRemainingMobs(), floor.isCleared(), floor.isBossFloor(),
-                floor.isBossDefeated(), citadel.hasCourtyard());
+                floor.isBossDefeated(), citadel.hasCourtyard(), floor.getZoneKey());
     }
 
     private static String clampName(String value) {
@@ -112,6 +115,7 @@ public final class FloorHudState {
         buf.writeShort(activeWave);
         buf.writeShort(totalWaves);
         buf.writeInt(remainingMobs);
+        ByteBufUtils.writeUTF8String(buf, zoneKey);
     }
 
     public static FloorHudState read(ByteBuf buf) {
@@ -129,9 +133,10 @@ public final class FloorHudState {
         int activeWave = buf.readUnsignedShort();
         int totalWaves = buf.readUnsignedShort();
         int remaining = buf.readInt();
+        String zone = ByteBufUtils.readUTF8String(buf);
         return new FloorHudState(true, id, name, archetype, (flags & 1) != 0, (flags & 2) != 0, floorIndex, surface,
                 underground, tier, activeWave, totalWaves, remaining, (flags & 4) != 0, (flags & 8) != 0,
-                (flags & 16) != 0, (flags & 32) != 0);
+                (flags & 16) != 0, (flags & 32) != 0, zone);
     }
 
     // ------------------------------------------------------------------ accessors
@@ -153,6 +158,7 @@ public final class FloorHudState {
     public boolean isBossFloor() { return bossFloor; }
     public boolean isBossDefeated() { return bossDefeated; }
     public boolean hasCourtyard() { return hasCourtyard; }
+    public String getZoneKey() { return zoneKey; }
 
     /** @return true if both states are on the same floor of the same structure. */
     public boolean sameFloorAs(FloorHudState other) {
@@ -175,7 +181,8 @@ public final class FloorHudState {
                 && surfaceFloors == s.surfaceFloors && undergroundLevels == s.undergroundLevels
                 && difficultyTier == s.difficultyTier && activeWave == s.activeWave && totalWaves == s.totalWaves
                 && remainingMobs == s.remainingMobs && cleared == s.cleared && bossFloor == s.bossFloor
-                && bossDefeated == s.bossDefeated && hasCourtyard == s.hasCourtyard && citadelId.equals(s.citadelId)
+                && bossDefeated == s.bossDefeated && hasCourtyard == s.hasCourtyard && zoneKey.equals(s.zoneKey)
+                && citadelId.equals(s.citadelId)
                 && citadelName.equals(s.citadelName) && archetypeKey.equals(s.archetypeKey);
     }
 
@@ -186,6 +193,6 @@ public final class FloorHudState {
         }
         return Objects.hash(citadelId, citadelName, archetypeKey, skyCitadel, undergroundOnly, floorIndex, surfaceFloors,
                 undergroundLevels, difficultyTier, activeWave, totalWaves, remainingMobs, cleared, bossFloor, bossDefeated,
-                hasCourtyard);
+                hasCourtyard, zoneKey);
     }
 }

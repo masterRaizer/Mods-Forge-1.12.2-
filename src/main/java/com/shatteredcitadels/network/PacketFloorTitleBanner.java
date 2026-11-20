@@ -19,6 +19,7 @@ public final class PacketFloorTitleBanner implements IMessage {
     private boolean skyCitadel;
     private boolean bossFloor;
     private boolean hasCourtyard;
+    private String zoneKey = "";
 
     /** Required by SimpleNetworkWrapper. */
     public PacketFloorTitleBanner() {
@@ -32,6 +33,7 @@ public final class PacketFloorTitleBanner implements IMessage {
         this.skyCitadel = state.isSkyCitadel();
         this.bossFloor = state.isBossFloor();
         this.hasCourtyard = state.hasCourtyard();
+        this.zoneKey = state.getZoneKey();
     }
 
     public String getCitadelName() { return citadelName; }
@@ -41,6 +43,7 @@ public final class PacketFloorTitleBanner implements IMessage {
     public boolean isSkyCitadel() { return skyCitadel; }
     public boolean isBossFloor() { return bossFloor; }
     public boolean hasCourtyard() { return hasCourtyard; }
+    public String getZoneKey() { return zoneKey; }
     public boolean isUndergroundLevel() { return floorIndex < 0; }
 
     @Override
@@ -52,6 +55,8 @@ public final class PacketFloorTitleBanner implements IMessage {
         buf.writeByte(surfaceFloors);
         buf.writeByte(difficultyTier);
         buf.writeByte((skyCitadel ? 1 : 0) | (bossFloor ? 2 : 0) | (hasCourtyard ? 4 : 0));
+        ByteBufUtils.writeUTF8String(buf, zoneKey.length() > FloorHudState.MAX_NAME_LENGTH
+                ? zoneKey.substring(0, FloorHudState.MAX_NAME_LENGTH) : zoneKey);
     }
 
     @Override
@@ -65,6 +70,7 @@ public final class PacketFloorTitleBanner implements IMessage {
         skyCitadel = (flags & 1) != 0;
         bossFloor = (flags & 2) != 0;
         hasCourtyard = (flags & 4) != 0;
+        zoneKey = ByteBufUtils.readUTF8String(buf);
     }
 
     public static final class Handler implements IMessageHandler<PacketFloorTitleBanner, IMessage> {

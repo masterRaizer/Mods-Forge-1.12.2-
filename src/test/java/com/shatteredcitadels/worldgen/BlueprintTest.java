@@ -121,4 +121,26 @@ public class BlueprintTest {
         assertFalse(citadel.isInPart(new BlockPos(15, 70, 5)));
         assertTrue(citadel.contains(new BlockPos(15, 70, 5)));
     }
+
+    @Test
+    public void manorZonesUnlockInRouteOrder() {
+        ManorPlan plan = new ManorPlan(-39, -43, 70, 5L, 0);
+        assertEquals(plan.writeToNBT(), StructurePlans.read(plan.writeToNBT()).writeToNBT());
+
+        CitadelInstance manor = new CitadelInstance(UUID.randomUUID(), "", StructureType.MANOR,
+                CitadelArchetype.GOTHIC_MANOR, 0, BlockPos.ORIGIN, new StructureBoundingBox(0, 60, 0, 100, 120, 100));
+        FloorData yard = manor.addFloor(0, 70, 82, 1, 2, false).setArea(0, 0, 50, 50).setZoneKey("forecourt");
+        FloorData hall = manor.addFloor(1, 70, 90, 2, 2, false).setArea(51, 0, 70, 50).setZoneKey("great_hall")
+                .setRequiresFloor(0);
+        assertTrue(manor.isUnlocked(yard));
+        assertFalse(manor.isUnlocked(hall));
+        yard.setCleared(true);
+        assertTrue(manor.isUnlocked(hall));
+        assertEquals("great_hall", manor.floorAt(new BlockPos(60, 75, 10)).getZoneKey());
+
+        FloorData copy = FloorData.readFromNBT(hall.writeToNBT());
+        assertEquals("great_hall", copy.getZoneKey());
+        assertEquals(0, copy.getRequiresFloor());
+        assertEquals(Integer.MIN_VALUE, FloorData.readFromNBT(yard.writeToNBT()).getRequiresFloor());
+    }
 }

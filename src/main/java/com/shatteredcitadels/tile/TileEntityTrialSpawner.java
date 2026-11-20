@@ -135,7 +135,7 @@ public class TileEntityTrialSpawner extends TileEntity implements ITickable {
         CitadelInstance citadel = resolveCitadel();
         FloorData floor = citadel == null ? null : citadel.getFloor(floorIndex);
         boolean active = citadel != null
-                ? FloorTrackerHandler.isAnyPlayerOnFloor(world, citadelId, floorIndex)
+                ? FloorTrackerHandler.isAnyPlayerOnFloor(world, citadelId, floorIndex) && citadel.isUnlocked(floor)
                 : isStandalonePlayerNear();
         if (!active) {
             // Strict floor isolation: a player on another floor never wakes this spawner.

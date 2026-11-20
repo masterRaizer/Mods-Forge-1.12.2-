@@ -27,6 +27,10 @@ public final class FloorData {
     private int[] area;
     /** The courtyard of a walled castle (floor 0, shown as "Courtyard"). */
     private boolean courtyard;
+    /** Named zone of a manor ("great_hall", ...); empty for numbered floors. */
+    private String zoneKey = "";
+    /** Floor that must be cleared before this one's spawners wake up; MIN_VALUE = none. */
+    private int requiresFloor = Integer.MIN_VALUE;
 
     public FloorData(int index, int minY, int maxY, int difficultyTier, int totalWaves, boolean bossFloor) {
         this.index = index;
@@ -77,6 +81,20 @@ public final class FloorData {
 
     public boolean isCourtyard() { return courtyard; }
 
+    public String getZoneKey() { return zoneKey; }
+
+    public FloorData setZoneKey(String zoneKey) {
+        this.zoneKey = zoneKey == null ? "" : zoneKey;
+        return this;
+    }
+
+    public int getRequiresFloor() { return requiresFloor; }
+
+    public FloorData setRequiresFloor(int requiresFloor) {
+        this.requiresFloor = requiresFloor;
+        return this;
+    }
+
     public FloorData setCourtyard(boolean courtyard) {
         this.courtyard = courtyard;
         return this;
@@ -123,6 +141,12 @@ public final class FloorData {
             tag.setIntArray("area", area.clone());
         }
         tag.setBoolean("courtyard", courtyard);
+        if (!zoneKey.isEmpty()) {
+            tag.setString("zone", zoneKey);
+        }
+        if (requiresFloor != Integer.MIN_VALUE) {
+            tag.setInteger("requires", requiresFloor);
+        }
         return tag;
     }
 
@@ -138,6 +162,8 @@ public final class FloorData {
             floor.area = area;
         }
         floor.courtyard = tag.getBoolean("courtyard");
+        floor.zoneKey = tag.getString("zone");
+        floor.requiresFloor = tag.hasKey("requires") ? tag.getInteger("requires") : Integer.MIN_VALUE;
         return floor;
     }
 }

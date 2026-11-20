@@ -18,6 +18,7 @@ import com.shatteredcitadels.structure.FloorData;
 import com.shatteredcitadels.tile.TileEntityBossAltar;
 import com.shatteredcitadels.worldgen.BlockWriter;
 import com.shatteredcitadels.worldgen.CastlePlanner;
+import com.shatteredcitadels.worldgen.ManorPlanner;
 import com.shatteredcitadels.worldgen.CitadelPlan;
 import com.shatteredcitadels.worldgen.CitadelWorldGenerator;
 import com.shatteredcitadels.worldgen.StructureJobs;
@@ -126,6 +127,8 @@ public final class CommandCitadel extends CommandBase {
             plan = CommonProxy.WORLD_GENERATOR.planCrypt(world, minX, minZ, random, true);
         } else if ("castle".equals(kind)) {
             plan = CastlePlanner.plan(world, chunkX, chunkZ, random, null, true);
+        } else if ("manor".equals(kind)) {
+            plan = ManorPlanner.plan(world, chunkX, chunkZ, random, true);
         } else {
             boolean sky = "sky".equals(kind) || "sky_citadel".equals(kind);
             boolean tower = "tower".equals(kind);
@@ -293,6 +296,7 @@ public final class CommandCitadel extends CommandBase {
         kinds.add("sky");
         kinds.add("tower");
         kinds.add("castle");
+        kinds.add("manor");
         kinds.add("dungeon");
         return kinds;
     }
