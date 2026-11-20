@@ -9,7 +9,9 @@ public enum StructureType {
     /** A castle built by the Castle Dungeons mod and adopted by the floor tracker. */
     CASTLE_DUNGEONS,
     /** Standalone underground crypt reached from a surface entrance. */
-    CRYPT;
+    CRYPT,
+    /** Curtain wall, moat and courtyard (floor 0) around a keep (floors 1..n). */
+    WALLED_CASTLE;
 
     public static StructureType byName(String name) {
         for (StructureType type : values()) {

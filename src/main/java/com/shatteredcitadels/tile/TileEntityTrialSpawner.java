@@ -328,7 +328,7 @@ public class TileEntityTrialSpawner extends TileEntity implements ITickable {
         // Placed by an admin or by an older generator: adopt the structure it stands in.
         CitadelInstance citadel = data.getCitadelAt(pos);
         if (citadel != null) {
-            FloorData floor = citadel.floorAt(pos.getY());
+            FloorData floor = citadel.floorAt(pos);
             if (floor != null) {
                 citadelId = citadel.getCitadelId();
                 floorIndex = floor.getIndex();

@@ -68,8 +68,8 @@ public final class DungeonCryptBuilder {
 
     private final IBlockState[] wallVariants;
     private final IBlockState air = Blocks.AIR.getDefaultState();
-    /** Seal the ladder from the citadel's ground floor until floor 0 is cleared. */
-    private boolean sealEntrance;
+    /** Floor whose clearing opens the ladder from the citadel's ground floor; MIN_VALUE = open. */
+    private int entranceFloor = Integer.MIN_VALUE;
 
     /** Per level: open[i][j] true = air at grid cell (x0 + i, z0 + j). */
     private boolean[][][] open;
@@ -100,9 +100,9 @@ public final class DungeonCryptBuilder {
         };
     }
 
-    /** The ladder from the citadel's ground floor stays sealed until floor 0 is cleared. */
-    public DungeonCryptBuilder sealEntrance() {
-        this.sealEntrance = true;
+    /** The ladder from the citadel's ground floor stays sealed until {@code groundFloor} is cleared. */
+    public DungeonCryptBuilder sealEntrance(int groundFloor) {
+        this.entranceFloor = groundFloor;
         return this;
     }
 
@@ -152,7 +152,7 @@ public final class DungeonCryptBuilder {
                     ConfigCache.get().rollWaveCount(rand), false);
         }
         rec.setHasCrypt(true);
-        rec.expandBounds(new StructureBoundingBox(x0, topLevelY - (count - 1) * LEVEL_HEIGHT, z0,
+        rec.addPart(new StructureBoundingBox(x0, topLevelY - (count - 1) * LEVEL_HEIGHT, z0,
                 x0 + size - 1, shaftTopY, z0 + size - 1));
         return count;
     }
@@ -163,9 +163,7 @@ public final class DungeonCryptBuilder {
             for (int z = cz - 3; z <= cz + 3; z++) {
                 w.set(x, surfaceY, z, wall());
                 w.clear(x, surfaceY + 1, z, x, surfaceY + 4, z);
-                for (int y = surfaceY - 1; y >= surfaceY - 4 && !w.isSolid(x, y, z); y--) {
-                    w.set(x, y, z, wall());
-                }
+                w.fillDown(x, z, surfaceY - 1, wall(), 4);
                 boolean edge = Math.abs(x - cx) == 3 || Math.abs(z - cz) == 3;
                 if (edge) {
                     int height = rand.nextInt(4);
@@ -421,15 +419,15 @@ public final class DungeonCryptBuilder {
                 for (EnumFacing side : HORIZONTALS) {
                     int nx = x + side.getXOffset();
                     int nz = z + side.getZOffset();
-                    if (y < shaftTopY && !w.isSolid(nx, y, nz)) {
-                        w.set(nx, y, nz, wall());
+                    if (y < shaftTopY && !w.isPlanned(nx, y, nz)) {
+                        w.setIfNotSolid(nx, y, nz, wall());
                     }
                 }
             }
             w.set(x, y, z, ladder);
         }
-        if (sealEntrance) {
-            seal(x, shaftTopY, z, 0);
+        if (entranceFloor != Integer.MIN_VALUE) {
+            seal(x, shaftTopY, z, entranceFloor);
         }
     }
 
@@ -479,11 +477,7 @@ public final class DungeonCryptBuilder {
      * neighbouring chunk during population (cascading worldgen).
      */
     private void fillDispenser(BlockPos pos) {
-        TileEntity tile = w.getWorld().getTileEntity(pos);
-        if (!(tile instanceof TileEntityDispenser)) {
-            return;
-        }
-        NBTTagList items = new NBTTagList();
+        final NBTTagList items = new NBTTagList();
         if (rand.nextFloat() < 0.6F) {
             items.appendTag(slot(0, new ItemStack(Items.ARROW, 8 + rand.nextInt(9))));
         } else {
@@ -492,9 +486,14 @@ public final class DungeonCryptBuilder {
                 items.appendTag(slot(slot, PotionUtils.addPotionToItemStack(new ItemStack(Items.SPLASH_POTION), type)));
             }
         }
-        NBTTagCompound tag = tile.writeToNBT(new NBTTagCompound());
-        tag.setTag("Items", items);
-        tile.readFromNBT(tag);
+        w.afterPlace(pos, (world, at) -> {
+            TileEntity tile = world.getTileEntity(at);
+            if (tile instanceof TileEntityDispenser) {
+                NBTTagCompound tag = tile.writeToNBT(new NBTTagCompound());
+                tag.setTag("Items", items.copy());
+                tile.readFromNBT(tag);
+            }
+        });
     }
 
     private static NBTTagCompound slot(int slot, ItemStack stack) {
@@ -632,21 +631,11 @@ public final class DungeonCryptBuilder {
         if (!w.inside(pos.getX(), pos.getY(), pos.getZ())) {
             return;
         }
-        SpawnerContext context = new SpawnerContext(SpawnerSource.CRYPT, rec.getCitadelId(), floorIndex, tier, tag);
-        if (WaveSpawnerHooks.place(w.getWorld(), pos, context)) {
-            rec.addSpawnerPoint(pos, floorIndex, tier);
-        }
+        StructurePieces.spawner(w, rec, pos, new SpawnerContext(SpawnerSource.CRYPT, rec.getCitadelId(), floorIndex, tier, tag));
     }
 
     private void placeChest(BlockPos pos) {
-        if (!w.set(pos, Blocks.CHEST.getDefaultState().withProperty(BlockChest.FACING, EnumFacing.SOUTH))) {
-            return;
-        }
-        TileEntity tile = w.getWorld().getTileEntity(pos);
-        if (tile instanceof TileEntityLockableLoot) {
-            ((TileEntityLockableLoot) tile).setLootTable(ModLootTables.UNDERGROUND_CRYPT, rand.nextLong());
-        }
-        rec.addChestPoint(pos);
+        StructurePieces.chest(w, rec, pos, EnumFacing.SOUTH, ModLootTables.UNDERGROUND_CRYPT, rand.nextLong());
     }
 
     private void placeVases(int minX, int minZ, int maxX, int maxZ, int yL, int count) {

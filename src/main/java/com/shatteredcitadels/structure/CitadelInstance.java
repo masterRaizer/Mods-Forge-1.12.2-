@@ -38,6 +38,8 @@ public final class CitadelInstance {
     private final List<SpawnerPoint> spawnerPoints = new ArrayList<>();
     private final List<BlockPos> chestPoints = new ArrayList<>();
     private final List<GatePoint> gates = new ArrayList<>();
+    /** Built volumes (tower, wings, walls, buildings); protection applies inside them only. */
+    private final List<StructureBoundingBox> parts = new ArrayList<>();
     /** Blocks placed by players inside the structure: always breakable again. */
     private final java.util.Set<Long> playerPlaced = new java.util.HashSet<>();
     private final List<TaggedRoom> rooms = new ArrayList<>();
@@ -86,6 +88,27 @@ public final class CitadelInstance {
     }
 
     public List<GatePoint> getGates() { return Collections.unmodifiableList(gates); }
+
+    /** Adds a built volume and grows the total bounds to cover it. */
+    public void addPart(StructureBoundingBox box) {
+        parts.add(copy(box));
+        expandBounds(box);
+    }
+
+    public List<StructureBoundingBox> getParts() { return Collections.unmodifiableList(parts); }
+
+    /** @return true if the position is inside a built part (or anywhere, for records without parts). */
+    public boolean isInPart(BlockPos pos) {
+        if (parts.isEmpty()) {
+            return contains(pos);
+        }
+        for (StructureBoundingBox box : parts) {
+            if (box.isVecInside(pos)) {
+                return true;
+            }
+        }
+        return false;
+    }
 
     public void markPlayerPlaced(BlockPos pos) {
         playerPlaced.add(pos.toLong());
@@ -163,14 +186,38 @@ public final class CitadelInstance {
         return totalBounds.isVecInside(pos);
     }
 
-    /** @return the floor whose Y span contains {@code y}, or null. */
+    /**
+     * @return the floor whose Y span contains {@code y}, ignoring horizontal areas (floors without
+     * an area win, so the courtyard never shadows the keep), or null.
+     */
     public FloorData floorAt(int y) {
+        FloorData fallback = null;
         for (FloorData floor : floors.values()) {
             if (floor.containsY(y)) {
-                return floor;
+                if (!floor.hasArea()) {
+                    return floor;
+                }
+                fallback = fallback == null ? floor : fallback;
             }
         }
-        return null;
+        return fallback;
+    }
+
+    /** @return the smallest floor containing the position (keep floor over courtyard), or null. */
+    public FloorData floorAt(BlockPos pos) {
+        FloorData best = null;
+        for (FloorData floor : floors.values()) {
+            if (floor.contains(pos) && (best == null || floor.areaSize() < best.areaSize())) {
+                best = floor;
+            }
+        }
+        return best;
+    }
+
+    /** @return true if floor 0 of this structure is a castle courtyard. */
+    public boolean hasCourtyard() {
+        FloorData ground = floors.get(0);
+        return ground != null && ground.isCourtyard();
     }
 
     /** @return number of floors above ground (index &gt;= 0). */
@@ -247,6 +294,11 @@ public final class CitadelInstance {
             gateList.appendTag(g);
         }
         tag.setTag("gates", gateList);
+        NBTTagList partList = new NBTTagList();
+        for (StructureBoundingBox box : parts) {
+            partList.appendTag(box.toNBTTagIntArray());
+        }
+        tag.setTag("parts", partList);
         NBTTagList placedList = new NBTTagList();
         for (Long pos : playerPlaced) {
             placedList.appendTag(new net.minecraft.nbt.NBTTagLong(pos));
@@ -303,6 +355,10 @@ public final class CitadelInstance {
         for (int i = 0; i < gateList.tagCount(); i++) {
             NBTTagCompound g = gateList.getCompoundTagAt(i);
             instance.addGate(BlockPos.fromLong(g.getLong("pos")), g.getInteger("floor"), g.getInteger("restore"));
+        }
+        NBTTagList partList = tag.getTagList("parts", Constants.NBT.TAG_INT_ARRAY);
+        for (int i = 0; i < partList.tagCount(); i++) {
+            instance.parts.add(readBox(partList.getIntArrayAt(i)));
         }
         NBTTagList placedList = tag.getTagList("placed", Constants.NBT.TAG_LONG);
         for (int i = 0; i < placedList.tagCount(); i++) {

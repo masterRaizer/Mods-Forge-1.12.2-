@@ -47,7 +47,7 @@ public final class CitadelProtectionHandler {
             return false;
         }
         CitadelInstance citadel = CitadelWorldSavedData.get(world).getCitadelAt(pos);
-        if (citadel == null || citadel.isConquered() || citadel.isPlayerPlaced(pos)) {
+        if (citadel == null || citadel.isConquered() || !citadel.isInPart(pos) || citadel.isPlayerPlaced(pos)) {
             return false;
         }
         return !isAlwaysBreakable(world.getBlockState(pos));

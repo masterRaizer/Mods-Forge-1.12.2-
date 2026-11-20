@@ -40,7 +40,8 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
     public static final int WEIGHT = 100;
 
     private static final long SECTION_SALT = 0x5C17ADE1C17ADE1L;
-    private static final int SECTION_MARGIN = 2;
+    /** Chunks kept free at section edges: the largest footprint (walled castle) reaches this far. */
+    private static final int SECTION_MARGIN = 6;
     private static final int MIN_BASE_Y = 12;
 
     private boolean generating;
@@ -76,34 +77,52 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
             return;
         }
         generating = true;
-        CascadeGuard.enter(chunkX, chunkZ);
         try {
-            StructureBoundingBox clip = BlockWriter.populationBox(chunkX, chunkZ);
+            StructureJobs jobs = StructureJobs.get(world);
+            CitadelWorldSavedData data = CitadelWorldSavedData.get(world);
+            StructurePlan plan;
             if (citadelChunk) {
                 Random buildRandom = new Random(buildSeed);
-                CitadelPlan plan = planCitadel(world, (chunkX << 4) + 1, (chunkZ << 4) + 1, buildRandom, null, null, false);
-                if (plan != null && CitadelWorldSavedData.get(world).isFarEnough(chunkX, chunkZ,
-                        config.getMinDistanceBetweenCitadelsChunks())) {
-                    buildCitadel(world, plan, buildRandom, clip);
-                } else if (plan != null) {
+                int minDistance = config.getMinDistanceBetweenCitadelsChunks();
+                if (!data.isFarEnough(chunkX, chunkZ, minDistance) || jobs.isNear(chunkX, chunkZ, minDistance)) {
                     ShatteredCitadelsMod.LOGGER.debug("Citadel site in chunk {},{} rejected: too close to another structure",
                             chunkX, chunkZ);
+                    return;
+                }
+                plan = buildRandom.nextDouble() < config.getWalledCastleChance()
+                        ? CastlePlanner.plan(world, chunkX, chunkZ, buildRandom, null, false) : null;
+                if (plan == null) {
+                    // No castle (not rolled, or too much water or mountain around): a citadel tower still fits here.
+                    plan = planCitadel(world, (chunkX << 4) + 1, (chunkZ << 4) + 1, new Random(buildSeed ^ 0x51ED270B27L),
+                            null, null, null, false);
                 }
             } else {
-                CitadelWorldSavedData data = CitadelWorldSavedData.get(world);
-                boolean free = !data.isChunkOccupied(chunkX, chunkZ) && !data.isChunkOccupied(chunkX + 1, chunkZ)
-                        && !data.isChunkOccupied(chunkX, chunkZ + 1) && !data.isChunkOccupied(chunkX + 1, chunkZ + 1);
-                if (free) {
-                    Random buildRandom = new Random(buildSeed ^ 0x9E3779B97F4A7C15L);
-                    buildStandaloneCrypt(world, (chunkX << 4) + 1, (chunkZ << 4) + 1, buildRandom, clip, false);
-                }
+                plan = planCrypt(world, (chunkX << 4) + 1, (chunkZ << 4) + 1, new Random(buildSeed ^ 0x9E3779B97F4A7C15L), false);
+            }
+            if (plan != null && isAreaFree(world, plan.footprint())) {
+                jobs.submit(plan);
             }
         } catch (RuntimeException e) {
-            ShatteredCitadelsMod.LOGGER.error("Citadel generation failed in chunk [{}, {}]", chunkX, chunkZ, e);
+            ShatteredCitadelsMod.LOGGER.error("Citadel planning failed in chunk [{}, {}]", chunkX, chunkZ, e);
         } finally {
-            CascadeGuard.exit();
             generating = false;
         }
+    }
+
+    /** @return true if no registered or queued structure overlaps the footprint. */
+    public static boolean isAreaFree(World world, StructureBoundingBox footprint) {
+        if (StructureJobs.get(world).isReserved(footprint)) {
+            return false;
+        }
+        CitadelWorldSavedData data = CitadelWorldSavedData.get(world);
+        for (int cx = footprint.minX >> 4; cx <= footprint.maxX >> 4; cx++) {
+            for (int cz = footprint.minZ >> 4; cz <= footprint.maxZ >> 4; cz++) {
+                if (data.isChunkOccupied(cx, cz)) {
+                    return false;
+                }
+            }
+        }
+        return true;
     }
 
     static Random sectionRandom(long worldSeed, int sx, int sz) {
@@ -125,9 +144,17 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         return planCitadel(world, minX, minZ, random, forceSky, null, forceArchetype, ignoreTerrain);
     }
 
-    /** @param forceTower null = roll with towerCitadelChance (regular citadels only) */
     public CitadelPlan planCitadel(World world, int minX, int minZ, Random random, Boolean forceSky, Boolean forceTower,
                                    CitadelArchetype forceArchetype, boolean ignoreTerrain) {
+        return planCitadel(world, minX, minZ, random, forceSky, forceTower, forceArchetype, ignoreTerrain, 0);
+    }
+
+    /**
+     * @param forceTower  null = roll with towerCitadelChance (regular citadels only)
+     * @param floorOffset 1 for the keep of a walled castle (its courtyard is floor 0)
+     */
+    public CitadelPlan planCitadel(World world, int minX, int minZ, Random random, Boolean forceSky, Boolean forceTower,
+                                   CitadelArchetype forceArchetype, boolean ignoreTerrain, int floorOffset) {
         ConfigCache.Snapshot config = ConfigCache.get();
         boolean sky = forceSky != null ? forceSky : random.nextDouble() < config.getSkyCitadelChance();
         int width = sky ? 21 + 2 * random.nextInt(2) : 25 + 2 * random.nextInt(3);
@@ -182,8 +209,9 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         }
         CitadelArchetype archetype = forceArchetype != null ? forceArchetype
                 : sky ? CitadelArchetype.SKY_CITADEL : chooseArchetype(biome, archetypeRoll);
+        boolean wings = config.getTowerWingChance() > 0.0D;
         return new CitadelPlan(minX, minZ, width, baseY, floors, arenaHeight, sky, archetype, spireTop,
-                cryptLevels, random.nextLong());
+                cryptLevels, random.nextLong(), world.provider.getDimension(), wings, floorOffset);
     }
 
     /**
@@ -222,7 +250,7 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
     }
 
     /** @return sorted ground heights on a 4-block grid, or null if the site is mostly water. */
-    private static int[] sampleHeights(World world, int minX, int minZ, int width) {
+    static int[] sampleHeights(World world, int minX, int minZ, int width) {
         int steps = width / 4 + 1;
         int[] heights = new int[steps * steps];
         int water = 0;
@@ -246,14 +274,14 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         return heights;
     }
 
-    private static boolean isUnsuitableBiome(Biome biome) {
+    static boolean isUnsuitableBiome(Biome biome) {
         return BiomeDictionary.hasType(biome, BiomeDictionary.Type.OCEAN)
                 || BiomeDictionary.hasType(biome, BiomeDictionary.Type.RIVER)
                 || BiomeDictionary.hasType(biome, BiomeDictionary.Type.BEACH)
                 || BiomeDictionary.hasType(biome, BiomeDictionary.Type.MUSHROOM);
     }
 
-    private static CitadelArchetype chooseArchetype(Biome biome, double roll) {
+    static CitadelArchetype chooseArchetype(Biome biome, double roll) {
         if (BiomeDictionary.hasType(biome, BiomeDictionary.Type.NETHER)
                 || (BiomeDictionary.hasType(biome, BiomeDictionary.Type.HOT) && BiomeDictionary.hasType(biome, BiomeDictionary.Type.DRY))) {
             return roll < 0.75D ? CitadelArchetype.OBSIDIAN_BASTILLE : CitadelArchetype.TITAN_FORGE;
@@ -277,40 +305,10 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         return CitadelArchetype.OBSIDIAN_BASTILLE;
     }
 
-    // ------------------------------------------------------------------ building
+    // ------------------------------------------------------------------ crypts
 
-    /** Builds the planned citadel (and its crypt) and registers it in the floor tracker. */
-    public CitadelInstance buildCitadel(World world, CitadelPlan plan, Random random, StructureBoundingBox clip) {
-        long started = System.nanoTime();
-        CitadelWorldSavedData data = CitadelWorldSavedData.get(world);
-        BlockPalette palette = ModPaletteRegistry.forCitadel(plan.archetype, plan.buildSeed);
-        BlockWriter writer = new BlockWriter(world, clip);
-        Random buildRandom = new Random(plan.buildSeed ^ random.nextLong());
-        CitadelInstance record = new CitadelInstance(MathHelper.getRandomUUID(buildRandom),
-                CitadelNameGenerator.generate(plan.archetype.key(), buildRandom),
-                plan.sky ? StructureType.SKY_CITADEL : StructureType.CITADEL, plan.archetype,
-                world.provider.getDimension(), new BlockPos(plan.minX, plan.baseY, plan.minZ), plan.totalBounds());
-        new CitadelBuilder(writer, plan, palette, buildRandom, record).build();
-        if (plan.cryptLevels > 0) {
-            int tier = plan.sky ? 3 : 2;
-            new DungeonCryptBuilder(writer, palette, buildRandom, record, plan.minX, plan.minZ, plan.width, tier)
-                    .sealEntrance()
-                    .build(plan.cryptLevelY(0), plan.cryptLevels, CitadelBuilder.shaftX(plan), CitadelBuilder.shaftZ(plan),
-                            plan.floorY(0));
-        }
-        openUnguardedFloors(writer, record);
-        data.register(record);
-        ShatteredCitadelsMod.LOGGER.info("Generated {} #{} ({}, {} floors, crypt levels {}) at {} y={}..{}: {} blocks, {} clipped, {} ms",
-                record.getType(), record.getCitadelId(), plan.archetype.key(), plan.floors, plan.cryptLevels,
-                record.getOrigin(), record.getTotalBounds().minY, record.getTotalBounds().maxY,
-                writer.getWritten(), writer.getRejected(), (System.nanoTime() - started) / 1_000_000L);
-        return record;
-    }
-
-    /** Standalone crypt with a ruined surface entrance; footprint 21x21 inside the clip box. */
-    public CitadelInstance buildStandaloneCrypt(World world, int minX, int minZ, Random random,
-                                                  StructureBoundingBox clip, boolean ignoreTerrain) {
-        int size = 21;
+    /** Standalone crypt with a ruined surface entrance; footprint 21x21. */
+    public CryptPlan planCrypt(World world, int minX, int minZ, Random random, boolean ignoreTerrain) {
         int cx = minX + 11;
         int cz = minZ + 11;
         Biome biome = world.getBiome(new BlockPos(cx, 64, cz));
@@ -322,26 +320,8 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
             return null;
         }
         int surfaceY = Math.max(MIN_BASE_Y + 12, top.getY() - 1);
-        int topLevelY = surfaceY - 12;
         int levels = ConfigCache.get().rollCryptLevels(random);
-        CitadelWorldSavedData data = CitadelWorldSavedData.get(world);
         CitadelArchetype archetype = random.nextBoolean() ? CitadelArchetype.KEEPERS_CITADEL : CitadelArchetype.OBSIDIAN_BASTILLE;
-        BlockPalette palette = ModPaletteRegistry.forCitadel(archetype, random.nextLong());
-        BlockWriter writer = new BlockWriter(world, clip);
-        CitadelInstance record = new CitadelInstance(MathHelper.getRandomUUID(random),
-                CitadelNameGenerator.generate("crypt", random), StructureType.CRYPT, archetype,
-                world.provider.getDimension(), new BlockPos(minX, topLevelY, minZ),
-                new StructureBoundingBox(minX, topLevelY, minZ, minX + size - 1, surfaceY + 4, minZ + size - 1));
-        DungeonCryptBuilder builder = new DungeonCryptBuilder(writer, palette, random, record, minX, minZ, size, 1);
-        builder.buildSurfaceRuin(cx, surfaceY, cz);
-        int built = builder.build(topLevelY, levels, cx, cz, surfaceY, true);
-        if (built == 0) {
-            return null;
-        }
-        openUnguardedFloors(writer, record);
-        data.register(record);
-        ShatteredCitadelsMod.LOGGER.info("Generated CRYPT #{} ({} levels) at {}: {} blocks, {} clipped",
-                record.getCitadelId(), built, record.getOrigin(), writer.getWritten(), writer.getRejected());
-        return record;
+        return new CryptPlan(minX, minZ, surfaceY, levels, archetype, random.nextLong(), world.provider.getDimension());
     }
 }

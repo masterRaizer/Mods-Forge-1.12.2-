@@ -85,7 +85,7 @@ public class BlockVase extends Block {
     private static void shatter(WorldServer world, BlockPos pos, Variant variant, EntityPlayer player) {
         world.playSound(null, pos, SoundEvents.BLOCK_GLASS_BREAK, SoundCategory.BLOCKS, 1.0F, 0.55F + world.rand.nextFloat() * 0.2F);
         CitadelInstance citadel = CitadelWorldSavedData.get(world).getCitadelAt(pos);
-        FloorData floor = citadel == null ? null : citadel.floorAt(pos.getY());
+        FloorData floor = citadel == null ? null : citadel.floorAt(pos);
         int difficulty = floor == null ? 1 : floor.getDifficultyTier();
         if (variant == Variant.GILDED) {
             difficulty += 2;

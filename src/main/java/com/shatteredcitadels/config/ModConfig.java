@@ -130,6 +130,30 @@ public final class ModConfig {
         @Config.RangeDouble(min = 0.0D, max = 1.0D)
         public double towerCitadelChance = 0.30D;
 
+        @Config.Name("towerWingChance")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.towerWingChance")
+        @Config.Comment("Chance per floor band (every 2-3 floors) that a tower grows a wing with annexes.")
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double towerWingChance = 0.65D;
+
+        @Config.Name("walledCastleChance")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.walledCastleChance")
+        @Config.Comment({
+                "Chance that a citadel site becomes a walled castle: curtain wall with towers, gatehouse, moat,",
+                "a courtyard that must be taken first (its waves seal the keep) and the keep in the middle."
+        })
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double walledCastleChance = 0.35D;
+
+        @Config.Name("generationBudgetMs")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.generationBudgetMs")
+        @Config.Comment({
+                "Milliseconds per server tick spent writing structures into the world. Structures are planned",
+                "in the background and written gradually into loaded chunks, so they never freeze the game."
+        })
+        @Config.RangeInt(min = 1, max = 40)
+        public int generationBudgetMs = 5;
+
         @Config.Name("towerMinFloors")
         @Config.LangKey("config.shatteredcitadels.castle_generation.towerMinFloors")
         @Config.Comment("Minimum floors of a tower citadel.")

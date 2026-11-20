@@ -17,7 +17,11 @@ import com.shatteredcitadels.structure.CitadelWorldSavedData;
 import com.shatteredcitadels.structure.FloorData;
 import com.shatteredcitadels.tile.TileEntityBossAltar;
 import com.shatteredcitadels.worldgen.BlockWriter;
+import com.shatteredcitadels.worldgen.CastlePlanner;
 import com.shatteredcitadels.worldgen.CitadelPlan;
+import com.shatteredcitadels.worldgen.CitadelWorldGenerator;
+import com.shatteredcitadels.worldgen.StructureJobs;
+import com.shatteredcitadels.worldgen.StructurePlan;
 import net.minecraft.command.CommandBase;
 import net.minecraft.command.CommandException;
 import net.minecraft.command.ICommandSender;
@@ -97,22 +101,31 @@ public final class CommandCitadel extends CommandBase {
         }
         World world = sender.getEntityWorld();
         BlockPos pos = sender.getPosition();
-        int chunkX = pos.getX() >> 4;
-        int chunkZ = pos.getZ() >> 4;
+        StructurePlan plan = planAndQueue(world, args[1], pos.getX() >> 4, pos.getZ() >> 4);
+        sender.sendMessage(line("Queued ", TextFormatting.GREEN).appendText(plan.describe()
+                + ". It is built in the background and appears within seconds as its chunks are loaded."));
+    }
+
+    /**
+     * Plans a structure of {@code kind} anchored at the chunk and queues it. Loads the anchor's
+     * 2x2 chunks (a command may) so the site can be measured.
+     */
+    public static StructurePlan planAndQueue(World world, String rawKind, int chunkX, int chunkZ) throws CommandException {
         ensureSiteFree(world, chunkX, chunkZ);
         for (int dx = 0; dx <= 1; dx++) {
             for (int dz = 0; dz <= 1; dz++) {
                 world.getChunk(chunkX + dx, chunkZ + dz);
             }
         }
-        StructureBoundingBox clip = BlockWriter.populationBox(chunkX, chunkZ);
         int minX = (chunkX << 4) + 1;
         int minZ = (chunkZ << 4) + 1;
-        Random random = new Random(world.getSeed() ^ pos.toLong() ^ System.nanoTime());
-        String kind = args[1].toLowerCase(Locale.ROOT);
-        CitadelInstance created;
+        Random random = new Random(world.getSeed() ^ ((long) chunkX << 32) ^ chunkZ ^ System.nanoTime());
+        String kind = rawKind.toLowerCase(Locale.ROOT);
+        StructurePlan plan;
         if ("dungeon".equals(kind) || "crypt".equals(kind)) {
-            created = CommonProxy.WORLD_GENERATOR.buildStandaloneCrypt(world, minX, minZ, random, clip, true);
+            plan = CommonProxy.WORLD_GENERATOR.planCrypt(world, minX, minZ, random, true);
+        } else if ("castle".equals(kind)) {
+            plan = CastlePlanner.plan(world, chunkX, chunkZ, random, null, true);
         } else {
             boolean sky = "sky".equals(kind) || "sky_citadel".equals(kind);
             boolean tower = "tower".equals(kind);
@@ -120,19 +133,17 @@ public final class CommandCitadel extends CommandBase {
             if (archetype == null && !tower) {
                 throw new CommandException("Unknown type '" + kind + "'. Use: " + String.join(", ", kinds()));
             }
-            CitadelPlan plan = CommonProxy.WORLD_GENERATOR.planCitadel(world, minX, minZ, random, sky, tower ? Boolean.TRUE : null, archetype, true);
-            if (plan == null) {
-                throw new CommandException("No room below the build limit here");
-            }
-            created = CommonProxy.WORLD_GENERATOR.buildCitadel(world, plan, random, clip);
+            plan = CommonProxy.WORLD_GENERATOR.planCitadel(world, minX, minZ, random, sky, tower ? Boolean.TRUE : null,
+                    archetype, true);
         }
-        if (created == null) {
-            throw new CommandException("Generation failed at " + minX + " " + minZ);
+        if (plan == null) {
+            throw new CommandException("No room for that structure here (build limit or bedrock)");
         }
-        StructureBoundingBox b = created.getTotalBounds();
-        sender.sendMessage(line("Generated ", TextFormatting.GREEN).appendSibling(CitadelNameGenerator.toComponent(created.getDisplayName()))
-                .appendText(" (" + created.getType() + ") at " + b.minX + " " + b.minY + " " + b.minZ + " -> "
-                        + b.maxX + " " + b.maxY + " " + b.maxZ));
+        if (!CitadelWorldGenerator.isAreaFree(world, plan.footprint())) {
+            throw new CommandException("Another structure is too close; move further away");
+        }
+        StructureJobs.get(world).submit(plan);
+        return plan;
     }
 
     /** /citadel locate - nearest tracked structure of the sender's dimension. */
@@ -171,7 +182,7 @@ public final class CommandCitadel extends CommandBase {
         if (citadel == null) {
             throw new CommandException("You are not inside a tracked citadel or dungeon");
         }
-        FloorData floor = citadel.floorAt(pos.getY());
+        FloorData floor = citadel.floorAt(pos);
         ConfigCache.Snapshot config = ConfigCache.get();
         sender.sendMessage(line("Citadel ", TextFormatting.GOLD).appendSibling(CitadelNameGenerator.toComponent(citadel.getDisplayName()))
                 .appendText(" [" + citadel.getCitadelId() + "] " + citadel.getType() + " / " + citadel.getArchetypeKey()));
@@ -281,6 +292,7 @@ public final class CommandCitadel extends CommandBase {
         }
         kinds.add("sky");
         kinds.add("tower");
+        kinds.add("castle");
         kinds.add("dungeon");
         return kinds;
     }

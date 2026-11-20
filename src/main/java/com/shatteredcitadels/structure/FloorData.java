@@ -1,6 +1,7 @@
 package com.shatteredcitadels.structure;
 
 import net.minecraft.nbt.NBTTagCompound;
+import net.minecraft.util.math.BlockPos;
 
 /**
  * One floor of a citadel (index &gt;= 0) or one crypt level (index -1, -2, -3...): its Y span,
@@ -22,6 +23,10 @@ public final class FloorData {
     private int remainingMobs;
     private boolean cleared;
     private boolean bossDefeated;
+    /** Optional horizontal extent {minX, minZ, maxX, maxZ}; null = the whole structure at this height. */
+    private int[] area;
+    /** The courtyard of a walled castle (floor 0, shown as "Courtyard"). */
+    private boolean courtyard;
 
     public FloorData(int index, int minY, int maxY, int difficultyTier, int totalWaves, boolean bossFloor) {
         this.index = index;
@@ -50,6 +55,31 @@ public final class FloorData {
 
     public boolean containsY(int y) {
         return y >= minY && y <= maxY;
+    }
+
+    /** @return true if the position lies in this floor's height span and horizontal area (if any). */
+    public boolean contains(BlockPos pos) {
+        return containsY(pos.getY()) && (area == null || (pos.getX() >= area[0] && pos.getX() <= area[2]
+                && pos.getZ() >= area[1] && pos.getZ() <= area[3]));
+    }
+
+    /** @return horizontal area in blocks; floors without an area count as unbounded. */
+    public long areaSize() {
+        return area == null ? Long.MAX_VALUE : (long) (area[2] - area[0] + 1) * (area[3] - area[1] + 1);
+    }
+
+    public boolean hasArea() { return area != null; }
+
+    public FloorData setArea(int minX, int minZ, int maxX, int maxZ) {
+        this.area = new int[]{Math.min(minX, maxX), Math.min(minZ, maxZ), Math.max(minX, maxX), Math.max(minZ, maxZ)};
+        return this;
+    }
+
+    public boolean isCourtyard() { return courtyard; }
+
+    public FloorData setCourtyard(boolean courtyard) {
+        this.courtyard = courtyard;
+        return this;
     }
 
     // ------------------------------------------------------------------ combat state (stage 4)
@@ -89,6 +119,10 @@ public final class FloorData {
         tag.setInteger("remaining", remainingMobs);
         tag.setBoolean("cleared", cleared);
         tag.setBoolean("bossDefeated", bossDefeated);
+        if (area != null) {
+            tag.setIntArray("area", area.clone());
+        }
+        tag.setBoolean("courtyard", courtyard);
         return tag;
     }
 
@@ -99,6 +133,11 @@ public final class FloorData {
         floor.remainingMobs = Math.max(0, tag.getInteger("remaining"));
         floor.cleared = tag.getBoolean("cleared");
         floor.bossDefeated = tag.getBoolean("bossDefeated");
+        int[] area = tag.getIntArray("area");
+        if (area.length == 4) {
+            floor.area = area;
+        }
+        floor.courtyard = tag.getBoolean("courtyard");
         return floor;
     }
 }

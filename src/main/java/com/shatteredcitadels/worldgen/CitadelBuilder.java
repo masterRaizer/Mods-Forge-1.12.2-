@@ -115,8 +115,8 @@ public final class CitadelBuilder {
             }
 
             @Override
-            public World world() {
-                return w.getWorld();
+            public void afterPlace(BlockPos pos, Blueprint.TileAction action) {
+                w.afterPlace(pos, action);
             }
         }, random, palette, vaseVariant(plan.archetype));
     }
@@ -139,6 +139,7 @@ public final class CitadelBuilder {
     }
 
     public void build() {
+        rec.addPart(p.totalBounds());
         buildFoundation();
         for (int f = 0; f < p.floors; f++) {
             buildShell(f);
@@ -154,6 +155,34 @@ public final class CitadelBuilder {
         if (p.cryptLevels > 0) {
             cutCryptHatch();
         }
+        if (p.wings) {
+            new TowerWings(w, p, pal, rand, rec, source, new TowerWings.Tower() {
+                @Override
+                public boolean reserved(int floor, int x, int z) {
+                    return isReserved(floor, x, z);
+                }
+
+                @Override
+                public void reserve(int floor, int minX, int minZ, int maxX, int maxZ) {
+                    CitadelBuilder.this.reserve(floor, minX, minZ, maxX, maxZ);
+                }
+
+                @Override
+                public int difficulty(int floor) {
+                    return difficultyForFloor(floor);
+                }
+
+                @Override
+                public int tier(int floor) {
+                    return tierForFloor(floor);
+                }
+
+                @Override
+                public int recordFloor(int floor) {
+                    return idx(floor);
+                }
+            }, vaseVariant(p.archetype), window).build();
+        }
         for (int f = 0; f < p.topFloorIndex(); f++) {
             decorateFloor(f);
         }
@@ -166,7 +195,7 @@ public final class CitadelBuilder {
             int y0 = p.floorY(f);
             int height = f == p.topFloorIndex() ? p.arenaHeight : CitadelPlan.FLOOR_HEIGHT;
             boolean boss = f == p.topFloorIndex();
-            rec.addFloor(f, y0, y0 + height - 1, difficultyForFloor(f), boss ? 1 : waves.rollWaveCount(rand), boss);
+            rec.addFloor(idx(f), y0, y0 + height - 1, difficultyForFloor(f), boss ? 1 : waves.rollWaveCount(rand), boss);
         }
     }
 
@@ -176,13 +205,10 @@ public final class CitadelBuilder {
         for (int x = x0; x <= x1; x++) {
             for (int z = z0; z <= z1; z++) {
                 boolean edge = x == x0 || x == x1 || z == z0 || z == z1;
-                for (int d = 1; d <= FOUNDATION_MAX_DEPTH; d++) {
-                    int y = p.baseY - d;
-                    if (y < BlockWriter.MIN_Y || (d > 1 && w.isSolid(x, y, z))) {
-                        break;
-                    }
-                    w.set(x, y, z, edge ? pal.get(PaletteSlot.PILLAR) : pal.get(PaletteSlot.WALL, rand));
-                }
+                // The first layer always; deeper only where the terrain leaves a gap (resolved at write time).
+                IBlockState fill = edge ? pal.get(PaletteSlot.PILLAR) : pal.get(PaletteSlot.WALL, rand);
+                w.set(x, p.baseY - 1, z, fill);
+                w.fillDown(x, z, p.baseY - 2, fill, FOUNDATION_MAX_DEPTH - 1);
             }
         }
     }
@@ -349,7 +375,7 @@ public final class CitadelBuilder {
                 int z = sz + dz * k + lz * l;
                 IBlockState replaced = w.get(x, y, z);
                 if (w.set(x, y, z, gate)) {
-                    rec.addGate(new BlockPos(x, y, z), f, Block.getStateId(replaced));
+                    rec.addGate(new BlockPos(x, y, z), idx(f), Block.getStateId(replaced));
                 }
             }
         }
@@ -370,7 +396,7 @@ public final class CitadelBuilder {
         w.set(cx + 2, y0 + 1, z1 + 1, pal.get(PaletteSlot.LIGHT));
         reserve(0, cx - 2, z1 - 2, cx + 2, z1);
         rec.addRoom(new StructureBoundingBox(x0 + 1, y0, cz + 1, x1 - 1, y0 + CitadelPlan.FLOOR_HEIGHT - 1, z1 - 1),
-                RoomTag.ENTRANCE_HALL, 0);
+                RoomTag.ENTRANCE_HALL, idx(0));
     }
 
     private void cutCryptHatch() {
@@ -404,7 +430,7 @@ public final class CitadelBuilder {
             boolean hall = f == 0 && (q == SE || q == SW);
             RoomTag tag = hall ? RoomTag.ENTRANCE_HALL : ROOM_ROTATION[(f + q) % ROOM_ROTATION.length];
             if (!hall) {
-                rec.addRoom(new StructureBoundingBox(b[0], y0, b[1], b[2], y0 + CitadelPlan.FLOOR_HEIGHT - 1, b[3]), tag, f);
+                rec.addRoom(new StructureBoundingBox(b[0], y0, b[1], b[2], y0 + CitadelPlan.FLOOR_HEIGHT - 1, b[3]), tag, idx(f));
             }
             int qx = (b[0] + b[2]) / 2;
             int qz = (b[1] + b[3]) / 2;
@@ -475,24 +501,14 @@ public final class CitadelBuilder {
 
     /** Loot is set as a table (never pre-filled), which is what makes the chest Lootr-compatible. */
     private void placeChest(BlockPos pos, EnumFacing facing, ResourceLocation lootTable) {
-        if (!w.set(pos, Blocks.CHEST.getDefaultState().withProperty(BlockChest.FACING, facing))) {
-            return;
-        }
-        TileEntity tile = w.getWorld().getTileEntity(pos);
-        if (tile instanceof TileEntityLockableLoot) {
-            ((TileEntityLockableLoot) tile).setLootTable(lootTable, rand.nextLong());
-        }
-        rec.addChestPoint(pos);
+        StructurePieces.chest(w, rec, pos, facing, lootTable, rand.nextLong());
     }
 
     private void placeSpawner(BlockPos pos, int floor, int tier, RoomTag tag) {
         if (!w.inside(pos.getX(), pos.getY(), pos.getZ())) {
             return;
         }
-        SpawnerContext context = new SpawnerContext(source, rec.getCitadelId(), floor, tier, tag);
-        if (WaveSpawnerHooks.place(w.getWorld(), pos, context)) {
-            rec.addSpawnerPoint(pos, floor, tier);
-        }
+        StructurePieces.spawner(w, rec, pos, new SpawnerContext(source, rec.getCitadelId(), idx(floor), tier, tag));
     }
 
     // ------------------------------------------------------------------ boss arena
@@ -557,18 +573,12 @@ public final class CitadelBuilder {
         BlockPos altar = new BlockPos(cx, y0 + 3, cz);
         StructureBoundingBox arena = new StructureBoundingBox(x0, y0, z0, x1, y0 + h, z1);
         rec.setBossArena(arena, altar);
-        rec.addRoom(arena, RoomTag.BOSS_ARENA, f);
+        rec.addRoom(arena, RoomTag.BOSS_ARENA, idx(f));
     }
 
     /** Boss altar block (the boss stands on top of it); configured in memory, no markDirty(). */
     static void placeBossAltar(BlockWriter writer, BlockPos pos, CitadelInstance record) {
-        if (ModBlocks.BOSS_ALTAR == null || !writer.set(pos, ModBlocks.BOSS_ALTAR.getDefaultState())) {
-            return;
-        }
-        TileEntity tile = writer.getWorld().getTileEntity(pos);
-        if (tile instanceof TileEntityBossAltar) {
-            ((TileEntityBossAltar) tile).configure(record.getCitadelId());
-        }
+        StructurePieces.bossAltar(writer, pos, record);
     }
 
     private void column(int floor, int x, int z, int size, int minY, int maxY) {
@@ -624,6 +634,11 @@ public final class CitadelBuilder {
                 {cx + 1, cz + 1, x1 - 1, z1 - 1},
                 {x0 + 1, cz + 1, cx - 1, z1 - 1}
         };
+    }
+
+    /** @return the record's floor index of builder floor {@code f} (keeps of walled castles start at 1). */
+    private int idx(int f) {
+        return f + p.floorOffset;
     }
 
     /** Floor difficulty 1-6: regular citadels span 1..5, the Citadel Above the Clouds 2..6. */

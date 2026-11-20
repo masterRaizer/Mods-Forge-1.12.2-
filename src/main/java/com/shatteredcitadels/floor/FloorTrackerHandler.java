@@ -146,7 +146,7 @@ public final class FloorTrackerHandler {
         }
         // Gates that waited in unloaded chunks open as soon as someone is inside again.
         SealedGates.reconcile(player.world, citadel);
-        return FloorHudState.of(citadel, citadel.floorAt(MathHelper.floor(player.posY)));
+        return FloorHudState.of(citadel, citadel.floorAt(new BlockPos(player)));
     }
 
     /**

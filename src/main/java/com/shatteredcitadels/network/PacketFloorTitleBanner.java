@@ -18,6 +18,7 @@ public final class PacketFloorTitleBanner implements IMessage {
     private int difficultyTier = 1;
     private boolean skyCitadel;
     private boolean bossFloor;
+    private boolean hasCourtyard;
 
     /** Required by SimpleNetworkWrapper. */
     public PacketFloorTitleBanner() {
@@ -30,6 +31,7 @@ public final class PacketFloorTitleBanner implements IMessage {
         this.difficultyTier = state.getDifficultyTier();
         this.skyCitadel = state.isSkyCitadel();
         this.bossFloor = state.isBossFloor();
+        this.hasCourtyard = state.hasCourtyard();
     }
 
     public String getCitadelName() { return citadelName; }
@@ -38,6 +40,7 @@ public final class PacketFloorTitleBanner implements IMessage {
     public int getDifficultyTier() { return difficultyTier; }
     public boolean isSkyCitadel() { return skyCitadel; }
     public boolean isBossFloor() { return bossFloor; }
+    public boolean hasCourtyard() { return hasCourtyard; }
     public boolean isUndergroundLevel() { return floorIndex < 0; }
 
     @Override
@@ -48,7 +51,7 @@ public final class PacketFloorTitleBanner implements IMessage {
         buf.writeShort(floorIndex);
         buf.writeByte(surfaceFloors);
         buf.writeByte(difficultyTier);
-        buf.writeByte((skyCitadel ? 1 : 0) | (bossFloor ? 2 : 0));
+        buf.writeByte((skyCitadel ? 1 : 0) | (bossFloor ? 2 : 0) | (hasCourtyard ? 4 : 0));
     }
 
     @Override
@@ -61,6 +64,7 @@ public final class PacketFloorTitleBanner implements IMessage {
         int flags = buf.readUnsignedByte();
         skyCitadel = (flags & 1) != 0;
         bossFloor = (flags & 2) != 0;
+        hasCourtyard = (flags & 4) != 0;
     }
 
     public static final class Handler implements IMessageHandler<PacketFloorTitleBanner, IMessage> {

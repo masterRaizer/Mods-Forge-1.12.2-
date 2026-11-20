@@ -1,11 +1,20 @@
 # Citadels of the Shattered Crown
 
 Мод подземелий для Minecraft 1.12.2 (Forge 14.23.5.2860, Java 8, MixinBooter).
-modid: `shatteredcitadels`, версия 1.3.1.
+modid: `shatteredcitadels`, версия 1.4.0.
 
 ## Что добавляет мод
 - Многоэтажные цитадели пяти архетипов (Цитадель Хранителей, Обсидиановая Бастилия, Техно-арканный Шпиль,
   Кузня Титанов, Небесная Цитадель), подземные крипты-лабиринты с ловушками; генерация без cascading worldgen.
+- Башни с ответвлениями: на разных этажах от башни отходят крылья (1–3 этажа) с комнатами, спавнерами и лутом;
+  у крыльев башенки со смотровой площадкой (иногда с балконом) и часовни на крыше; низкие крылья стоят на опорах,
+  высокие держатся на ступенчатых консолях (`towerWingChance`).
+- Замки со стеной (`walledCastleChance`): ров с мостом, крепостная стена с дозорным ходом и зубцами, угловые и
+  средние башни с лучниками, надвратная башня, двор с казармами, кузницей, складом, конюшней, часовней, оружейной,
+  колодцем и огородом, донжон в центре. Двор — это этаж 0: пока не отбиты его волны, дверь донжона запечатана.
+- Генератор больших построек: постройка рассчитывается в фоне и записывается в загруженные чанки по несколько
+  миллисекунд за тик (`generationBudgetMs`), поэтому размер не ограничен и нет ни фризов, ни cascading worldgen.
+  Недостроенное достраивается после перезапуска. Прогресс — `/shatteredcitadels status`.
 - Высота: обычные цитадели 3–9 этажей, 30% из них — цитадели-башни до предела мира (около 22 этажей, крыша ниже Y 250,
   `towerCitadelChance`, `towerMinFloors`, `towerMaxFloors`). Сила мобов и боссов перестаёт расти после 14-го этажа.
 - Палитры из блоков модов сборки: Quark, Tinkers' Construct, Immersive Engineering, Unseen's Nether Backport (`nb`),
@@ -28,7 +37,7 @@ modid: `shatteredcitadels`, версия 1.3.1.
   12 достижений и квестлайн BetterQuesting.
 
 ## Установка в сборку
-1. Положите `shatteredcitadels-1.3.1.jar` и MixinBooter (8.0 или новее) в папку `mods`.
+1. Положите `shatteredcitadels-1.4.0.jar` и MixinBooter (8.0 или новее) в папку `mods`.
    Forge 14.23.5.2847+ (рекомендуется 2860). Остальные интеграции (Castle Dungeons, Lootr, Baubles,
    Apotheosis, BetterQuesting) необязательны и подхватываются автоматически.
 2. Первый запуск создаст конфиг `config/shatteredcitadels/shatteredcitadels.cfg`
@@ -49,5 +58,5 @@ modid: `shatteredcitadels`, версия 1.3.1.
 - `/shatteredcitadels` (`/scitadels`) — расширенная диагностика: list, info, status, spawners, boss, relics, lore и др.
 
 ## Сборка из исходников
-`./gradlew build` → `build/libs/shatteredcitadels-1.3.1.jar` (refmap миксинов включён в jar).
+`./gradlew build` → `build/libs/shatteredcitadels-1.4.0.jar` (refmap миксинов включён в jar).
 Для тестов с Castle Dungeons/Baubles: `./gradlew runServer -PwithCastleDungeons -PwithBaubles`.

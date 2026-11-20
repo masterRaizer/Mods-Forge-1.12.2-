@@ -90,7 +90,7 @@ public final class ClientFloorHudOverlay {
         FontRenderer font = mc.fontRenderer;
         String title = CitadelTextFormatter.name(banner.getCitadelName());
         String subtitle = CitadelTextFormatter.bannerSubtitle(banner.getFloorIndex(), banner.getSurfaceFloors(),
-                banner.getDifficultyTier());
+                banner.getDifficultyTier(), banner.hasCourtyard());
         String extra = banner.isBossFloor() ? CitadelTextFormatter.translate("shatteredcitadels.hud.banner.arena") : null;
 
         int centerX = resolution.getScaledWidth() / 2;
@@ -137,7 +137,8 @@ public final class ClientFloorHudOverlay {
         }
         lines.add(name);
         colors.add(COLOR_TITLE);
-        lines.add(CitadelTextFormatter.plaqueFloor(state.getFloorIndex(), state.getSurfaceFloors(), state.getDifficultyTier()));
+        lines.add(CitadelTextFormatter.plaqueFloor(state.getFloorIndex(), state.getSurfaceFloors(), state.getDifficultyTier(),
+                state.hasCourtyard()));
         colors.add(COLOR_TEXT);
         String status = statusLine(state);
         if (status != null) {

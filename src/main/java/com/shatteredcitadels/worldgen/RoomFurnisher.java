@@ -52,7 +52,8 @@ public final class RoomFurnisher {
 
         void chest(BlockPos pos, EnumFacing facing, ResourceLocation lootTable);
 
-        World world();
+        /** Configures the tile entity at {@code pos} once the block has been written. */
+        void afterPlace(BlockPos pos, Blueprint.TileAction action);
     }
 
     private final Site site;
@@ -344,12 +345,14 @@ public final class RoomFurnisher {
         EnumDyeColor color = EnumDyeColor.byMetadata(rand.nextInt(16));
         if (site.set(footX, y, footZ, bed.withProperty(BlockBed.PART, BlockBed.EnumPartType.FOOT))
                 && site.set(headX, y, headZ, bed.withProperty(BlockBed.PART, BlockBed.EnumPartType.HEAD))) {
-            for (BlockPos pos : new BlockPos[]{new BlockPos(footX, y, footZ), new BlockPos(headX, y, headZ)}) {
-                TileEntity tile = site.world().getTileEntity(pos);
+            Blueprint.TileAction dye = (world, at) -> {
+                TileEntity tile = world.getTileEntity(at);
                 if (tile instanceof TileEntityBed) {
                     ((TileEntityBed) tile).setColor(color);
                 }
-            }
+            };
+            site.afterPlace(new BlockPos(footX, y, footZ), dye);
+            site.afterPlace(new BlockPos(headX, y, headZ), dye);
         }
     }
 
@@ -358,29 +361,32 @@ public final class RoomFurnisher {
         if (rand.nextFloat() >= chance) {
             return;
         }
-        TileEntity tile = site.world().getTileEntity(pos);
-        try {
-            if (tile instanceof TileEntityLockableLoot) {
-                ((TileEntityLockableLoot) tile).setLootTable(table, rand.nextLong());
-            } else if (tile instanceof IInventory && site.world() instanceof WorldServer) {
-                // Small appliance inventories (fridges): put what fits into random free slots, no overflow.
-                WorldServer world = (WorldServer) site.world();
-                IInventory inventory = (IInventory) tile;
-                List<Integer> free = new ArrayList<>();
-                for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
-                    if (inventory.getStackInSlot(slot).isEmpty()) {
-                        free.add(slot);
+        long seed = rand.nextLong();
+        site.afterPlace(pos, (world, at) -> {
+            TileEntity tile = world.getTileEntity(at);
+            try {
+                if (tile instanceof TileEntityLockableLoot) {
+                    ((TileEntityLockableLoot) tile).setLootTable(table, seed);
+                } else if (tile instanceof IInventory && world instanceof WorldServer) {
+                    // Small appliance inventories (fridges): what fits goes into random free slots, no overflow.
+                    Random random = new Random(seed);
+                    IInventory inventory = (IInventory) tile;
+                    List<Integer> free = new ArrayList<>();
+                    for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+                        if (inventory.getStackInSlot(slot).isEmpty()) {
+                            free.add(slot);
+                        }
+                    }
+                    Collections.shuffle(free, random);
+                    List<ItemStack> loot = ((WorldServer) world).getLootTableManager().getLootTableFromLocation(table)
+                            .generateLootForPools(random, new LootContext.Builder((WorldServer) world).build());
+                    for (int i = 0; i < loot.size() && i < free.size(); i++) {
+                        inventory.setInventorySlotContents(free.get(i), loot.get(i));
                     }
                 }
-                Collections.shuffle(free, rand);
-                List<ItemStack> loot = world.getLootTableManager().getLootTableFromLocation(table)
-                        .generateLootForPools(rand, new LootContext.Builder(world).build());
-                for (int i = 0; i < loot.size() && i < free.size(); i++) {
-                    inventory.setInventorySlotContents(free.get(i), loot.get(i));
-                }
+            } catch (RuntimeException e) {
+                ShatteredCitadelsMod.LOGGER.debug("Could not stock {} at {}: {}", tile, at, e.toString());
             }
-        } catch (RuntimeException e) {
-            ShatteredCitadelsMod.LOGGER.debug("Could not stock {} at {}: {}", tile, pos, e.toString());
-        }
+        });
     }
 }
