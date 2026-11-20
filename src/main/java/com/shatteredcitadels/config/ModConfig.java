@@ -91,6 +91,18 @@ public final class ModConfig {
         @Config.RangeDouble(min = 0.0D, max = 1.0D)
         public double undergroundUnderCastleChance = 0.35D;
 
+        @Config.Name("cryptMinLevels")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.cryptMinLevels")
+        @Config.Comment("Minimum levels of an underground crypt (each level is 6 blocks tall).")
+        @Config.RangeInt(min = 1, max = 8)
+        public int cryptMinLevels = 3;
+
+        @Config.Name("cryptMaxLevels")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.cryptMaxLevels")
+        @Config.Comment("Maximum levels of an underground crypt; shortened automatically above bedrock.")
+        @Config.RangeInt(min = 1, max = 8)
+        public int cryptMaxLevels = 5;
+
         @Config.Name("standaloneUndergroundDungeonChance")
         @Config.LangKey("config.shatteredcitadels.castle_generation.standaloneUndergroundDungeonChance")
         @Config.Comment("Chance per placement section (without a citadel) to generate a standalone underground dungeon.")

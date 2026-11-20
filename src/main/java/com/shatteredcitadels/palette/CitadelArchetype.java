@@ -23,14 +23,12 @@ public enum CitadelArchetype {
                     "quark:world_stone_bricks[variant=stone_andesite_bricks]|minecraft:stonebrick@0|minecraft:stonebrick@1",
                     "tconstruct:brownstone[type=brick]|tconstruct:brownstone[type=brick]|tconstruct:brownstone[type=brick_cracked]",
                     "atum:*limestone_brick*",
-                    "moreblocks:*stone_brick*",
                     "minecraft:stonebrick@0|minecraft:stonebrick@0|minecraft:stonebrick@0|minecraft:stonebrick@1|minecraft:stonebrick@2")
             .slot(PaletteSlot.PILLAR,
                     "quark:marble[variant=stone_marble_smooth]",
                     "quark:slate[variant=stone_slate_smooth]",
                     "quark:world_stone_carved[variant=stone_andesite_carved]",
                     "projectred-exploration:stone[*marble_brick*]",
-                    "moreblocks:*pillar*",
                     "minecraft:stonebrick@3")
             .slot(PaletteSlot.FLOOR,
                     "futuremc:smooth_stone",
@@ -51,13 +49,12 @@ public enum CitadelArchetype {
                     "modernbackports:dead_brain_coral_block|modernbackports:dead_tube_coral_block|modernbackports:dead_horn_coral_block",
                     "minecraft:mossy_cobblestone|minecraft:stonebrick@1")
             .slot(PaletteSlot.LIGHT,
-                    "quark:paper_lantern",
                     "nb:shroom_light",
                     "quark:blaze_lantern",
                     "minecraft:glowstone")
             .slot(PaletteSlot.FURNITURE,
                     "cfm:*chair*|cfm:*table*|cfm:*cabinet*",
-                    "futuremc:barrel|futuremc:lectern",
+                    "futuremc:barrel",
                     "minecraft:bookshelf|minecraft:bookshelf|minecraft:crafting_table")),
 
     /** 2) Obsidian-Nether Bastille. */
@@ -70,7 +67,6 @@ public enum CitadelArchetype {
                     "moreblocks:crackednetherbricks|moreblocks:chiselednetherbricks|minecraft:nether_brick",
                     "minecraft:nether_brick|minecraft:nether_brick|minecraft:red_nether_brick")
             .slot(PaletteSlot.PILLAR,
-                    "futuremc:crying_obsidian|minecraft:obsidian",
                     "nb:cry_obi|minecraft:obsidian",
                     "enderio:block_reinforced_obsidian",
                     "nb:polished_basalt",
@@ -90,7 +86,6 @@ public enum CitadelArchetype {
                     "minecraft:nether_brick_stairs")
             .slot(PaletteSlot.ACCENT,
                     "quark:magma_bricks",
-                    "tconstruct:seared[type=brick_fancy]",
                     "nb:gilded_blackstone",
                     "nb:chisled_polished_black_stone",
                     "nb:quartz_bricks",
@@ -118,7 +113,6 @@ public enum CitadelArchetype {
                     "immersiveengineering:metal_decoration0[type=heavy_engineering]",
                     "immersiveengineering:metal_decoration0[type=light_engineering]",
                     "appliedenergistics2:quartz_pillar",
-                    "ic2:*reinforced*",
                     "minecraft:quartz_block@2")
             .slot(PaletteSlot.FLOOR,
                     "mekanism:plasticblock@15",
@@ -134,12 +128,10 @@ public enum CitadelArchetype {
             .slot(PaletteSlot.ACCENT,
                     "enderio:block_fused_quartz",
                     "thermalfoundation:glass",
-                    "immersiveengineering:stone_decoration[type=insulating_glass]",
                     "immersiveengineering:metal_decoration0[type=rs_engineering]",
                     "quark:framed_glass",
                     "minecraft:stained_glass@3")
             .slot(PaletteSlot.LIGHT,
-                    "mekanism:glowplasticblock@3",
                     "quark:duskbound_lantern",
                     "quark:elder_sea_lantern",
                     "minecraft:sea_lantern")
@@ -149,7 +141,6 @@ public enum CitadelArchetype {
     /** 4) Forge of the Ancient Titans. */
     TITAN_FORGE("Forge of the Ancient Titans", spec()
             .slot(PaletteSlot.WALL,
-                    "tconstruct:seared[type=brick]|tconstruct:seared[type=brick_cracked]|tconstruct:seared[type=brick_square]",
                     "immersiveengineering:stone_decoration[type=blastbrick]|immersiveengineering:stone_decoration[type=blastbrick]|immersiveengineering:stone_decoration[type=blastbrick_reinforced]",
                     "immersiveengineering:stone_decoration[type=cokebrick]",
                     "immersiveengineering:stone_decoration[type=alloybrick]",
@@ -160,13 +151,11 @@ public enum CitadelArchetype {
                     "quark:basalt[variant=stone_basalt_smooth]",
                     "nb:polished_basalt",
                     "nb:smooth_basalt",
-                    "tconstruct:seared[type=brick_square]",
-                    "moreblocks:*pillar*",
                     "minecraft:stonebrick@3")
             .slot(PaletteSlot.FLOOR,
-                    "tconstruct:seared[type=paver]",
-                    "tconstruct:seared[type=road]",
                     "quark:world_stone_pavement[variant=stone_basalt_pavement]",
+                    "immersiveengineering:stone_decoration[type=concrete_tile]",
+                    "nb:polished_basalt",
                     "minecraft:stone@6|minecraft:stone@4")
             .slot(PaletteSlot.STAIRS,
                     "tconstruct:seared_stairs_brick",
@@ -174,15 +163,13 @@ public enum CitadelArchetype {
                     "quark:stone_basalt_bricks_stairs",
                     "minecraft:brick_stairs")
             .slot(PaletteSlot.ACCENT,
-                    "tconstruct:seared[type=tile]",
-                    "tconstruct:seared[type=creeper]",
                     "quark:magma_bricks",
                     "immersiveengineering:sheetmetal[type=copper]",
+                    "immersiveengineering:stone_decoration[type=cokebrick]",
                     "minecraft:stained_hardened_clay@1")
             .slot(PaletteSlot.LIGHT,
                     "quark:blaze_lantern",
                     "nb:shroom_light",
-                    "tconstruct:firewood[type=lavawood]",
                     "minecraft:glowstone")
             .slot(PaletteSlot.FURNITURE,
                     "minecraft:furnace|minecraft:cauldron|minecraft:crafting_table")),

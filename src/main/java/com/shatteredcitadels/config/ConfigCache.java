@@ -68,6 +68,10 @@ public final class ConfigCache {
         next.minDistanceBetweenCitadelsChunks = clamp(gen.minDistanceBetweenCitadelsChunks, 8, 1024);
         next.skyCitadelChance = clamp01(gen.skyCitadelChance);
         next.undergroundUnderCastleChance = clamp01(gen.undergroundUnderCastleChance);
+        int[] cryptLevels = orderedRange("castle_generation.cryptMinLevels/cryptMaxLevels",
+                gen.cryptMinLevels, gen.cryptMaxLevels, 1, 8);
+        next.cryptMinLevels = cryptLevels[0];
+        next.cryptMaxLevels = cryptLevels[1];
         next.standaloneUndergroundDungeonChance = clamp01(gen.standaloneUndergroundDungeonChance);
         int[] floors = orderedRange("castle_generation.minFloors/maxFloors", gen.minFloors, gen.maxFloors, 2, 30);
         next.minFloors = floors[0];
@@ -334,6 +338,8 @@ public final class ConfigCache {
         int minDistanceBetweenCitadelsChunks = 64;
         double skyCitadelChance = 0.06D;
         double undergroundUnderCastleChance = 0.35D;
+        int cryptMinLevels = 3;
+        int cryptMaxLevels = 5;
         double standaloneUndergroundDungeonChance = 0.04D;
         int minFloors = 3;
         int maxFloors = 7;
@@ -397,6 +403,8 @@ public final class ConfigCache {
             c.minDistanceBetweenCitadelsChunks = minDistanceBetweenCitadelsChunks;
             c.skyCitadelChance = skyCitadelChance;
             c.undergroundUnderCastleChance = undergroundUnderCastleChance;
+            c.cryptMinLevels = cryptMinLevels;
+            c.cryptMaxLevels = cryptMaxLevels;
             c.standaloneUndergroundDungeonChance = standaloneUndergroundDungeonChance;
             c.minFloors = minFloors;
             c.maxFloors = maxFloors;
@@ -454,6 +462,11 @@ public final class ConfigCache {
         public int getMinDistanceBetweenCitadelsChunks() { return minDistanceBetweenCitadelsChunks; }
         public double getSkyCitadelChance() { return skyCitadelChance; }
         public double getUndergroundUnderCastleChance() { return undergroundUnderCastleChance; }
+
+        /** @return a crypt level count within the configured inclusive range. */
+        public int rollCryptLevels(Random random) {
+            return cryptMinLevels + random.nextInt(cryptMaxLevels - cryptMinLevels + 1);
+        }
         public double getStandaloneUndergroundDungeonChance() { return standaloneUndergroundDungeonChance; }
         public int getMinFloors() { return minFloors; }
         public int getMaxFloors() { return maxFloors; }

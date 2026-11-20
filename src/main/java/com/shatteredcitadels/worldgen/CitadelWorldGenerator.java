@@ -141,7 +141,7 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         int arenaHeight = 12 + random.nextInt(3);
         int spireTarget = 210 + random.nextInt(31);
         boolean crypt = random.nextDouble() < config.getUndergroundUnderCastleChance();
-        int cryptLevels = crypt ? 2 + random.nextInt(2) : 0;
+        int cryptLevels = crypt ? config.rollCryptLevels(random) : 0;
         double archetypeRoll = random.nextDouble();
 
         int centerX = minX + width / 2;
@@ -281,6 +281,7 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
 
     /** Builds the planned citadel (and its crypt) and registers it in the floor tracker. */
     public CitadelInstance buildCitadel(World world, CitadelPlan plan, Random random, StructureBoundingBox clip) {
+        long started = System.nanoTime();
         CitadelWorldSavedData data = CitadelWorldSavedData.get(world);
         BlockPalette palette = ModPaletteRegistry.forCitadel(plan.archetype, plan.buildSeed);
         BlockWriter writer = new BlockWriter(world, clip);
@@ -299,10 +300,10 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         }
         openUnguardedFloors(writer, record);
         data.register(record);
-        ShatteredCitadelsMod.LOGGER.info("Generated {} #{} ({}, {} floors, crypt levels {}) at {} y={}..{}: {} blocks, {} clipped",
+        ShatteredCitadelsMod.LOGGER.info("Generated {} #{} ({}, {} floors, crypt levels {}) at {} y={}..{}: {} blocks, {} clipped, {} ms",
                 record.getType(), record.getCitadelId(), plan.archetype.key(), plan.floors, plan.cryptLevels,
                 record.getOrigin(), record.getTotalBounds().minY, record.getTotalBounds().maxY,
-                writer.getWritten(), writer.getRejected());
+                writer.getWritten(), writer.getRejected(), (System.nanoTime() - started) / 1_000_000L);
         return record;
     }
 
@@ -322,7 +323,7 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         }
         int surfaceY = Math.max(MIN_BASE_Y + 12, top.getY() - 1);
         int topLevelY = surfaceY - 12;
-        int levels = 2 + random.nextInt(2);
+        int levels = ConfigCache.get().rollCryptLevels(random);
         CitadelWorldSavedData data = CitadelWorldSavedData.get(world);
         CitadelArchetype archetype = random.nextBoolean() ? CitadelArchetype.KEEPERS_CITADEL : CitadelArchetype.OBSIDIAN_BASTILLE;
         BlockPalette palette = ModPaletteRegistry.forCitadel(archetype, random.nextLong());

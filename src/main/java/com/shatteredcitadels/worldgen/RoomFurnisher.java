@@ -17,6 +17,7 @@ import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.inventory.IInventory;
 import net.minecraft.item.EnumDyeColor;
+import net.minecraft.item.ItemStack;
 import net.minecraft.tileentity.TileEntity;
 import net.minecraft.tileentity.TileEntityBed;
 import net.minecraft.tileentity.TileEntityLockableLoot;
@@ -226,8 +227,8 @@ public final class RoomFurnisher {
                 block = Blocks.CRAFTING_TABLE.getDefaultState();
                 table = true;
             } else {
-                block = ModPaletteRegistry.resolveDecor("tconstruct:seared[type=brick]",
-                        "immersiveengineering:stone_decoration[type=blastbrick]", "minecraft:brick_block");
+                block = ModPaletteRegistry.resolveDecor("immersiveengineering:stone_decoration[type=blastbrick]",
+                        "minecraft:brick_block");
             }
             place(c[0], y, c[2], block, facing);
         }
@@ -362,9 +363,21 @@ public final class RoomFurnisher {
             if (tile instanceof TileEntityLockableLoot) {
                 ((TileEntityLockableLoot) tile).setLootTable(table, rand.nextLong());
             } else if (tile instanceof IInventory && site.world() instanceof WorldServer) {
+                // Small appliance inventories (fridges): put what fits into random free slots, no overflow.
                 WorldServer world = (WorldServer) site.world();
-                world.getLootTableManager().getLootTableFromLocation(table)
-                        .fillInventory((IInventory) tile, rand, new LootContext.Builder(world).build());
+                IInventory inventory = (IInventory) tile;
+                List<Integer> free = new ArrayList<>();
+                for (int slot = 0; slot < inventory.getSizeInventory(); slot++) {
+                    if (inventory.getStackInSlot(slot).isEmpty()) {
+                        free.add(slot);
+                    }
+                }
+                Collections.shuffle(free, rand);
+                List<ItemStack> loot = world.getLootTableManager().getLootTableFromLocation(table)
+                        .generateLootForPools(rand, new LootContext.Builder(world).build());
+                for (int i = 0; i < loot.size() && i < free.size(); i++) {
+                    inventory.setInventorySlotContents(free.get(i), loot.get(i));
+                }
             }
         } catch (RuntimeException e) {
             ShatteredCitadelsMod.LOGGER.debug("Could not stock {} at {}: {}", tile, pos, e.toString());

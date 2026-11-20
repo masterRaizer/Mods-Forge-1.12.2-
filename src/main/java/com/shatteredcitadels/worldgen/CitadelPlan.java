@@ -7,7 +7,8 @@ import net.minecraft.world.gen.structure.StructureBoundingBox;
 public final class CitadelPlan {
 
     public static final int FLOOR_HEIGHT = 8;
-    public static final int CRYPT_LEVEL_HEIGHT = 5;
+    /** Floor slab, 4 blocks of headroom, ceiling slab. */
+    public static final int CRYPT_LEVEL_HEIGHT = 6;
 
     public final int minX;
     public final int minZ;
