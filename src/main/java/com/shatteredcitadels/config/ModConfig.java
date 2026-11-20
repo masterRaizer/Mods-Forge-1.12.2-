@@ -371,6 +371,42 @@ public final class ModConfig {
         @Config.Comment("Try modded bosses of a tier before vanilla ones; vanilla mobs remain the fallback if no modded boss fits the arena.")
         public boolean preferModdedBosses = true;
 
+        @Config.Name("mageHealth")
+        @Config.LangKey("config.shatteredcitadels.boss_settings.mageHealth")
+        @Config.Comment("Health of the catacomb guardian mage.")
+        @Config.RangeDouble(min = 50.0D, max = 5000.0D)
+        public double mageHealth = 300.0D;
+
+        @Config.Name("mageArmor")
+        @Config.LangKey("config.shatteredcitadels.boss_settings.mageArmor")
+        @Config.Comment("Armor of the catacomb guardian mage.")
+        @Config.RangeDouble(min = 0.0D, max = 30.0D)
+        public double mageArmor = 6.0D;
+
+        @Config.Name("mageLightningWarningTicks")
+        @Config.LangKey("config.shatteredcitadels.boss_settings.mageLightningWarningTicks")
+        @Config.Comment("Ticks between the mage's lightning warning circle and the strike.")
+        @Config.RangeInt(min = 10, max = 100)
+        public int mageLightningWarningTicks = 30;
+
+        @Config.Name("mageTeleportMinTicks")
+        @Config.LangKey("config.shatteredcitadels.boss_settings.mageTeleportMinTicks")
+        @Config.Comment("Shortest time between the mage's teleports (ticks).")
+        @Config.RangeInt(min = 40, max = 1200)
+        public int mageTeleportMinTicks = 160;
+
+        @Config.Name("mageTeleportMaxTicks")
+        @Config.LangKey("config.shatteredcitadels.boss_settings.mageTeleportMaxTicks")
+        @Config.Comment("Longest time between the mage's teleports (ticks).")
+        @Config.RangeInt(min = 40, max = 1200)
+        public int mageTeleportMaxTicks = 240;
+
+        @Config.Name("mageMaxGuards")
+        @Config.LangKey("config.shatteredcitadels.boss_settings.mageMaxGuards")
+        @Config.Comment("Most skeleton guards the mage keeps alive at once.")
+        @Config.RangeInt(min = 3, max = 20)
+        public int mageMaxGuards = 6;
+
         @Config.Name("bossHealthMultiplierPerFloor")
         @Config.LangKey("config.shatteredcitadels.boss_settings.bossHealthMultiplierPerFloor")
         @Config.Comment("Compounding health multiplier per floor: health = base * value^(floor - 1).")

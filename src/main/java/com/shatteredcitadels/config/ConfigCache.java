@@ -122,6 +122,14 @@ public final class ConfigCache {
         next.useBuiltInModBosses = boss.useBuiltInModBosses;
         next.preferModdedBosses = boss.preferModdedBosses;
         next.bossHealthMultiplierPerFloor = clamp(boss.bossHealthMultiplierPerFloor, 1.0D, 3.0D);
+        next.mageHealth = clamp(boss.mageHealth, 50.0D, 5000.0D);
+        next.mageArmor = clamp(boss.mageArmor, 0.0D, 30.0D);
+        next.mageLightningWarningTicks = clamp(boss.mageLightningWarningTicks, 10, 100);
+        int[] teleport = orderedRange("boss_settings.mageTeleportMinTicks/mageTeleportMaxTicks",
+                boss.mageTeleportMinTicks, boss.mageTeleportMaxTicks, 40, 1200);
+        next.mageTeleportMinTicks = teleport[0];
+        next.mageTeleportMaxTicks = teleport[1];
+        next.mageMaxGuards = clamp(boss.mageMaxGuards, 3, 20);
         next.bossDamageMultiplierPerFloor = clamp(boss.bossDamageMultiplierPerFloor, 1.0D, 3.0D);
         next.skyCitadelBossMultiplier = clamp(boss.skyCitadelBossMultiplier, 1.0D, 20.0D);
         next.strictArenaAntiGrief = boss.strictArenaAntiGrief;
@@ -388,6 +396,12 @@ public final class ConfigCache {
         boolean useBuiltInModBosses = true;
         boolean preferModdedBosses = true;
         double bossHealthMultiplierPerFloor = 1.15D;
+        double mageHealth = 300.0D;
+        double mageArmor = 6.0D;
+        int mageLightningWarningTicks = 30;
+        int mageTeleportMinTicks = 160;
+        int mageTeleportMaxTicks = 240;
+        int mageMaxGuards = 6;
         double bossDamageMultiplierPerFloor = 1.10D;
         double skyCitadelBossMultiplier = 3.0D;
         boolean strictArenaAntiGrief = true;
@@ -460,6 +474,12 @@ public final class ConfigCache {
             c.useBuiltInModBosses = useBuiltInModBosses;
             c.preferModdedBosses = preferModdedBosses;
             c.bossHealthMultiplierPerFloor = bossHealthMultiplierPerFloor;
+            c.mageHealth = mageHealth;
+            c.mageArmor = mageArmor;
+            c.mageLightningWarningTicks = mageLightningWarningTicks;
+            c.mageTeleportMinTicks = mageTeleportMinTicks;
+            c.mageTeleportMaxTicks = mageTeleportMaxTicks;
+            c.mageMaxGuards = mageMaxGuards;
             c.bossDamageMultiplierPerFloor = bossDamageMultiplierPerFloor;
             c.skyCitadelBossMultiplier = skyCitadelBossMultiplier;
             c.strictArenaAntiGrief = strictArenaAntiGrief;
@@ -593,6 +613,12 @@ public final class ConfigCache {
         public boolean isUseBuiltInModBosses() { return useBuiltInModBosses; }
         public boolean isPreferModdedBosses() { return preferModdedBosses; }
         public double getBossHealthMultiplierPerFloor() { return bossHealthMultiplierPerFloor; }
+        public double getMageHealth() { return mageHealth; }
+        public double getMageArmor() { return mageArmor; }
+        public int getMageLightningWarningTicks() { return mageLightningWarningTicks; }
+        public int getMageTeleportMinTicks() { return mageTeleportMinTicks; }
+        public int getMageTeleportMaxTicks() { return mageTeleportMaxTicks; }
+        public int getMageMaxGuards() { return mageMaxGuards; }
         public double getBossDamageMultiplierPerFloor() { return bossDamageMultiplierPerFloor; }
         public double getSkyCitadelBossMultiplier() { return skyCitadelBossMultiplier; }
         public boolean isStrictArenaAntiGrief() { return strictArenaAntiGrief; }

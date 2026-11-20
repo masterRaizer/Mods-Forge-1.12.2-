@@ -27,6 +27,10 @@ public class ClientProxy extends CommonProxy {
     @Override
     public void preInit(FMLPreInitializationEvent event) {
         super.preInit(event);
+        net.minecraftforge.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
+                com.shatteredcitadels.entity.EntityGuardianMage.class, com.shatteredcitadels.client.render.RenderGuardianMage::new);
+        net.minecraftforge.fml.client.registry.RenderingRegistry.registerEntityRenderingHandler(
+                com.shatteredcitadels.entity.EntityMageBolt.class, com.shatteredcitadels.client.render.RenderMageBolt::new);
     }
 
     @Override
