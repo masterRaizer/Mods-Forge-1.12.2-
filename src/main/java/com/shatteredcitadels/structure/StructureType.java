@@ -13,7 +13,9 @@ public enum StructureType {
     /** Curtain wall, moat and courtyard (floor 0) around a keep (floors 1..n). */
     WALLED_CASTLE,
     /** Gothic manor: named zones (floor indices) cleared in route order, boss in the throne room. */
-    MANOR;
+    MANOR,
+    /** The End stronghold that replaces the vanilla one: explorative, no floors, no protection. */
+    STRONGHOLD;
 
     public static StructureType byName(String name) {
         for (StructureType type : values()) {

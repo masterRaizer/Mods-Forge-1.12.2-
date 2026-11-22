@@ -77,8 +77,14 @@ public class StrongholdBuilderTest {
                     EnumFacing side = door.out.rotateY();
                     for (int t = -1; t <= 1; t++) {
                         BlockPos p = door.pos.offset(side, t);
+                        // The treasure room's entry is narrowed to its iron door: only the middle stays open.
+                        boolean treasureEntry = piece.kind == com.shatteredcitadels.worldgen.stronghold.PieceKind.TREASURE
+                                && door == piece.doors.get(0);
+                        if (door.used && treasureEntry && t != 0) {
+                            continue;
+                        }
                         if (door.used) {
-                            assertTrue("seed " + seed + " blocked doorway at " + p, !writer.isSolid(p.getX(), p.getY(), p.getZ())
+                            assertTrue("seed " + seed + " " + piece.kind + " blocked doorway at " + p, !writer.isSolid(p.getX(), p.getY(), p.getZ())
                                     && !writer.isSolid(p.getX(), p.getY() + 1, p.getZ()));
                         } else {
                             for (int dy = 0; dy <= 2; dy++) {
@@ -115,5 +121,50 @@ public class StrongholdBuilderTest {
                 }
             }
         }
+    }
+
+    private static int count(BlockWriter writer, StructureBoundingBox b, net.minecraft.block.Block block) {
+        int n = 0;
+        for (int x = b.minX; x <= b.maxX; x++) {
+            for (int y = b.minY; y <= b.maxY; y++) {
+                for (int z = b.minZ; z <= b.maxZ; z++) {
+                    if (writer.get(x, y, z).getBlock() == block) {
+                        n++;
+                    }
+                }
+            }
+        }
+        return n;
+    }
+
+    @Test
+    public void roomsHaveContent() {
+        int libraries = 0;
+        int prisons = 0;
+        int treasures = 0;
+        for (long seed = 1; seed <= 12; seed++) {
+            StrongholdLayout layout = StrongholdLayout.generate(seed, 0, 30, 0);
+            BlockWriter writer = built(layout, seed);
+            for (StrongholdLayout.Piece piece : layout.pieces()) {
+                switch (piece.kind) {
+                    case SMALL_LIBRARY:
+                    case GRAND_LIBRARY:
+                        libraries++;
+                        assertTrue(piece.kind + " without shelves", count(writer, piece.box, Blocks.BOOKSHELF) > 0);
+                        break;
+                    case PRISON:
+                        prisons++;
+                        assertTrue("prison without bars", count(writer, piece.box, Blocks.IRON_BARS) > 0);
+                        break;
+                    case TREASURE:
+                        treasures++;
+                        assertTrue("treasure without gold", count(writer, piece.box, Blocks.GOLD_BLOCK) > 0);
+                        break;
+                    default:
+                        break;
+                }
+            }
+        }
+        assertTrue(libraries > 0 && prisons > 0 && treasures > 0);
     }
 }

@@ -293,10 +293,403 @@ public class StrongholdBuilder {
         spawner(at(piece, ca, 1, y + 1), SILVERFISH);
     }
 
-    // ------------------------------------------------------------------ rooms (filled in by the rooms task)
+    // ------------------------------------------------------------------ rooms
 
+    /** Furnishes a room piece according to its kind. */
     protected void buildRoom(StrongholdLayout.Piece piece) {
-        // Bare room until furnished.
+        switch (piece.kind) {
+            case CROSSING:
+                crossing(piece);
+                break;
+            case GRAND_LIBRARY:
+                grandLibrary(piece);
+                break;
+            case SMALL_LIBRARY:
+                smallLibrary(piece);
+                break;
+            case PRISON:
+                prison(piece);
+                break;
+            case ARMOURY:
+                armoury(piece);
+                break;
+            case TREASURE:
+                treasure(piece);
+                break;
+            case MESS_HALL:
+                messHall(piece);
+                break;
+            case STOREROOM:
+                storeroom(piece);
+                break;
+            case QUARTERS:
+                quarters(piece);
+                break;
+            case CISTERN:
+                cistern(piece);
+                break;
+            case PILLARED_HALL:
+                pillaredHall(piece);
+                break;
+            case CRYPT:
+                crypt(piece);
+                break;
+            default:
+                break;
+        }
+    }
+
+    private int lengthOf(StrongholdLayout.Piece piece) {
+        return piece.length;
+    }
+
+    /** True if (a, c) on the walk level is in front of one of the piece's doorways (kept clear). */
+    private boolean nearDoor(StrongholdLayout.Piece piece, int a, int c) {
+        BlockPos p = at(piece, a, c, piece.floorY + 1);
+        return nearDoorAt(piece, p.getX(), p.getZ());
+    }
+
+    private static boolean nearDoorAt(StrongholdLayout.Piece piece, int x, int z) {
+        for (StrongholdLayout.Doorway door : piece.doors) {
+            if (door.used && Math.abs(door.pos.getX() - x) <= 2 && Math.abs(door.pos.getZ() - z) <= 2) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    private void crossing(StrongholdLayout.Piece piece) {
+        int y = piece.floorY;
+        int width = piece.kind.width;
+        if (piece.depth == 0) {
+            // The start is laid out around its centre: four pillars and torches, the middle stays open.
+            StructureBoundingBox b = piece.box;
+            for (int[] p : new int[][]{{b.minX + 2, b.minZ + 2}, {b.maxX - 2, b.minZ + 2}, {b.minX + 2, b.maxZ - 2}, {b.maxX - 2, b.maxZ - 2}}) {
+                for (int fy = y + 1; fy < b.maxY; fy++) {
+                    w.set(p[0], fy, p[1], pal.pillar());
+                }
+                w.set(p[0], y + 3, p[1] + (p[1] < (b.minZ + b.maxZ) / 2 ? 1 : -1), Blocks.TORCH.getDefaultState()
+                        .withProperty(BlockTorch.FACING, p[1] < (b.minZ + b.maxZ) / 2 ? EnumFacing.SOUTH : EnumFacing.NORTH));
+            }
+            StructurePieces.chest(w, rec, new BlockPos(b.minX + 1, y + 1, b.minZ + 1), EnumFacing.SOUTH,
+                    LootTableList.CHESTS_STRONGHOLD_CROSSING, rand.nextLong());
+            return;
+        }
+        for (int[] p : new int[][]{{2, 2}, {2, width - 3}, {lengthOf(piece) - 3, 2}, {lengthOf(piece) - 3, width - 3}}) {
+            for (int fy = y + 1; fy < piece.box.maxY; fy++) {
+                set(at(piece, p[0], p[1], fy), pal.pillar());
+            }
+        }
+        StructurePieces.chest(w, rec, at(piece, 1, 1, y + 1), piece.facing, LootTableList.CHESTS_STRONGHOLD_CROSSING, rand.nextLong());
+        torch(piece, lengthOf(piece) / 2, 0, y + 3);
+        torch(piece, lengthOf(piece) / 2, width - 1, y + 3);
+    }
+
+    private void shelvesAlongWalls(StrongholdLayout.Piece piece, int fromY, int toY) {
+        int length = lengthOf(piece);
+        int width = piece.kind.width;
+        for (int a = 1; a <= length - 2; a++) {
+            for (int c = 1; c <= width - 2; c++) {
+                boolean face = a == 1 || a == length - 2 || c == 1 || c == width - 2;
+                if (!face || nearDoor(piece, a, c)) {
+                    continue;
+                }
+                for (int y = fromY; y <= toY; y++) {
+                    set(at(piece, a, c, y), Blocks.BOOKSHELF.getDefaultState());
+                }
+            }
+        }
+    }
+
+    private void grandLibrary(StrongholdLayout.Piece piece) {
+        int y = piece.floorY;
+        int length = lengthOf(piece);
+        int width = piece.kind.width;
+        shelvesAlongWalls(piece, y + 1, y + 4);
+        // Aisles of shelves on the ground floor, a gap in the middle of each row.
+        for (int c = 4; c <= width - 5; c += 3) {
+            for (int a = 4; a <= length - 5; a++) {
+                if (a == length / 2) {
+                    continue;
+                }
+                for (int fy = y + 1; fy <= y + 3; fy++) {
+                    set(at(piece, a, c, fy), Blocks.BOOKSHELF.getDefaultState());
+                }
+            }
+        }
+        // Gallery two blocks wide around the walls, with a fence rail and ladders.
+        int gy = y + 6;
+        for (int a = 1; a <= length - 2; a++) {
+            for (int c = 1; c <= width - 2; c++) {
+                boolean ring = a <= 2 || a >= length - 3 || c <= 2 || c >= width - 3;
+                if (!ring) {
+                    continue;
+                }
+                set(at(piece, a, c, gy), Blocks.PLANKS.getDefaultState().withProperty(net.minecraft.block.BlockPlanks.VARIANT,
+                        net.minecraft.block.BlockPlanks.EnumType.DARK_OAK));
+                boolean edge = a == 3 - 1 && c > 2 && c < width - 3 || a == length - 3 && c > 2 && c < width - 3
+                        || c == 2 && a > 2 && a < length - 3 || c == width - 3 && a > 2 && a < length - 3;
+                if (edge) {
+                    set(at(piece, a, c, gy + 1), Blocks.DARK_OAK_FENCE.getDefaultState());
+                }
+            }
+        }
+        shelvesAlongWalls(piece, gy + 1, gy + 3);
+        for (int fy = y + 1; fy <= gy; fy++) {
+            set(at(piece, 3, 3, fy), pal.pillar());
+            set(at(piece, 2, 3, fy), Blocks.LADDER.getDefaultState().withProperty(net.minecraft.block.BlockLadder.FACING,
+                    piece.facing.getOpposite()));
+        }
+        // Chandelier.
+        BlockPos centre = at(piece, length / 2, width / 2, piece.box.maxY - 1);
+        set(centre, Blocks.DARK_OAK_FENCE.getDefaultState());
+        set(centre.down(), Blocks.GLOWSTONE.getDefaultState());
+        StructurePieces.chest(w, rec, at(piece, length / 2, 3, y + 1), piece.facing.rotateY(), LootTableList.CHESTS_STRONGHOLD_LIBRARY,
+                rand.nextLong());
+        StructurePieces.chest(w, rec, at(piece, length / 2, width - 3, gy + 1), piece.facing.rotateYCCW(),
+                LootTableList.CHESTS_STRONGHOLD_LIBRARY, rand.nextLong());
+    }
+
+    private void smallLibrary(StrongholdLayout.Piece piece) {
+        int y = piece.floorY;
+        shelvesAlongWalls(piece, y + 1, y + 3);
+        int mid = lengthOf(piece) / 2;
+        set(at(piece, mid, piece.kind.width / 2, y + 1), Blocks.CRAFTING_TABLE.getDefaultState());
+        set(at(piece, mid - 1, piece.kind.width / 2, y + 1), stair(piece.facing));
+        StructurePieces.chest(w, rec, at(piece, mid + 1, piece.kind.width / 2, y + 1), piece.facing.getOpposite(),
+                LootTableList.CHESTS_STRONGHOLD_LIBRARY, rand.nextLong());
+        set(at(piece, mid, piece.kind.width / 2, piece.box.maxY - 1), Blocks.GLOWSTONE.getDefaultState());
+    }
+
+    private void prison(StrongholdLayout.Piece piece) {
+        int y = piece.floorY;
+        int length = lengthOf(piece);
+        int width = piece.kind.width;
+        for (int side = 0; side < 2; side++) {
+            int bars = side == 0 ? 3 : width - 4;
+            int back = side == 0 ? 1 : width - 2;
+            for (int a = 2; a <= length - 3; a++) {
+                boolean divider = (a - 2) % 3 == 0;
+                for (int fy = y + 1; fy <= y + 3; fy++) {
+                    set(at(piece, a, bars, fy), Blocks.IRON_BARS.getDefaultState());
+                    if (divider) {
+                        for (int c = Math.min(bars, back); c <= Math.max(bars, back); c++) {
+                            set(at(piece, a, c, fy), pal.wall(rand));
+                        }
+                    }
+                }
+                if ((a - 2) % 3 == 2 && rand.nextBoolean()) {
+                    set(at(piece, a, back, y + 1), rand.nextBoolean() ? Blocks.SKULL.getDefaultState()
+                            .withProperty(net.minecraft.block.BlockSkull.FACING, EnumFacing.UP) : Blocks.WEB.getDefaultState());
+                }
+            }
+        }
+        spawner(at(piece, length - 3, width / 2, y + 1), rand.nextBoolean() ? DEFAULT_MOBS[0] : DEFAULT_MOBS[1]);
+        StructurePieces.chest(w, rec, at(piece, 1, width / 2 + 1, y + 1), piece.facing, LootTableList.CHESTS_STRONGHOLD_CORRIDOR,
+                rand.nextLong());
+    }
+
+    private void armoury(StrongholdLayout.Piece piece) {
+        int y = piece.floorY;
+        int length = lengthOf(piece);
+        int width = piece.kind.width;
+        set(at(piece, length / 2, width / 2, y + 1), Blocks.ANVIL.getDefaultState());
+        for (int a = 2; a <= length - 3; a += 2) {
+            BlockPos standPos = at(piece, a, 1, y + 1);
+            EnumFacing faces = piece.facing.rotateY();
+            int seedArmour = rand.nextInt(4);
+            w.afterPlace(standPos, (world, pos) -> {
+                net.minecraft.entity.item.EntityArmorStand stand = new net.minecraft.entity.item.EntityArmorStand(world,
+                        pos.getX() + 0.5D, pos.getY(), pos.getZ() + 0.5D);
+                stand.rotationYaw = faces.getHorizontalAngle();
+                boolean iron = seedArmour < 2;
+                stand.setItemStackToSlot(net.minecraft.inventory.EntityEquipmentSlot.CHEST,
+                        new ItemStack(iron ? Items.IRON_CHESTPLATE : Items.CHAINMAIL_CHESTPLATE));
+                if (seedArmour % 2 == 0) {
+                    stand.setItemStackToSlot(net.minecraft.inventory.EntityEquipmentSlot.HEAD,
+                            new ItemStack(iron ? Items.IRON_HELMET : Items.CHAINMAIL_HELMET));
+                }
+                world.spawnEntity(stand);
+            });
+            set(at(piece, a, width - 2, y + 1), Blocks.OAK_FENCE.getDefaultState());
+        }
+        StructurePieces.chest(w, rec, at(piece, length - 2, width / 2, y + 1), piece.facing.getOpposite(),
+                LootTableList.CHESTS_STRONGHOLD_CORRIDOR, rand.nextLong());
+    }
+
+    /** Behind an iron door; a button by the door, on a chiseled brick, opens it. */
+    private void treasure(StrongholdLayout.Piece piece) {
+        int y = piece.floorY;
+        int length = lengthOf(piece);
+        int width = piece.kind.width;
+        int c0 = width / 2;
+        for (int c = c0 - 1; c <= c0 + 1; c++) {
+            for (int fy = y + 1; fy <= y + 3; fy++) {
+                if (c != c0 || fy == y + 3) {
+                    set(at(piece, 0, c, fy), pal.wall(rand));
+                }
+            }
+        }
+        EnumFacing doorFacing = piece.facing;
+        set(at(piece, 0, c0, y + 1), Blocks.IRON_DOOR.getDefaultState().withProperty(net.minecraft.block.BlockDoor.FACING, doorFacing)
+                .withProperty(net.minecraft.block.BlockDoor.HALF, net.minecraft.block.BlockDoor.EnumDoorHalf.LOWER));
+        set(at(piece, 0, c0, y + 2), Blocks.IRON_DOOR.getDefaultState().withProperty(net.minecraft.block.BlockDoor.FACING, doorFacing)
+                .withProperty(net.minecraft.block.BlockDoor.HALF, net.minecraft.block.BlockDoor.EnumDoorHalf.UPPER));
+        set(at(piece, 0, c0 - 1, y + 2), pal.accent());
+        set(at(piece, -1, c0 - 1, y + 2), Blocks.STONE_BUTTON.getDefaultState()
+                .withProperty(net.minecraft.block.BlockButton.FACING, piece.facing.getOpposite()));
+        for (int[] p : new int[][]{{1, 1}, {1, width - 2}, {length - 2, 1}, {length - 2, width - 2}}) {
+            set(at(piece, p[0], p[1], y + 1), Blocks.GOLD_BLOCK.getDefaultState());
+        }
+        StructurePieces.chest(w, rec, at(piece, length - 2, c0 - 1, y + 1), piece.facing.getOpposite(),
+                com.shatteredcitadels.loot.ModLootTables.CATACOMB_DEEP, rand.nextLong());
+        StructurePieces.chest(w, rec, at(piece, length - 2, c0 + 1, y + 1), piece.facing.getOpposite(),
+                com.shatteredcitadels.loot.ModLootTables.CATACOMB_DEEP, rand.nextLong());
+        set(at(piece, length / 2, c0, piece.box.maxY - 1), Blocks.GLOWSTONE.getDefaultState());
+    }
+
+    private void messHall(StrongholdLayout.Piece piece) {
+        int y = piece.floorY;
+        int length = lengthOf(piece);
+        int width = piece.kind.width;
+        for (int c : new int[]{3, width - 4}) {
+            for (int a = 3; a <= length - 4; a++) {
+                if (a == length / 2) {
+                    continue;
+                }
+                set(at(piece, a, c, y + 1), Blocks.OAK_FENCE.getDefaultState());
+                set(at(piece, a, c, y + 2), Blocks.WOODEN_PRESSURE_PLATE.getDefaultState());
+                set(at(piece, a, c - 1, y + 1), stair(piece.facing.rotateY()));
+                set(at(piece, a, c + 1, y + 1), stair(piece.facing.rotateYCCW()));
+            }
+        }
+        set(at(piece, length - 2, 1, y + 1), Blocks.CAULDRON.getDefaultState());
+        set(at(piece, length - 2, width - 2, y + 1), Blocks.FURNACE.getDefaultState());
+        set(at(piece, length - 2, width - 3, y + 1), Blocks.FURNACE.getDefaultState());
+        torch(piece, length / 2, 0, y + 3);
+        torch(piece, length / 2, width - 1, y + 3);
+    }
+
+    private void storeroom(StrongholdLayout.Piece piece) {
+        int y = piece.floorY;
+        int length = lengthOf(piece);
+        int width = piece.kind.width;
+        StructurePieces.chest(w, rec, at(piece, length - 2, 1, y + 1), piece.facing.getOpposite(),
+                LootTableList.CHESTS_STRONGHOLD_CORRIDOR, rand.nextLong());
+        vase(at(piece, length - 2, width - 2, y + 1));
+        vase(at(piece, 2, width - 2, y + 1));
+        set(at(piece, length - 3, 1, y + 1), Blocks.LOG.getDefaultState());
+        set(at(piece, length - 3, 1, y + 2), Blocks.PLANKS.getDefaultState());
+        if (rand.nextBoolean()) {
+            vase(at(piece, length - 2, width / 2, y + 1));
+        }
+    }
+
+    private void quarters(StrongholdLayout.Piece piece) {
+        StructureBoundingBox b = piece.box;
+        com.shatteredcitadels.structure.RoomTag[] tags = {com.shatteredcitadels.structure.RoomTag.PANTRY,
+                com.shatteredcitadels.structure.RoomTag.BEDROOM, com.shatteredcitadels.structure.RoomTag.SMELTERY};
+        com.shatteredcitadels.worldgen.RoomFurnisher furnisher = new com.shatteredcitadels.worldgen.RoomFurnisher(
+                new com.shatteredcitadels.worldgen.RoomFurnisher.Site() {
+                    @Override
+                    public boolean free(int x, int y, int z) {
+                        return x > b.minX && x < b.maxX && z > b.minZ && z < b.maxZ
+                                && w.get(x, y, z).getBlock() == Blocks.AIR && !nearDoorAt(piece, x, z);
+                    }
+
+                    @Override
+                    public IBlockState get(int x, int y, int z) {
+                        return w.get(x, y, z);
+                    }
+
+                    @Override
+                    public boolean set(int x, int y, int z, IBlockState state) {
+                        return w.set(x, y, z, state);
+                    }
+
+                    @Override
+                    public void chest(BlockPos pos, EnumFacing facing, ResourceLocation lootTable) {
+                        StructurePieces.chest(w, rec, pos, facing, lootTable, rand.nextLong());
+                    }
+
+                    @Override
+                    public void afterPlace(BlockPos pos, com.shatteredcitadels.worldgen.Blueprint.TileAction action) {
+                        w.afterPlace(pos, action);
+                    }
+                }, rand, com.shatteredcitadels.palette.ModPaletteRegistry.quiet(
+                        com.shatteredcitadels.palette.CitadelArchetype.KEEPERS_CITADEL), BlockVase.Variant.CLAY);
+        furnisher.furnish(tags[rand.nextInt(tags.length)], b.minX + 1, b.minZ + 1, b.maxX - 1, b.maxZ - 1, piece.floorY);
+        furnisher.abandon(b.minX + 1, b.minZ + 1, b.maxX - 1, b.maxZ - 1, piece.floorY, b.maxY - piece.floorY - 1);
+    }
+
+    /** A sunken pool two deep, crossed by two walkways. */
+    private void cistern(StrongholdLayout.Piece piece) {
+        int y = piece.floorY;
+        int length = lengthOf(piece);
+        int width = piece.kind.width;
+        for (int a = 1; a <= length - 2; a++) {
+            for (int c = 1; c <= width - 2; c++) {
+                boolean pool = a >= 3 && a <= length - 4 && c >= 3 && c <= width - 4;
+                boolean walkway = a == length / 2 || c == width / 2;
+                if (!pool || walkway) {
+                    continue;
+                }
+                set(at(piece, a, c, y - 2), pal.floor(rand));
+                set(at(piece, a, c, y - 1), Blocks.WATER.getDefaultState());
+                set(at(piece, a, c, y), Blocks.WATER.getDefaultState());
+            }
+        }
+        // Walls of the pool below the floor: the ring around it at y - 1 and y - 2.
+        for (int a = 2; a <= length - 3; a++) {
+            for (int c = 2; c <= width - 3; c++) {
+                boolean pool = a >= 3 && a <= length - 4 && c >= 3 && c <= width - 4;
+                boolean walkway = a == length / 2 || c == width / 2;
+                if (!pool || walkway) {
+                    set(at(piece, a, c, y - 1), pal.wall(rand));
+                    set(at(piece, a, c, y - 2), pal.wall(rand));
+                }
+            }
+        }
+        for (int a = 2; a <= length - 3; a += 4) {
+            torch(piece, a, 0, y + 3);
+            torch(piece, a, width - 1, y + 3);
+        }
+    }
+
+    private void pillaredHall(StrongholdLayout.Piece piece) {
+        int y = piece.floorY;
+        int length = lengthOf(piece);
+        int width = piece.kind.width;
+        for (int c : new int[]{3, width - 4}) {
+            for (int a = 2; a <= length - 3; a += 3) {
+                for (int fy = y + 1; fy < piece.box.maxY; fy++) {
+                    set(at(piece, a, c, fy), pal.pillar());
+                }
+                torch(piece, a, 0, y + 4);
+            }
+        }
+        for (int a = 2; a <= length - 3; a++) {
+            set(at(piece, a, width / 2, y), pal.accent());
+        }
+    }
+
+    private void crypt(StrongholdLayout.Piece piece) {
+        int y = piece.floorY;
+        int length = lengthOf(piece);
+        int width = piece.kind.width;
+        for (int c : new int[]{2, width - 3}) {
+            for (int a = 2; a + 1 <= length - 3; a += 3) {
+                for (int da = 0; da <= 1; da++) {
+                    set(at(piece, a + da, c, y + 1), pal.pillar());
+                    set(at(piece, a + da, c, y + 2), Blocks.STONE_SLAB.getDefaultState().withProperty(
+                            net.minecraft.block.BlockStoneSlab.VARIANT, net.minecraft.block.BlockStoneSlab.EnumType.SMOOTHBRICK));
+                }
+            }
+        }
+        set(at(piece, length - 2, width / 2, y + 1), Blocks.SKULL.getDefaultState()
+                .withProperty(net.minecraft.block.BlockSkull.FACING, EnumFacing.UP));
+        spawner(at(piece, length / 2, width / 2, y + 1), DEFAULT_MOBS[2]);
+        vase(at(piece, 1, 1, y + 1));
     }
 
     // ------------------------------------------------------------------ helpers

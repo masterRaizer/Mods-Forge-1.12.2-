@@ -24,6 +24,8 @@ public final class StructurePlans {
                 return ManorPlan.read(tag);
             case FragmentPlan.KIND:
                 return FragmentPlan.read(tag);
+            case com.shatteredcitadels.worldgen.stronghold.StrongholdPlan.KIND:
+                return com.shatteredcitadels.worldgen.stronghold.StrongholdPlan.read(tag);
             default:
                 ShatteredCitadelsMod.LOGGER.warn("Dropping saved structure job of unknown kind '{}'", kind);
                 return null;

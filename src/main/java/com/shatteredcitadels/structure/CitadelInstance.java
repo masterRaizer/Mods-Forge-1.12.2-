@@ -54,7 +54,7 @@ public final class CitadelInstance {
         this.type = type;
         this.archetype = archetype;
         this.skyCitadel = type == StructureType.SKY_CITADEL;
-        this.underground = type == StructureType.CRYPT;
+        this.underground = type == StructureType.CRYPT || type == StructureType.STRONGHOLD;
         this.dimension = dimension;
         this.origin = origin.toImmutable();
         this.totalBounds = copy(totalBounds);

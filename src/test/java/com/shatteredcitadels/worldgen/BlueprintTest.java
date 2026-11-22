@@ -277,4 +277,33 @@ public class BlueprintTest {
                 .build(new BlockWriter(new Blueprint()));
         assertFalse(crypt.isBuriedFragment());
     }
+
+    @Test
+    public void strongholdPlanRoundTripAndCentre() {
+        com.shatteredcitadels.worldgen.stronghold.StrongholdPlan plan =
+                new com.shatteredcitadels.worldgen.stronghold.StrongholdPlan(200, 30, -100, 4L, 0);
+        StructurePlan copy = StructurePlans.read(plan.writeToNBT());
+        assertEquals(plan.writeToNBT(), copy.writeToNBT());
+        BlockWriter writer = new BlockWriter(new Blueprint());
+        CitadelInstance stronghold = copy.build(writer);
+        assertNotNull(stronghold);
+        assertEquals(StructureType.STRONGHOLD, stronghold.getType());
+        assertTrue(stronghold.getParts().isEmpty());
+        assertTrue(stronghold.getFloors().isEmpty());
+        assertFalse("the eye leads to the open crossing", writer.isSolid(200, 31, -100));
+        assertTrue(writer.isPlanned(200, 31, -100));
+        assertTrue(copy.footprint().isVecInside(new BlockPos(200, 31, -100)));
+    }
+
+    @Test
+    public void floorStaysUnderLowGround() {
+        java.util.Random r = new java.util.Random(3);
+        for (int i = 0; i < 100; i++) {
+            int y = com.shatteredcitadels.worldgen.stronghold.StrongholdPlan.floorYFor(47, r);
+            assertTrue("floor " + y, y >= 24 && y <= 27);
+        }
+        assertEquals(24, com.shatteredcitadels.worldgen.stronghold.StrongholdPlan.floorYFor(20, r));
+        int high = com.shatteredcitadels.worldgen.stronghold.StrongholdPlan.floorYFor(90, r);
+        assertTrue(high >= 24 && high <= 35);
+    }
 }
