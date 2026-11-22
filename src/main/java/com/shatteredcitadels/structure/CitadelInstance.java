@@ -109,6 +109,11 @@ public final class CitadelInstance {
                 && totalBounds.maxY - totalBounds.minY <= LEGACY_FRAGMENT_MAX_HEIGHT;
     }
 
+    /** Strongholds and buried fragments are never protected (mineable like vanilla). */
+    public boolean isUnprotected() {
+        return type == StructureType.STRONGHOLD || isBuriedFragment();
+    }
+
     public void setBuriedFragment(boolean buriedFragment) {
         this.buriedFragment = buriedFragment;
     }

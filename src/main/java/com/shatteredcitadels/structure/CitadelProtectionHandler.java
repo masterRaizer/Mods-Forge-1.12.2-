@@ -47,10 +47,16 @@ public final class CitadelProtectionHandler {
             return false;
         }
         CitadelInstance citadel = CitadelWorldSavedData.get(world).getCitadelAt(pos);
-        if (citadel == null || citadel.isConqueredAt(pos) || !citadel.isInPart(pos) || citadel.isPlayerPlaced(pos)) {
-            return false;
-        }
-        return !isAlwaysBreakable(world.getBlockState(pos));
+        return protects(citadel, pos) && !isAlwaysBreakable(world.getBlockState(pos));
+    }
+
+    /**
+     * @return true if the structure guards the position: not a stronghold or buried fragment (those
+     * are mineable like vanilla), not conquered there, inside a built part, not placed by a player.
+     */
+    public static boolean protects(CitadelInstance citadel, BlockPos pos) {
+        return citadel != null && !citadel.isUnprotected() && !citadel.isConqueredAt(pos) && citadel.isInPart(pos)
+                && !citadel.isPlayerPlaced(pos);
     }
 
     /** Loot containers, furniture, vases and cobwebs stay breakable; our own machinery never does. */

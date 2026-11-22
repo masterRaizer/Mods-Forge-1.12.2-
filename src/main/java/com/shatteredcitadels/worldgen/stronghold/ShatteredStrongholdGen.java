@@ -25,6 +25,16 @@ public class ShatteredStrongholdGen extends MapGenStronghold {
         return false;
     }
 
+    /** @return true if a vanilla stronghold started before the mod (older world) overlaps the box. */
+    public boolean hasLegacyStartIn(net.minecraft.world.gen.structure.StructureBoundingBox box) {
+        for (net.minecraft.world.gen.structure.StructureStart start : structureMap.values()) {
+            if (start != null && start.getBoundingBox() != null && start.getBoundingBox().intersectsWith(box)) {
+                return true;
+            }
+        }
+        return false;
+    }
+
     /** @return true if the chunk is one of the vanilla stronghold sites. */
     public boolean isSite(int chunkX, int chunkZ) {
         return super.canSpawnStructureAtCoords(chunkX, chunkZ);
@@ -32,20 +42,25 @@ public class ShatteredStrongholdGen extends MapGenStronghold {
 
     @Override
     public synchronized boolean generateStructure(World worldIn, Random randomIn, ChunkPos chunkCoord) {
+        // Vanilla strongholds already started in an older world keep growing their pieces.
+        boolean legacy = super.generateStructure(worldIn, randomIn, chunkCoord);
         if (worldIn.isRemote || worldIn.provider.getDimension() != 0) {
-            return false;
+            return legacy;
         }
         this.world = worldIn;
         if (!isSite(chunkCoord.x, chunkCoord.z)) {
-            return false;
+            return legacy;
         }
         long seed = worldIn.getSeed() ^ ChunkPos.asLong(chunkCoord.x, chunkCoord.z) ^ SALT;
         StrongholdPlan plan = StrongholdPlan.plan(worldIn, chunkCoord.x, chunkCoord.z, seed);
-        if (CitadelWorldGenerator.isAreaFree(worldIn, plan.footprint())) {
+        if (hasLegacyStartIn(plan.footprint())) {
+            ShatteredCitadelsMod.LOGGER.info("Stronghold site {},{} keeps its vanilla stronghold", chunkCoord.x, chunkCoord.z);
+        } else if (CitadelWorldGenerator.isAreaFreeForStronghold(worldIn, plan.footprint())) {
             StructureJobs.get(worldIn).submit(plan);
         } else {
-            ShatteredCitadelsMod.LOGGER.info("Stronghold site {},{} already holds a structure", chunkCoord.x, chunkCoord.z);
+            ShatteredCitadelsMod.LOGGER.warn("Stronghold site {},{} is occupied by a structure from before the site reservation",
+                    chunkCoord.x, chunkCoord.z);
         }
-        return false;
+        return legacy;
     }
 }

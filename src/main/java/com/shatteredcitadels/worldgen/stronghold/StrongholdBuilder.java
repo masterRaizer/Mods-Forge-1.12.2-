@@ -111,12 +111,17 @@ public class StrongholdBuilder {
 
     private void shell(StrongholdLayout.Piece piece) {
         StructureBoundingBox b = piece.box;
+        // A sunken piece (the cistern) is solid below its room floor; stairs span their whole box.
+        int floor = piece.rise != 0 ? b.minY : Math.max(b.minY, piece.floorY);
         for (int x = b.minX; x <= b.maxX; x++) {
             for (int z = b.minZ; z <= b.maxZ; z++) {
                 boolean edge = x == b.minX || x == b.maxX || z == b.minZ || z == b.maxZ;
-                w.set(x, b.minY, z, pal.floor(rand));
+                for (int y = b.minY; y < floor; y++) {
+                    w.set(x, y, z, pal.wall(rand));
+                }
+                w.set(x, floor, z, pal.floor(rand));
                 w.set(x, b.maxY, z, pal.ceiling());
-                for (int y = b.minY + 1; y < b.maxY; y++) {
+                for (int y = floor + 1; y < b.maxY; y++) {
                     w.set(x, y, z, edge ? pal.wall(rand) : air);
                 }
             }
@@ -538,6 +543,9 @@ public class StrongholdBuilder {
         set(at(piece, 0, c0 - 1, y + 2), pal.accent());
         set(at(piece, -1, c0 - 1, y + 2), Blocks.STONE_BUTTON.getDefaultState()
                 .withProperty(net.minecraft.block.BlockButton.FACING, piece.facing.getOpposite()));
+        // And one inside on the same block, so nobody is shut in.
+        set(at(piece, 1, c0 - 1, y + 2), Blocks.STONE_BUTTON.getDefaultState()
+                .withProperty(net.minecraft.block.BlockButton.FACING, piece.facing));
         for (int[] p : new int[][]{{1, 1}, {1, width - 2}, {length - 2, 1}, {length - 2, width - 2}}) {
             set(at(piece, p[0], p[1], y + 1), Blocks.GOLD_BLOCK.getDefaultState());
         }

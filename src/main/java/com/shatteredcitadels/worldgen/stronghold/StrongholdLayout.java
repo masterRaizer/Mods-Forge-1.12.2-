@@ -270,7 +270,9 @@ public final class StrongholdLayout {
         int height = rise != 0 ? PieceKind.CORRIDOR.height : kind.height;
         BlockPos p0 = local(entry, f, right, 0, -c0);
         BlockPos p1 = local(entry, f, right, length - 1, width - 1 - c0);
-        StructureBoundingBox box = new StructureBoundingBox(Math.min(p0.getX(), p1.getX()), Math.min(floorY, endFloor),
+        // The cistern's pool sinks two blocks below its floor: its box includes them.
+        int sink = kind == PieceKind.CISTERN ? 2 : 0;
+        StructureBoundingBox box = new StructureBoundingBox(Math.min(p0.getX(), p1.getX()), Math.min(floorY, endFloor) - sink,
                 Math.min(p0.getZ(), p1.getZ()), Math.max(p0.getX(), p1.getX()), Math.max(floorY, endFloor) + height - 1,
                 Math.max(p0.getZ(), p1.getZ()));
         Piece piece = new Piece(kind, box, f, depth, floorY, rise, length);

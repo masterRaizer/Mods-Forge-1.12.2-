@@ -148,7 +148,9 @@ public final class CommandCitadel extends CommandBase {
         if (plan == null) {
             throw new CommandException("No room for that structure here (build limit or bedrock)");
         }
-        if (!CitadelWorldGenerator.isAreaFree(world, plan.footprint(), "fragment".equals(kind))) {
+        boolean free = "stronghold".equals(kind) ? CitadelWorldGenerator.isAreaFreeForStronghold(world, plan.footprint())
+                : CitadelWorldGenerator.isAreaFree(world, plan.footprint(), "fragment".equals(kind));
+        if (!free) {
             throw new CommandException("Another structure is too close; move further away");
         }
         StructureJobs.get(world).submit(plan);

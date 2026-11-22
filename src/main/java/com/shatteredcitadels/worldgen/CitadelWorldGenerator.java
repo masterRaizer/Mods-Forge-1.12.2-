@@ -125,7 +125,21 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
 
     /** @param countFragments true for placing a fragment, which must not overlap anything at all */
     public static boolean isAreaFree(World world, StructureBoundingBox footprint, boolean countFragments) {
+        return isAreaFree(world, footprint, countFragments, !countFragments);
+    }
+
+    /** For a stronghold on its own site: other structures count, fragments and the site reservation do not. */
+    public static boolean isAreaFreeForStronghold(World world, StructureBoundingBox footprint) {
+        return isAreaFree(world, footprint, false, false);
+    }
+
+    /** @param keepOffStrongholdSites structures (not fragments) keep off stronghold sites so the eye finds one */
+    private static boolean isAreaFree(World world, StructureBoundingBox footprint, boolean countFragments,
+                                      boolean keepOffStrongholdSites) {
         StructureJobs jobs = StructureJobs.get(world);
+        if (keepOffStrongholdSites && com.shatteredcitadels.worldgen.stronghold.StrongholdSites.blocks(world, footprint)) {
+            return false;
+        }
         if (countFragments ? jobs.isReserved(footprint) : jobs.isReservedForStructures(footprint)) {
             return false;
         }

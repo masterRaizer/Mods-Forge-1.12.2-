@@ -230,4 +230,19 @@ public class CitadelPersistenceTest {
         flagged.setBuriedFragment(true);
         assertTrue(CitadelInstance.readFromNBT(flagged.writeToNBT()).isBuriedFragment());
     }
+
+    /** Strongholds and buried fragments are mineable like vanilla: never protected. */
+    @Test
+    public void strongholdsAndFragmentsAreNotProtected() {
+        CitadelInstance stronghold = new CitadelInstance(UUID.randomUUID(), "S", StructureType.STRONGHOLD,
+                CitadelArchetype.KEEPERS_CITADEL, 0, new BlockPos(0, 30, 0), new StructureBoundingBox(-72, 16, -72, 72, 56, 72));
+        org.junit.Assert.assertFalse(CitadelProtectionHandler.protects(stronghold, new BlockPos(5, 30, 5)));
+        CitadelInstance fragment = new CitadelInstance(UUID.randomUUID(), "F", StructureType.CRYPT,
+                CitadelArchetype.KEEPERS_CITADEL, 0, new BlockPos(8, 30, 8), new StructureBoundingBox(-11, 29, -11, 27, 38, 27));
+        org.junit.Assert.assertFalse(CitadelProtectionHandler.protects(fragment, new BlockPos(8, 32, 8)));
+        CitadelInstance citadel = new CitadelInstance(UUID.randomUUID(), "C", StructureType.CITADEL,
+                CitadelArchetype.KEEPERS_CITADEL, 0, new BlockPos(0, 64, 0), new StructureBoundingBox(0, 60, 0, 20, 120, 20));
+        citadel.addPart(new StructureBoundingBox(0, 60, 0, 20, 120, 20));
+        assertTrue(CitadelProtectionHandler.protects(citadel, new BlockPos(5, 70, 5)));
+    }
 }
