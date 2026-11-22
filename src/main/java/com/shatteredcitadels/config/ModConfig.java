@@ -107,6 +107,22 @@ public final class ModConfig {
         @Config.Comment("Replace the vanilla End stronghold with a large explorative one; the eye of ender leads to it.")
         public boolean replaceStrongholds = true;
 
+        @Config.Name("replaceDesertTemples")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.replaceDesertTemples")
+        @Config.Comment("Replace the vanilla desert pyramid with a pyramid over an underground temple ending in a tomb.")
+        public boolean replaceDesertTemples = true;
+
+        @Config.Name("desertTempleBossChance")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.desertTempleBossChance")
+        @Config.Comment("Chance that a desert temple's tomb is a pharaoh's tomb with a boss (Atum's pharaoh, or a husk).")
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double desertTempleBossChance = 0.4D;
+
+        @Config.Name("desertTempleSpawnerMobs")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.desertTempleSpawnerMobs")
+        @Config.Comment("Mobs of the desert temple's spawners.")
+        public String[] desertTempleSpawnerMobs = {"minecraft:husk", "minecraft:skeleton", "minecraft:spider"};
+
         @Config.Name("strongholdSpawnerMobs")
         @Config.LangKey("config.shatteredcitadels.castle_generation.strongholdSpawnerMobs")
         @Config.Comment("Mobs of the stronghold's spawners (the portal room always has silverfish).")

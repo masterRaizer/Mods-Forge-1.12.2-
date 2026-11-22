@@ -70,9 +70,9 @@ public final class BossFactory {
         }
         int tier = bossTier(citadel);
         ConfigCache.Snapshot config = ConfigCache.get();
-        List<ResourceLocation> candidates = BuiltInModBosses.orderForSpawn(config.getBossCandidates(tier),
-                config.isPreferModdedBosses(), random);
-        for (int i = 0; i < candidates.size() && i < MAX_CANDIDATES; i++) {
+        List<ResourceLocation> candidates = candidateOrder(citadel.getPreferredBoss(),
+                BuiltInModBosses.orderForSpawn(config.getBossCandidates(tier), config.isPreferModdedBosses(), random));
+        for (int i = 0; i < candidates.size() && i < MAX_CANDIDATES + 2; i++) {
             EntityLiving boss = create(world, candidates.get(i));
             if (boss != null && place(world, boss, arena, altarPos, random)) {
                 return finish(world, boss, citadel, altarPos, tier, false);
@@ -85,6 +85,21 @@ public final class BossFactory {
             }
         }
         return null;
+    }
+
+    /**
+     * A structure's preferred boss (e.g. Atum's pharaoh) goes first, then a husk in its place when
+     * the mod is missing, then the tier pool.
+     */
+    public static List<ResourceLocation> candidateOrder(ResourceLocation preferred, List<ResourceLocation> pool) {
+        if (preferred == null) {
+            return pool;
+        }
+        List<ResourceLocation> order = new java.util.ArrayList<>();
+        order.add(preferred);
+        order.add(new ResourceLocation("minecraft", "husk"));
+        order.addAll(pool);
+        return order;
     }
 
     private static EntityLiving create(WorldServer world, ResourceLocation id) {

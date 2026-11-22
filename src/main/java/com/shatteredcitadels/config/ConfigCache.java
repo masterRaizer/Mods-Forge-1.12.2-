@@ -71,6 +71,9 @@ public final class ConfigCache {
         next.fragmentRegionChunks = clamp(gen.fragmentRegionChunks, 4, 64);
         next.fragmentChance = clamp01(gen.fragmentChance);
         next.replaceStrongholds = gen.replaceStrongholds;
+        next.replaceDesertTemples = gen.replaceDesertTemples;
+        next.desertTempleBossChance = clamp01(gen.desertTempleBossChance);
+        next.desertTempleSpawnerMobs = gen.desertTempleSpawnerMobs == null ? new String[0] : gen.desertTempleSpawnerMobs.clone();
         next.strongholdSpawnerMobs = gen.strongholdSpawnerMobs == null ? new String[0] : gen.strongholdSpawnerMobs.clone();
         next.standaloneUndergroundDungeonChance = clamp01(gen.standaloneUndergroundDungeonChance);
         int[] floors = orderedRange("castle_generation.minFloors/maxFloors", gen.minFloors, gen.maxFloors, 2, 30);
@@ -360,6 +363,9 @@ public final class ConfigCache {
         int fragmentRegionChunks = 10;
         double fragmentChance = 0.6D;
         boolean replaceStrongholds = true;
+        boolean replaceDesertTemples = true;
+        double desertTempleBossChance = 0.4D;
+        String[] desertTempleSpawnerMobs = {"minecraft:husk", "minecraft:skeleton", "minecraft:spider"};
         String[] strongholdSpawnerMobs = {"minecraft:zombie", "minecraft:skeleton", "minecraft:spider", "minecraft:cave_spider",
                 "minecraft:silverfish"};
         double standaloneUndergroundDungeonChance = 0.04D;
@@ -443,6 +449,9 @@ public final class ConfigCache {
             c.fragmentRegionChunks = fragmentRegionChunks;
             c.fragmentChance = fragmentChance;
             c.replaceStrongholds = replaceStrongholds;
+            c.replaceDesertTemples = replaceDesertTemples;
+            c.desertTempleBossChance = desertTempleBossChance;
+            c.desertTempleSpawnerMobs = desertTempleSpawnerMobs.clone();
             c.strongholdSpawnerMobs = strongholdSpawnerMobs.clone();
             c.standaloneUndergroundDungeonChance = standaloneUndergroundDungeonChance;
             c.minFloors = minFloors;
@@ -519,6 +528,9 @@ public final class ConfigCache {
         public int getFragmentRegionChunks() { return fragmentRegionChunks; }
         public double getFragmentChance() { return fragmentChance; }
         public boolean isReplaceStrongholds() { return replaceStrongholds; }
+        public boolean isReplaceDesertTemples() { return replaceDesertTemples; }
+        public double getDesertTempleBossChance() { return desertTempleBossChance; }
+        public String[] getDesertTempleSpawnerMobs() { return desertTempleSpawnerMobs.clone(); }
         public String[] getStrongholdSpawnerMobs() { return strongholdSpawnerMobs.clone(); }
         public double getStandaloneUndergroundDungeonChance() { return standaloneUndergroundDungeonChance; }
         public int getMinFloors() { return minFloors; }

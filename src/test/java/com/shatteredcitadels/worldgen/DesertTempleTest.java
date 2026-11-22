@@ -102,4 +102,46 @@ public class DesertTempleTest {
         assertTrue(rec.isUnprotected());
         assertTrue(CitadelInstance.readFromNBT(rec.writeToNBT()).isUnprotected());
     }
+
+    @Test
+    public void planRoundTripAndSpiralReachesStart() {
+        com.shatteredcitadels.worldgen.temple.DesertTemplePlan plan =
+                new com.shatteredcitadels.worldgen.temple.DesertTemplePlan(300, 66, -200, 7L, 0, true);
+        StructurePlan copy = StructurePlans.read(plan.writeToNBT());
+        assertEquals(plan.writeToNBT(), copy.writeToNBT());
+        BlockWriter writer = new BlockWriter(new Blueprint());
+        CitadelInstance temple = copy.build(writer);
+        assertNotNull(temple);
+        assertEquals(StructureType.DESERT_TEMPLE, temple.getType());
+        int start = com.shatteredcitadels.worldgen.temple.DesertTemplePlan.undergroundFloor(66);
+        for (int[] step : com.shatteredcitadels.worldgen.catacomb.CatacombBuilder.spiralPath(66, start)) {
+            net.minecraft.block.state.IBlockState state = writer.get(300 + step[0], step[1], -200 + step[2]);
+            assertTrue("step at " + step[1] + " is " + state, state.getBlock() instanceof net.minecraft.block.BlockStairs);
+            assertFalse(writer.isSolid(300 + step[0], step[1] + 1, -200 + step[2]));
+            assertFalse(writer.isSolid(300 + step[0], step[1] + 2, -200 + step[2]));
+        }
+    }
+
+    @Test
+    public void onlyDesertSitesReplaced() {
+        assertTrue(com.shatteredcitadels.worldgen.temple.ScatteredFeatureGen.isOurs(net.minecraft.init.Biomes.DESERT));
+        assertTrue(com.shatteredcitadels.worldgen.temple.ScatteredFeatureGen.isOurs(net.minecraft.init.Biomes.DESERT_HILLS));
+        assertFalse(com.shatteredcitadels.worldgen.temple.ScatteredFeatureGen.isOurs(net.minecraft.init.Biomes.JUNGLE));
+        assertFalse(com.shatteredcitadels.worldgen.temple.ScatteredFeatureGen.isOurs(net.minecraft.init.Biomes.SWAMPLAND));
+        assertFalse(com.shatteredcitadels.worldgen.temple.ScatteredFeatureGen.isOurs(net.minecraft.init.Biomes.ICE_PLAINS));
+    }
+
+    @Test
+    public void preferredBossFirstThenHuskThenPool() {
+        CitadelInstance rec = record();
+        rec.setPreferredBoss(new net.minecraft.util.ResourceLocation("atum", "pharaoh"));
+        assertEquals("atum:pharaoh", String.valueOf(CitadelInstance.readFromNBT(rec.writeToNBT()).getPreferredBoss()));
+        java.util.List<net.minecraft.util.ResourceLocation> order = com.shatteredcitadels.boss.BossFactory.candidateOrder(
+                rec.getPreferredBoss(), java.util.Arrays.asList(new net.minecraft.util.ResourceLocation("minecraft", "zombie")));
+        assertEquals("atum:pharaoh", order.get(0).toString());
+        assertEquals("minecraft:husk", order.get(1).toString());
+        assertEquals("minecraft:zombie", order.get(2).toString());
+        assertEquals(1, com.shatteredcitadels.boss.BossFactory.candidateOrder(null,
+                java.util.Arrays.asList(new net.minecraft.util.ResourceLocation("minecraft", "zombie"))).size());
+    }
 }

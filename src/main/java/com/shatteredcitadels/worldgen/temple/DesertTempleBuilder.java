@@ -47,6 +47,12 @@ public class DesertTempleBuilder extends StrongholdBuilder {
     }
 
     @Override
+    public DesertTempleBuilder withMobs(ResourceLocation[] mobs) {
+        super.withMobs(mobs);
+        return this;
+    }
+
+    @Override
     protected void buildRoom(StrongholdLayout.Piece piece) {
         if (!(piece.kind instanceof TempleKind)) {
             super.buildRoom(piece);

@@ -127,6 +127,9 @@ public final class CommandCitadel extends CommandBase {
             plan = CommonProxy.WORLD_GENERATOR.planCrypt(world, minX, minZ, random, true);
         } else if ("castle".equals(kind)) {
             plan = CastlePlanner.plan(world, chunkX, chunkZ, random, null, true);
+        } else if ("desert_temple".equals(kind)) {
+            world.getChunk(chunkX, chunkZ);
+            plan = com.shatteredcitadels.worldgen.temple.DesertTemplePlan.plan(world, chunkX, chunkZ, random.nextLong());
         } else if ("stronghold".equals(kind)) {
             plan = com.shatteredcitadels.worldgen.stronghold.StrongholdPlan.plan(world, chunkX, chunkZ, random.nextLong());
         } else if ("fragment".equals(kind)) {
@@ -308,6 +311,7 @@ public final class CommandCitadel extends CommandBase {
         kinds.add("dungeon");
         kinds.add("fragment");
         kinds.add("stronghold");
+        kinds.add("desert_temple");
         return kinds;
     }
 
