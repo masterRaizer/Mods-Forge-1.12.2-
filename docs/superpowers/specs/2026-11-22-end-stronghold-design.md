@@ -129,3 +129,8 @@ strongholds, retro-fitting strongholds that already exist.
   - `/citadel spawn stronghold` writes with 0 repaired blocks;
   - renders of the level.
 - In game (user): throw an eye of ender, find the portal room, activate the portal.
+
+## Decision after the pack test (1.7.1)
+The pack runs YUNG's Law (stone below y 63 far from caves becomes obsidian). The user chose to keep
+the stronghold without a surface entrance: players reach it through nearby caves or dig through
+the obsidian, as with YUNG's strongholds.
