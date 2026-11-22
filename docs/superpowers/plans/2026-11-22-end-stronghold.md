@@ -266,3 +266,20 @@ inside it.
   `Planned stronghold` appears without a command.
 - [ ] **Step 4: Release.** Run `./gradlew build`, copy the jar to `dist/`, remove 1.6.4, commit,
   push, and check that the link returns HTTP 200.
+
+## Amendments from the user's pack check (2026-11-22)
+- **Lowest floor ≥ y 12** (Better Caves liquid caverns up to y 10): `floorYFor` clamps to
+  [12 + 12, est - 20], i.e. a main floor at y ≥ 24. Stairs down are only placed when the lower
+  level stays ≥ 12. Test `floorStaysUnderLowGround` uses these numbers: `floorYFor(47, r) <= 27`,
+  and `floorYFor(20, r) == 24`.
+- **Pieces may touch but not intersect.** Walls are inside each box, and a passage cuts both walls.
+  This replaces the "1-block gap" rule, which cannot be squared with coinciding doorways. Add the
+  catacomb-style test `shellIsClosed` to Task 2: every non-solid planned block has planned
+  neighbours, so liquids are replaced and never reach a corridor.
+- **dimension 0 only** in `generateStructure`, so it works in the BIOMESOP world type too.
+- **Portal room first:** `StructurePlan.priorityArea()` (default null). `StructureJobs.pickNext`
+  prefers ready chunks inside the job's priority area before distance. `StrongholdPlan` returns
+  the portal room's box. Test in Task 4: `priorityChunksGoFirst` on the pure ranking function
+  `StructureJobs.rank(double distance, boolean priority)`.
+- **Task 5** also runs the dev server with the pack's Biomes O' Plenty jar (world type BIOMESOP)
+  if it loads in the dev environment.
