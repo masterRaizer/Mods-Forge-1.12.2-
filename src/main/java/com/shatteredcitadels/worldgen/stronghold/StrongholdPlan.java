@@ -67,6 +67,19 @@ public final class StrongholdPlan implements StructurePlan {
                 centreX + REACH, floorY + 26, centreZ + REACH);
     }
 
+    private transient StructureBoundingBox portalArea;
+
+    /** The portal room: its chunks are written first. */
+    @Override
+    public StructureBoundingBox priorityArea() {
+        if (portalArea == null) {
+            StrongholdLayout layout = StrongholdLayout.generate(seed, centreX, floorY, centreZ);
+            portalArea = layout == null || layout.portalRoom() == null
+                    ? new StructureBoundingBox(centreX, floorY, centreZ, centreX, floorY, centreZ) : layout.portalRoom().box;
+        }
+        return portalArea;
+    }
+
     @Override
     public CitadelInstance build(BlockWriter writer) {
         Random random = new Random(seed);

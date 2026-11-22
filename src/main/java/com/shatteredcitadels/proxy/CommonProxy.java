@@ -42,6 +42,8 @@ public class CommonProxy {
         ModLootTables.register();
         net.minecraftforge.common.MinecraftForge.TERRAIN_GEN_BUS.register(
                 com.shatteredcitadels.worldgen.catacomb.VanillaDungeonReplacer.class);
+        net.minecraftforge.common.MinecraftForge.TERRAIN_GEN_BUS.register(
+                com.shatteredcitadels.worldgen.stronghold.StrongholdReplacer.class);
         CustomAdvancementTriggers.register();
         QuestlineInstaller.install(event.getModConfigurationDirectory());
     }

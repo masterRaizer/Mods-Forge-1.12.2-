@@ -141,7 +141,8 @@ public final class StructureJobs extends WorldSavedData {
         long limit = (long) minDistanceChunks * minDistanceChunks;
         for (Job job : jobs) {
             // Underground pieces are not structure sites; overlap is still caught by isReserved.
-            if (job.plan instanceof CryptPlan || job.plan instanceof FragmentPlan) {
+            if (job.plan instanceof CryptPlan || job.plan instanceof FragmentPlan
+                    || job.plan instanceof com.shatteredcitadels.worldgen.stronghold.StrongholdPlan) {
                 continue;
             }
             StructureBoundingBox box = job.plan.footprint();
@@ -309,7 +310,12 @@ public final class StructureJobs extends WorldSavedData {
         }
     }
 
-    /** Chooses the ready, unwritten chunk closest to any player. */
+    /** Ordering key for ready chunks: a structure's priority area first, then the nearest to a player. */
+    public static double rank(double distanceToPlayers, boolean priority) {
+        return priority ? distanceToPlayers - 1.0E12D : distanceToPlayers;
+    }
+
+    /** Chooses the ready, unwritten chunk closest to any player (a priority area first). */
     private boolean pickNext(WorldServer world) {
         Job bestJob = null;
         Blueprint.ChunkPart best = null;
@@ -323,7 +329,10 @@ public final class StructureJobs extends WorldSavedData {
                     continue;
                 }
                 job.lastReadyTick = ticks;
-                double distance = distanceToPlayers(world, part.chunkX, part.chunkZ);
+                StructureBoundingBox priority = job.plan.priorityArea();
+                boolean first = priority != null && priority.intersectsWith(part.chunkX << 4, part.chunkZ << 4,
+                        (part.chunkX << 4) + 15, (part.chunkZ << 4) + 15);
+                double distance = rank(distanceToPlayers(world, part.chunkX, part.chunkZ), first);
                 if (best == null || distance < bestDistance) {
                     bestDistance = distance;
                     best = part;

@@ -102,6 +102,17 @@ public final class ModConfig {
         @Config.RangeDouble(min = 0.0D, max = 1.0D)
         public double fragmentChance = 0.6D;
 
+        @Config.Name("replaceStrongholds")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.replaceStrongholds")
+        @Config.Comment("Replace the vanilla End stronghold with a large explorative one; the eye of ender leads to it.")
+        public boolean replaceStrongholds = true;
+
+        @Config.Name("strongholdSpawnerMobs")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.strongholdSpawnerMobs")
+        @Config.Comment("Mobs of the stronghold's spawners (the portal room always has silverfish).")
+        public String[] strongholdSpawnerMobs = {"minecraft:zombie", "minecraft:skeleton", "minecraft:spider",
+                "minecraft:cave_spider", "minecraft:silverfish"};
+
         @Config.Name("standaloneUndergroundDungeonChance")
         @Config.LangKey("config.shatteredcitadels.castle_generation.standaloneUndergroundDungeonChance")
         @Config.Comment("Chance per placement section (without a citadel) to generate a standalone underground dungeon.")

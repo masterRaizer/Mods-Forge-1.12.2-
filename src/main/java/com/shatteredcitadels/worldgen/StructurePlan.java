@@ -13,6 +13,11 @@ public interface StructurePlan {
 
     String KIND_KEY = "kind";
 
+    /** @return an area whose chunks are written before the rest (e.g. a stronghold's portal room), or null. */
+    default net.minecraft.world.gen.structure.StructureBoundingBox priorityArea() {
+        return null;
+    }
+
     /** @return the kind stored in NBT, used by {@link StructurePlans#read}. */
     String kind();
 

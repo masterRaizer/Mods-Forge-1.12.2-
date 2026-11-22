@@ -136,6 +136,10 @@ public final class ModLootInjector {
                 addPool(event, "shatteredcitadels_modded", SMELTERY, 3, new LootCondition[0], false);
             } else if (ModLootTables.MAGE_PEDESTAL.equals(name) || ModLootTables.MAGE_PEDESTAL_FOLIO.equals(name)) {
                 addPool(event, "shatteredcitadels_modded", MAGE, 1, new LootCondition[]{new RandomChance(0.6F)}, false);
+            } else if (net.minecraft.world.storage.loot.LootTableList.CHESTS_STRONGHOLD_LIBRARY.equals(name)
+                    || net.minecraft.world.storage.loot.LootTableList.CHESTS_STRONGHOLD_CORRIDOR.equals(name)
+                    || net.minecraft.world.storage.loot.LootTableList.CHESTS_STRONGHOLD_CROSSING.equals(name)) {
+                addPool(event, "shatteredcitadels_modded", UNDERGROUND, 1, new LootCondition[]{new RandomChance(0.5F)}, false);
             } else if (ModLootTables.CATACOMB_DEEP.equals(name)) {
                 addPool(event, "shatteredcitadels_modded", UNDERGROUND, 1, new LootCondition[0], false);
                 addPool(event, "shatteredcitadels_mage", MAGE, 1, new LootCondition[]{new RandomChance(0.3F)}, false);

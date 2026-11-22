@@ -70,6 +70,8 @@ public final class ConfigCache {
         next.replaceVanillaDungeons = gen.replaceVanillaDungeons;
         next.fragmentRegionChunks = clamp(gen.fragmentRegionChunks, 4, 64);
         next.fragmentChance = clamp01(gen.fragmentChance);
+        next.replaceStrongholds = gen.replaceStrongholds;
+        next.strongholdSpawnerMobs = gen.strongholdSpawnerMobs == null ? new String[0] : gen.strongholdSpawnerMobs.clone();
         next.standaloneUndergroundDungeonChance = clamp01(gen.standaloneUndergroundDungeonChance);
         int[] floors = orderedRange("castle_generation.minFloors/maxFloors", gen.minFloors, gen.maxFloors, 2, 30);
         next.minFloors = floors[0];
@@ -357,6 +359,9 @@ public final class ConfigCache {
         boolean replaceVanillaDungeons = true;
         int fragmentRegionChunks = 10;
         double fragmentChance = 0.6D;
+        boolean replaceStrongholds = true;
+        String[] strongholdSpawnerMobs = {"minecraft:zombie", "minecraft:skeleton", "minecraft:spider", "minecraft:cave_spider",
+                "minecraft:silverfish"};
         double standaloneUndergroundDungeonChance = 0.04D;
         int minFloors = 3;
         int maxFloors = 7;
@@ -437,6 +442,8 @@ public final class ConfigCache {
             c.replaceVanillaDungeons = replaceVanillaDungeons;
             c.fragmentRegionChunks = fragmentRegionChunks;
             c.fragmentChance = fragmentChance;
+            c.replaceStrongholds = replaceStrongholds;
+            c.strongholdSpawnerMobs = strongholdSpawnerMobs.clone();
             c.standaloneUndergroundDungeonChance = standaloneUndergroundDungeonChance;
             c.minFloors = minFloors;
             c.maxFloors = maxFloors;
@@ -511,6 +518,8 @@ public final class ConfigCache {
         public boolean isReplaceVanillaDungeons() { return replaceVanillaDungeons; }
         public int getFragmentRegionChunks() { return fragmentRegionChunks; }
         public double getFragmentChance() { return fragmentChance; }
+        public boolean isReplaceStrongholds() { return replaceStrongholds; }
+        public String[] getStrongholdSpawnerMobs() { return strongholdSpawnerMobs.clone(); }
         public double getStandaloneUndergroundDungeonChance() { return standaloneUndergroundDungeonChance; }
         public int getMinFloors() { return minFloors; }
         public int getMaxFloors() { return maxFloors; }
