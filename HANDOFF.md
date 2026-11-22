@@ -60,7 +60,12 @@ Better Caves, Better Mineshafts, Traveler's Titles и YUNG's Law уже есть
    `StrongholdBuilder`, `StrongholdPlan` (зал портала пишется первым через `StructurePlan.priorityArea`),
    `ShatteredStrongholdGen` (подкласс `MapGenStronghold` через `InitMapGenEvent`: ванильные места и поиск оком,
    ванильные куски не строятся). Мир BIOMESOP проверяется в сборке (в dev Forge 2847, BOP требует 2858).
-3. Пустынные храмы: залы, ловушки, спуск вниз.
+3. ✅ Пустынные храмы (1.8.0, дизайн `docs/superpowers/specs/2026-11-22-desert-temple-design.md`): `worldgen/temple/` —
+   рост `StrongholdLayout` обобщён до каталога (`PieceSpec`, `Catalogue`; `TempleKind` — комнаты храма),
+   `DesertTempleBuilder extends StrongholdBuilder` (палитра `BlockSet`, `SandstonePalette`), `Pyramid` (наземная
+   часть), `DesertTemplePlan` (винтовая лестница от пирамиды к входному залу), `ScatteredFeatureGen` (подкласс
+   `MapGenScatteredFeature` через `InitMapGenEvent`: только пустынные места, остальное ваниль). Гробница фараона —
+   `preferredBoss` записи (`BossFactory.candidateOrder`: фараон Atum → кадавр → пул уровня).
 4. Храмы в джунглях: головоломки, ловушки, тайники.
 5. Мосты через реки.
 6. Хижины ведьм на болотах.

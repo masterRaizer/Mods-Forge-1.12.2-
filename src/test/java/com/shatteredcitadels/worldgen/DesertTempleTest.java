@@ -113,6 +113,7 @@ public class DesertTempleTest {
         CitadelInstance temple = copy.build(writer);
         assertNotNull(temple);
         assertEquals(StructureType.DESERT_TEMPLE, temple.getType());
+        assertTrue(temple.getDisplayName(), temple.getDisplayName().startsWith("@name:desert:"));
         int start = com.shatteredcitadels.worldgen.temple.DesertTemplePlan.undergroundFloor(66);
         for (int[] step : com.shatteredcitadels.worldgen.catacomb.CatacombBuilder.spiralPath(66, start)) {
             net.minecraft.block.state.IBlockState state = writer.get(300 + step[0], step[1], -200 + step[2]);

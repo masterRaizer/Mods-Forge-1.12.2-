@@ -88,7 +88,7 @@ public final class DesertTemplePlan implements StructurePlan {
             return null;
         }
         CitadelInstance record = new CitadelInstance(MathHelper.getRandomUUID(random),
-                CitadelNameGenerator.generate("crypt", random), StructureType.DESERT_TEMPLE, CitadelArchetype.KEEPERS_CITADEL,
+                CitadelNameGenerator.generate("desert", random), StructureType.DESERT_TEMPLE, CitadelArchetype.KEEPERS_CITADEL,
                 dimension, new BlockPos(centreX, surfaceY, centreZ), footprint());
         new DesertTempleBuilder(writer, record, random, pharaoh)
                 .withMobs(StrongholdMobs.resolve(ConfigCache.get().getDesertTempleSpawnerMobs(), DesertTempleBuilder.DEFAULT_MOBS))
