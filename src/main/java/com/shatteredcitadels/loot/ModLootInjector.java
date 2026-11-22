@@ -41,41 +41,41 @@ public final class ModLootInjector {
             {"thermalfoundation:material", 128, 2, 5, 6}, {"thermalfoundation:material", 129, 2, 5, 6},
             {"thermalfoundation:material", 512, 1, 2, 3}, {"mekanism:ingot", 1, 2, 4, 5},
             {"mekanism:controlcircuit", 0, 1, 2, 4}, {"enderio:item_alloy_ingot", 0, 1, 3, 5},
-            {"enderio:item_basic_capacitor", 0, 1, 2, 4}, {"ironapple:iron_apple", -1, 1, 2, 4},
+            {"enderio:item_basic_capacitor", 0, 1, 2, 4},
             {"ironapples:iron_apple", -1, 1, 2, 4}
     };
     private static final Object[][] TIER_5_PLUS = {
-            {"gobber2:gobber2_ingot", -1, 1, 3, 6}, {"gobber2:gobber2_ingot_nether", -1, 1, 2, 4},
-            {"gobber2:gobber2_ingot_end", -1, 1, 2, 2}, {"tconstruct:ingots", 2, 1, 2, 4},
+            {"gb:globette", -1, 1, 3, 6}, {"gb:globette2", -1, 1, 2, 4},
+            {"gb:globette3", -1, 1, 2, 2}, {"tconstruct:ingots", 2, 1, 2, 4},
             {"xat:poison_stone", -1, 1, 1, 1}, {"xat:dragons_eye", -1, 1, 1, 1}, {"xat:weightless_stone", -1, 1, 1, 1},
-            {"artifacts:everlasting_beef", -1, 1, 1, 1}, {"artifacts:cloud_in_a_bottle", -1, 1, 1, 1},
+            {"artifacts:everlasting_beef", -1, 1, 1, 1}, {"artifacts:bottled_cloud", -1, 1, 1, 1},
             {"draconicevolution:draconium_ingot", -1, 1, 3, 3}
     };
     private static final Object[][] UNDERGROUND = {
-            {"gobber2:gobber2_ingot", -1, 1, 3, 5}, {"tconstruct:ingots", 0, 1, 2, 4}, {"tconstruct:ingots", 1, 1, 2, 4},
+            {"gb:globette", -1, 1, 3, 5}, {"tconstruct:ingots", 0, 1, 2, 4}, {"tconstruct:ingots", 1, 1, 2, 4},
             {"xat:poison_stone", -1, 1, 1, 1}, {"xat:dwarf_ring", -1, 1, 1, 1}, {"artifacts:night_vision_goggles", -1, 1, 1, 1},
             {"artifacts:lucky_horseshoe", -1, 1, 1, 1}
     };
     private static final Object[][] BOSS = {
             {"draconicevolution:draconium_ingot", -1, 2, 6, 6}, {"draconicevolution:wyvern_core", -1, 1, 1, 2},
-            {"draconicevolution:draconic_core", -1, 1, 2, 3}, {"gobber2:gobber2_ingot_end", -1, 2, 4, 4},
-            {"gobber2:gobber2_ingot_nether", -1, 2, 5, 4}
+            {"draconicevolution:draconic_core", -1, 1, 2, 3}, {"gb:globette3", -1, 2, 4, 4},
+            {"gb:globette2", -1, 2, 5, 4}
     };
     private static final Object[][] BOSS_SKY = {
             {"draconicevolution:awakened_core", -1, 1, 1, 2}, {"draconicevolution:draconic_ingot", -1, 1, 3, 4},
-            {"draconicevolution:wyvern_core", -1, 1, 2, 3}, {"gobber2:gobber2_ingot_end", -1, 3, 6, 4}
+            {"draconicevolution:wyvern_core", -1, 1, 2, 3}, {"gb:globette3", -1, 3, 6, 4}
     };
     /** Food of the pack's mods for pantries. */
     private static final Object[][] PANTRY = {
             {"futuremc:sweet_berries", -1, 2, 6, 6}, {"futuremc:honey_bottle", -1, 1, 2, 3},
-            {"ironapples:iron_apple", -1, 1, 1, 2}, {"ironapple:iron_apple", -1, 1, 1, 2},
+            {"ironapples:iron_apple", -1, 1, 1, 2},
             {"aquaculture:food", 0, 1, 3, 3}, {"artifacts:everlasting_beef", -1, 1, 1, 1}
     };
     /** Personal trinkets for bedrooms. */
     private static final Object[][] BEDROOM = {
             {"xat:poison_stone", -1, 1, 1, 1}, {"xat:dwarf_ring", -1, 1, 1, 1}, {"xat:weightless_stone", -1, 1, 1, 1},
-            {"artifacts:lucky_horseshoe", -1, 1, 1, 1}, {"artifacts:cloud_in_a_bottle", -1, 1, 1, 1},
-            {"gobber2:gobber2_ingot", -1, 1, 2, 3}
+            {"artifacts:lucky_horseshoe", -1, 1, 1, 1}, {"artifacts:bottled_cloud", -1, 1, 1, 1},
+            {"gb:globette", -1, 1, 2, 3}
     };
     /** Ores and ingots of the pack's tech mods for smelting workshops and vases. */
     private static final Object[][] SMELTERY = {
@@ -89,20 +89,20 @@ public final class ModLootInjector {
     /** Magic loot of the pack's mods for the guardian mage's pedestals and the deepest catacomb level. */
     private static final Object[][] MAGE = {
             {"artifacts:night_vision_goggles", -1, 1, 1, 2}, {"artifacts:lucky_horseshoe", -1, 1, 1, 2},
-            {"artifacts:cloud_in_a_bottle", -1, 1, 1, 2}, {"artifacts:everlasting_beef", -1, 1, 1, 1},
+            {"artifacts:bottled_cloud", -1, 1, 1, 2}, {"artifacts:everlasting_beef", -1, 1, 1, 1},
             {"artifacts:magma_stone", -1, 1, 1, 2}, {"artifacts:obsidian_skull", -1, 1, 1, 2},
             {"xat:poison_stone", -1, 1, 1, 2}, {"xat:dragons_eye", -1, 1, 1, 1}, {"xat:weightless_stone", -1, 1, 1, 2},
             {"xat:dwarf_ring", -1, 1, 1, 2}, {"xat:fairy_ring", -1, 1, 1, 2}, {"xat:inertia_null_stone", -1, 1, 1, 1},
             {"mowziesmobs:ice_crystal", -1, 1, 1, 1}, {"mowziesmobs:wrought_helmet", -1, 1, 1, 1},
             {"mowziesmobs:barako_mask", -1, 1, 1, 1}, {"mowziesmobs:earth_talisman", -1, 1, 1, 1},
-            {"gobber2:gobber2_ingot_end", -1, 1, 3, 3}, {"gobber2:gobber2_ingot_nether", -1, 1, 3, 3},
+            {"gb:globette3", -1, 1, 3, 3}, {"gb:globette2", -1, 1, 3, 3},
             {"ironapples:diamond_apple", -1, 1, 1, 2}, {"ironapples:iron_apple", -1, 1, 2, 2}
     };
 
     /** Low-floor rare find (lowFloorRareLootChance). */
     private static final Object[][] RARE_FIND = {
             {"minecraft:diamond", -1, 1, 2, 6}, {"minecraft:emerald", -1, 1, 3, 6}, {"minecraft:golden_apple", -1, 1, 1, 4},
-            {"gobber2:gobber2_ingot", -1, 1, 2, 3}, {"tconstruct:ingots", 0, 1, 1, 3}
+            {"gb:globette", -1, 1, 2, 3}, {"tconstruct:ingots", 0, 1, 1, 3}
     };
 
     private static final Set<String> MISSING_LOGGED = java.util.Collections.newSetFromMap(
@@ -155,12 +155,9 @@ public final class ModLootInjector {
         Set<String> used = new HashSet<>();
         for (Object[] candidate : candidates) {
             ResourceLocation id = new ResourceLocation((String) candidate[0]);
-            if (!ForgeRegistries.ITEMS.containsKey(id)) {
-                continue;
-            }
-            Item item = ForgeRegistries.ITEMS.getValue(id);
             int meta = (Integer) candidate[1];
             String entryName = id + (meta >= 0 ? "#" + meta : "");
+            Item item = ForgeRegistries.ITEMS.containsKey(id) ? ForgeRegistries.ITEMS.getValue(id) : null;
             if (item == null || item == Items.AIR) {
                 // Worth knowing when the mod is installed: the name is wrong or the item is disabled.
                 if (net.minecraftforge.fml.common.Loader.isModLoaded(id.getNamespace()) && MISSING_LOGGED.add(entryName)) {

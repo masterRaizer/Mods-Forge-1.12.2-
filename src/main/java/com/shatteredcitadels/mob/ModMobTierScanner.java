@@ -111,6 +111,7 @@ public final class ModMobTierScanner {
         List<MobEntry> underground = new ArrayList<>();
         Map<ResourceLocation, Integer> manual = config.getManualMobTierOverrides();
         int failed = 0;
+        List<String> skipped = new ArrayList<>();
 
         if (config.isAutoModMobScannerEnabled()) {
             for (EntityEntry entry : new ArrayList<>(CANDIDATES)) {
@@ -121,6 +122,7 @@ public final class ModMobTierScanner {
                 MobEntry mob = classify(entry, world, -1, false);
                 if (mob == null) {
                     failed++;
+                    skipped.add(id.toString());
                     continue;
                 }
                 add(tiers, underground, mob);
@@ -147,6 +149,10 @@ public final class ModMobTierScanner {
         }
         ShatteredCitadelsMod.LOGGER.info("Mob scan finished in {} ms:{} underground={} skipped/failed={}",
                 (System.nanoTime() - start) / 1_000_000L, summary, registry.getUnderground().size(), failed);
+        if (!skipped.isEmpty()) {
+            // Not creatable in an empty world, not living, or flagged as a boss: never used as a wave mob.
+            ShatteredCitadelsMod.LOGGER.info("Mob scan skipped: {}", String.join(", ", skipped));
+        }
         return registry;
     }
 
