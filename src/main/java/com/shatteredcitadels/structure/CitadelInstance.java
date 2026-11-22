@@ -46,6 +46,7 @@ public final class CitadelInstance {
     private boolean hasCrypt;
     /** A buried catacomb fragment: never blocks a structure (NBT "buried", set since 1.6.2). */
     private boolean buriedFragment;
+    private net.minecraft.util.ResourceLocation preferredBoss;
 
     public CitadelInstance(UUID citadelId, String displayName, StructureType type, CitadelArchetype archetype,
                            int dimension, BlockPos origin, StructureBoundingBox totalBounds) {
@@ -109,9 +110,21 @@ public final class CitadelInstance {
                 && totalBounds.maxY - totalBounds.minY <= LEGACY_FRAGMENT_MAX_HEIGHT;
     }
 
-    /** Strongholds and buried fragments are never protected (mineable like vanilla). */
+    /**
+     * Strongholds, buried fragments and desert temples without a boss tomb are never protected
+     * (mineable like vanilla); a pharaoh's tomb protects only its tomb part.
+     */
     public boolean isUnprotected() {
-        return type == StructureType.STRONGHOLD || isBuriedFragment();
+        return type == StructureType.STRONGHOLD || isBuriedFragment() || type == StructureType.DESERT_TEMPLE && parts.isEmpty();
+    }
+
+    /** @return the boss the altar summons first (e.g. Atum's pharaoh), or null for the tier pool. */
+    public net.minecraft.util.ResourceLocation getPreferredBoss() {
+        return preferredBoss;
+    }
+
+    public void setPreferredBoss(net.minecraft.util.ResourceLocation preferredBoss) {
+        this.preferredBoss = preferredBoss;
     }
 
     public void setBuriedFragment(boolean buriedFragment) {
@@ -368,6 +381,9 @@ public final class CitadelInstance {
         if (buriedFragment) {
             tag.setBoolean("buried", true);
         }
+        if (preferredBoss != null) {
+            tag.setString("preferredBoss", preferredBoss.toString());
+        }
         return tag;
     }
 
@@ -428,6 +444,7 @@ public final class CitadelInstance {
         }
         instance.hasCrypt = tag.getBoolean("crypt");
         instance.buriedFragment = tag.getBoolean("buried");
+        instance.preferredBoss = tag.hasKey("preferredBoss") ? new net.minecraft.util.ResourceLocation(tag.getString("preferredBoss")) : null;
         return instance;
     }
 

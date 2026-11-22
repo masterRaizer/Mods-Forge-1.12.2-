@@ -44,12 +44,17 @@ public class StrongholdBuilder {
     protected final BlockWriter w;
     protected final CitadelInstance rec;
     protected final Random rand;
-    protected final CatacombPalette pal = new CatacombPalette();
+    protected final com.shatteredcitadels.worldgen.BlockSet pal;
     protected final IBlockState air = Blocks.AIR.getDefaultState();
     private ResourceLocation[] mobs = DEFAULT_MOBS;
     private int corridors;
 
     public StrongholdBuilder(BlockWriter w, CitadelInstance rec, Random rand) {
+        this(w, rec, rand, new CatacombPalette());
+    }
+
+    protected StrongholdBuilder(BlockWriter w, CitadelInstance rec, Random rand, com.shatteredcitadels.worldgen.BlockSet palette) {
+        this.pal = palette;
         this.w = w;
         this.rec = rec;
         this.rand = rand;
@@ -71,6 +76,10 @@ public class StrongholdBuilder {
             doors(piece);
         }
         for (StrongholdLayout.Piece piece : layout.pieces()) {
+            if (!(piece.kind instanceof PieceKind)) {
+                buildRoom(piece);
+                continue;
+            }
             switch ((PieceKind) piece.kind) {
                 case CORRIDOR:
                     corridor(piece);
@@ -302,6 +311,9 @@ public class StrongholdBuilder {
 
     /** Furnishes a room piece according to its kind. */
     protected void buildRoom(StrongholdLayout.Piece piece) {
+        if (!(piece.kind instanceof PieceKind)) {
+            return;
+        }
         switch ((PieceKind) piece.kind) {
             case CROSSING:
                 crossing(piece);
@@ -349,7 +361,7 @@ public class StrongholdBuilder {
     }
 
     /** True if (a, c) on the walk level is in front of one of the piece's doorways (kept clear). */
-    private boolean nearDoor(StrongholdLayout.Piece piece, int a, int c) {
+    protected boolean nearDoor(StrongholdLayout.Piece piece, int a, int c) {
         BlockPos p = at(piece, a, c, piece.floorY + 1);
         return nearDoorAt(piece, p.getX(), p.getZ());
     }

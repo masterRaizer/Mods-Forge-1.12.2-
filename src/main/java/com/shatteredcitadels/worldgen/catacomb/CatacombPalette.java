@@ -14,7 +14,7 @@ import java.util.Random;
  * Old, damp masonry for the catacombs: stone bricks in every state of decay, cobble, andesite and
  * bone. Optional modded stones join the wall mix when their mod is installed.
  */
-public final class CatacombPalette {
+public final class CatacombPalette implements com.shatteredcitadels.worldgen.BlockSet {
 
     private final List<IBlockState> walls = new ArrayList<>();
     private final List<IBlockState> floors = new ArrayList<>();
@@ -53,22 +53,27 @@ public final class CatacombPalette {
         }
     }
 
+    @Override
     public IBlockState wall(Random rand) {
         return walls.get(rand.nextInt(walls.size()));
     }
 
+    @Override
     public IBlockState floor(Random rand) {
         return floors.get(rand.nextInt(floors.size()));
     }
 
+    @Override
     public IBlockState ceiling() {
         return ceiling;
     }
 
+    @Override
     public IBlockState accent() {
         return accent;
     }
 
+    @Override
     public IBlockState pillar() {
         return pillar;
     }
