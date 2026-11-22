@@ -6,7 +6,7 @@ package com.shatteredcitadels.worldgen.stronghold;
  * ceiling (all including walls). Exits are F (ahead), L/R (both sides, a single side picked at
  * random for a turn), or none.
  */
-public enum PieceKind {
+public enum PieceKind implements PieceSpec {
     CROSSING(11, 11, 7, "FLR", 6, 6, 1),
     CORRIDOR(0, 5, 6, "F", 30, 999, 0),
     TURN(5, 5, 6, "T", 10, 999, 0),
@@ -45,11 +45,24 @@ public enum PieceKind {
         this.minDepth = minDepth;
     }
 
+    @Override public int length() { return length; }
+    @Override public int width() { return width; }
+    @Override public int height() { return height; }
+    @Override public String exits() { return exits; }
+    @Override public int weight() { return weight; }
+    @Override public int limit() { return limit; }
+    @Override public int minDepth() { return minDepth; }
+    @Override public int rise() { return this == STAIRS_UP ? StrongholdLayout.STAIR_RISE : this == STAIRS_DOWN ? -StrongholdLayout.STAIR_RISE : 0; }
+    @Override public int sink() { return this == CISTERN ? 2 : 0; }
+    @Override public boolean isCorridor() { return this == CORRIDOR; }
+    @Override public boolean isTurn() { return this == TURN; }
+
     public boolean isCorridorLike() {
         return this == CORRIDOR || this == TURN || this == T_JUNCTION || this == STAIRS_UP || this == STAIRS_DOWN
                 || this == CROSSING;
     }
 
+    @Override
     public boolean hasExits() {
         return !exits.isEmpty();
     }

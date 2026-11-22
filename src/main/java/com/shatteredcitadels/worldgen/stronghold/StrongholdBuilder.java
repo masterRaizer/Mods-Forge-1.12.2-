@@ -71,7 +71,7 @@ public class StrongholdBuilder {
             doors(piece);
         }
         for (StrongholdLayout.Piece piece : layout.pieces()) {
-            switch (piece.kind) {
+            switch ((PieceKind) piece.kind) {
                 case CORRIDOR:
                     corridor(piece);
                     break;
@@ -98,7 +98,7 @@ public class StrongholdBuilder {
     protected BlockPos at(StrongholdLayout.Piece piece, int a, int c, int y) {
         EnumFacing f = piece.facing;
         BlockPos entry = piece == null || piece.doors.isEmpty() ? BlockPos.ORIGIN : piece.doors.get(0).pos;
-        int c0 = piece.kind.width / 2;
+        int c0 = piece.kind.width() / 2;
         BlockPos p = entry.offset(f, a).offset(f.rotateY(), c - c0);
         return new BlockPos(p.getX(), y, p.getZ());
     }
@@ -249,7 +249,7 @@ public class StrongholdBuilder {
     private void portalRoom(StrongholdLayout.Piece piece) {
         int y = piece.floorY;
         int ca = 9;
-        int cc = piece.kind.width / 2;
+        int cc = piece.kind.width() / 2;
         // Platform 7x7, two high.
         for (int a = ca - 3; a <= ca + 3; a++) {
             for (int c = cc - 3; c <= cc + 3; c++) {
@@ -285,7 +285,7 @@ public class StrongholdBuilder {
         }
         // Pillars in the corners, torches on the walls.
         int length = piece.length;
-        int width = piece.kind.width;
+        int width = piece.kind.width();
         for (int[] p : new int[][]{{1, 1}, {1, width - 2}, {length - 2, 1}, {length - 2, width - 2}}) {
             for (int fy = y + 1; fy < piece.box.maxY; fy++) {
                 set(at(piece, p[0], p[1], fy), pal.pillar());
@@ -302,7 +302,7 @@ public class StrongholdBuilder {
 
     /** Furnishes a room piece according to its kind. */
     protected void buildRoom(StrongholdLayout.Piece piece) {
-        switch (piece.kind) {
+        switch ((PieceKind) piece.kind) {
             case CROSSING:
                 crossing(piece);
                 break;
@@ -365,7 +365,7 @@ public class StrongholdBuilder {
 
     private void crossing(StrongholdLayout.Piece piece) {
         int y = piece.floorY;
-        int width = piece.kind.width;
+        int width = piece.kind.width();
         if (piece.depth == 0) {
             // The start is laid out around its centre: four pillars and torches, the middle stays open.
             StructureBoundingBox b = piece.box;
@@ -392,7 +392,7 @@ public class StrongholdBuilder {
 
     private void shelvesAlongWalls(StrongholdLayout.Piece piece, int fromY, int toY) {
         int length = lengthOf(piece);
-        int width = piece.kind.width;
+        int width = piece.kind.width();
         for (int a = 1; a <= length - 2; a++) {
             for (int c = 1; c <= width - 2; c++) {
                 boolean face = a == 1 || a == length - 2 || c == 1 || c == width - 2;
@@ -409,7 +409,7 @@ public class StrongholdBuilder {
     private void grandLibrary(StrongholdLayout.Piece piece) {
         int y = piece.floorY;
         int length = lengthOf(piece);
-        int width = piece.kind.width;
+        int width = piece.kind.width();
         shelvesAlongWalls(piece, y + 1, y + 4);
         // Aisles of shelves on the ground floor, a gap in the middle of each row.
         for (int c = 4; c <= width - 5; c += 3) {
@@ -459,17 +459,17 @@ public class StrongholdBuilder {
         int y = piece.floorY;
         shelvesAlongWalls(piece, y + 1, y + 3);
         int mid = lengthOf(piece) / 2;
-        set(at(piece, mid, piece.kind.width / 2, y + 1), Blocks.CRAFTING_TABLE.getDefaultState());
-        set(at(piece, mid - 1, piece.kind.width / 2, y + 1), stair(piece.facing));
-        StructurePieces.chest(w, rec, at(piece, mid + 1, piece.kind.width / 2, y + 1), piece.facing.getOpposite(),
+        set(at(piece, mid, piece.kind.width() / 2, y + 1), Blocks.CRAFTING_TABLE.getDefaultState());
+        set(at(piece, mid - 1, piece.kind.width() / 2, y + 1), stair(piece.facing));
+        StructurePieces.chest(w, rec, at(piece, mid + 1, piece.kind.width() / 2, y + 1), piece.facing.getOpposite(),
                 LootTableList.CHESTS_STRONGHOLD_LIBRARY, rand.nextLong());
-        set(at(piece, mid, piece.kind.width / 2, piece.box.maxY - 1), Blocks.GLOWSTONE.getDefaultState());
+        set(at(piece, mid, piece.kind.width() / 2, piece.box.maxY - 1), Blocks.GLOWSTONE.getDefaultState());
     }
 
     private void prison(StrongholdLayout.Piece piece) {
         int y = piece.floorY;
         int length = lengthOf(piece);
-        int width = piece.kind.width;
+        int width = piece.kind.width();
         for (int side = 0; side < 2; side++) {
             int bars = side == 0 ? 3 : width - 4;
             int back = side == 0 ? 1 : width - 2;
@@ -497,7 +497,7 @@ public class StrongholdBuilder {
     private void armoury(StrongholdLayout.Piece piece) {
         int y = piece.floorY;
         int length = lengthOf(piece);
-        int width = piece.kind.width;
+        int width = piece.kind.width();
         set(at(piece, length / 2, width / 2, y + 1), Blocks.ANVIL.getDefaultState());
         for (int a = 2; a <= length - 3; a += 2) {
             BlockPos standPos = at(piece, a, 1, y + 1);
@@ -526,7 +526,7 @@ public class StrongholdBuilder {
     private void treasure(StrongholdLayout.Piece piece) {
         int y = piece.floorY;
         int length = lengthOf(piece);
-        int width = piece.kind.width;
+        int width = piece.kind.width();
         int c0 = width / 2;
         for (int c = c0 - 1; c <= c0 + 1; c++) {
             for (int fy = y + 1; fy <= y + 3; fy++) {
@@ -559,7 +559,7 @@ public class StrongholdBuilder {
     private void messHall(StrongholdLayout.Piece piece) {
         int y = piece.floorY;
         int length = lengthOf(piece);
-        int width = piece.kind.width;
+        int width = piece.kind.width();
         for (int c : new int[]{3, width - 4}) {
             for (int a = 3; a <= length - 4; a++) {
                 if (a == length / 2) {
@@ -581,7 +581,7 @@ public class StrongholdBuilder {
     private void storeroom(StrongholdLayout.Piece piece) {
         int y = piece.floorY;
         int length = lengthOf(piece);
-        int width = piece.kind.width;
+        int width = piece.kind.width();
         StructurePieces.chest(w, rec, at(piece, length - 2, 1, y + 1), piece.facing.getOpposite(),
                 LootTableList.CHESTS_STRONGHOLD_CORRIDOR, rand.nextLong());
         vase(at(piece, length - 2, width - 2, y + 1));
@@ -634,7 +634,7 @@ public class StrongholdBuilder {
     private void cistern(StrongholdLayout.Piece piece) {
         int y = piece.floorY;
         int length = lengthOf(piece);
-        int width = piece.kind.width;
+        int width = piece.kind.width();
         for (int a = 1; a <= length - 2; a++) {
             for (int c = 1; c <= width - 2; c++) {
                 boolean pool = a >= 3 && a <= length - 4 && c >= 3 && c <= width - 4;
@@ -667,7 +667,7 @@ public class StrongholdBuilder {
     private void pillaredHall(StrongholdLayout.Piece piece) {
         int y = piece.floorY;
         int length = lengthOf(piece);
-        int width = piece.kind.width;
+        int width = piece.kind.width();
         for (int c : new int[]{3, width - 4}) {
             for (int a = 2; a <= length - 3; a += 3) {
                 for (int fy = y + 1; fy < piece.box.maxY; fy++) {
@@ -684,7 +684,7 @@ public class StrongholdBuilder {
     private void crypt(StrongholdLayout.Piece piece) {
         int y = piece.floorY;
         int length = lengthOf(piece);
-        int width = piece.kind.width;
+        int width = piece.kind.width();
         for (int c : new int[]{2, width - 3}) {
             for (int a = 2; a + 1 <= length - 3; a += 3) {
                 for (int da = 0; da <= 1; da++) {

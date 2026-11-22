@@ -7,7 +7,6 @@ import net.minecraft.world.gen.structure.StructureBoundingBox;
 import java.util.ArrayList;
 import java.util.Collections;
 import java.util.Comparator;
-import java.util.EnumMap;
 import java.util.List;
 import java.util.Map;
 import java.util.Random;
@@ -26,7 +25,6 @@ public final class StrongholdLayout {
     public static final int STAIR_RISE = 6;
     private static final int LEVEL_SPAN = 12;
     private static final int ATTEMPTS = 12;
-    private static final int MIN_PIECES = 60;
 
     /** An opening in a piece's wall: {@code pos} is the wall block at walk level in the middle of it. */
     public static final class Doorway {
@@ -42,7 +40,7 @@ public final class StrongholdLayout {
     }
 
     public static final class Piece {
-        public final PieceKind kind;
+        public final PieceSpec kind;
         public final StructureBoundingBox box;
         /** Direction of travel from the entry doorway (for the start: NORTH). */
         public final EnumFacing facing;
@@ -53,7 +51,7 @@ public final class StrongholdLayout {
         public final int length;
         public final List<Doorway> doors = new ArrayList<>();
 
-        Piece(PieceKind kind, StructureBoundingBox box, EnumFacing facing, int depth, int floorY, int rise, int length) {
+        Piece(PieceSpec kind, StructureBoundingBox box, EnumFacing facing, int depth, int floorY, int rise, int length) {
             this.kind = kind;
             this.box = box;
             this.facing = facing;
@@ -69,11 +67,13 @@ public final class StrongholdLayout {
     private final int baseFloor;
     private final Random rand;
     private final List<Piece> pieces = new ArrayList<>();
-    private final Map<PieceKind, Integer> counts = new EnumMap<>(PieceKind.class);
+    private final Map<PieceSpec, Integer> counts = new java.util.HashMap<>();
+    private final Catalogue catalogue;
     private Piece start;
     private Piece portal;
 
-    private StrongholdLayout(long seed, int centreX, int floorY, int centreZ) {
+    private StrongholdLayout(long seed, int centreX, int floorY, int centreZ, Catalogue catalogue) {
+        this.catalogue = catalogue;
         this.rand = new Random(seed);
         this.centreX = centreX;
         this.centreZ = centreZ;
@@ -82,16 +82,22 @@ public final class StrongholdLayout {
 
     /** @param floorY y of the floor block of the main level (the start crossing). */
     public static StrongholdLayout generate(long seed, int centreX, int floorY, int centreZ) {
+        return generate(seed, centreX, floorY, centreZ, Catalogue.STRONGHOLD);
+    }
+
+    /** Grows a layout from any catalogue (stronghold, temple underground). */
+    public static StrongholdLayout generate(long seed, int centreX, int floorY, int centreZ, Catalogue catalogue) {
         // A growth whose branches all close early is redone with the next seed; the largest layout
         // with a portal room wins if none reaches the minimum size.
         StrongholdLayout best = null;
         for (int attempt = 0; attempt < ATTEMPTS; attempt++) {
-            StrongholdLayout layout = new StrongholdLayout(seed * 31L + attempt, centreX, Math.max(MIN_FLOOR_Y, floorY), centreZ);
+            StrongholdLayout layout = new StrongholdLayout(seed * 31L + attempt, centreX, Math.max(MIN_FLOOR_Y, floorY), centreZ,
+                    catalogue);
             layout.grow();
             if (!layout.placePortalRoom()) {
                 continue;
             }
-            if (layout.pieces.size() >= MIN_PIECES) {
+            if (layout.pieces.size() >= catalogue.minPieces) {
                 return layout;
             }
             if (best == null || layout.pieces.size() > best.pieces.size()) {
@@ -107,6 +113,11 @@ public final class StrongholdLayout {
 
     public Piece start() {
         return start;
+    }
+
+    /** The goal room: the portal room of a stronghold, the tomb of a temple. */
+    public Piece goal() {
+        return portal;
     }
 
     public Piece portalRoom() {
@@ -126,10 +137,11 @@ public final class StrongholdLayout {
     }
 
     private void grow() {
-        int half = PieceKind.CROSSING.width / 2;
-        start = new Piece(PieceKind.CROSSING, new StructureBoundingBox(centreX - half, baseFloor, centreZ - half,
-                centreX + half, baseFloor + PieceKind.CROSSING.height - 1, centreZ + half), EnumFacing.NORTH, 0, baseFloor, 0,
-                PieceKind.CROSSING.length);
+        PieceSpec startKind = catalogue.start;
+        int half = startKind.width() / 2;
+        start = new Piece(startKind, new StructureBoundingBox(centreX - half, baseFloor, centreZ - half,
+                centreX + half, baseFloor + startKind.height() - 1, centreZ + half), EnumFacing.NORTH, 0, baseFloor, 0,
+                startKind.length());
         for (EnumFacing side : EnumFacing.HORIZONTALS) {
             start.doors.add(new Doorway(new BlockPos(centreX + side.getXOffset() * half, baseFloor + 1,
                     centreZ + side.getZOffset() * half), side));
@@ -139,7 +151,7 @@ public final class StrongholdLayout {
         for (Doorway door : start.doors) {
             queue.add(new Open(start, door));
         }
-        int target = 60 + rand.nextInt(31);
+        int target = catalogue.minPieces + rand.nextInt(catalogue.maxPieces - catalogue.minPieces + 1);
         while (!queue.isEmpty() && pieces.size() < target - 1) {
             Open open = queue.remove(rand.nextInt(Math.min(3, queue.size())));
             Piece placed = attach(open, candidates(open.piece.depth + 1));
@@ -158,22 +170,22 @@ public final class StrongholdLayout {
     }
 
     /** Weighted shuffle of the kinds allowed at {@code depth}. */
-    private List<PieceKind> candidates(int depth) {
-        List<PieceKind> bag = new ArrayList<>();
-        for (PieceKind kind : PieceKind.values()) {
-            if (kind.weight == 0 || counts.getOrDefault(kind, 0) >= kind.limit || depth < kind.minDepth) {
+    private List<PieceSpec> candidates(int depth) {
+        List<PieceSpec> bag = new ArrayList<>();
+        for (PieceSpec kind : catalogue.kinds) {
+            if (kind.weight() == 0 || counts.getOrDefault(kind, 0) >= kind.limit() || depth < kind.minDepth()) {
                 continue;
             }
-            if (depth >= MAX_DEPTH && kind.hasExits()) {
+            if (depth >= catalogue.maxDepth && kind.hasExits()) {
                 continue;
             }
-            for (int i = 0; i < kind.weight; i++) {
+            for (int i = 0; i < kind.weight(); i++) {
                 bag.add(kind);
             }
         }
         Collections.shuffle(bag, rand);
-        List<PieceKind> order = new ArrayList<>();
-        for (PieceKind kind : bag) {
+        List<PieceSpec> order = new ArrayList<>();
+        for (PieceSpec kind : bag) {
             if (!order.contains(kind)) {
                 order.add(kind);
             }
@@ -181,10 +193,10 @@ public final class StrongholdLayout {
         return order;
     }
 
-    private Piece attach(Open open, List<PieceKind> kinds) {
-        for (PieceKind kind : kinds) {
+    private Piece attach(Open open, List<PieceSpec> kinds) {
+        for (PieceSpec kind : kinds) {
             // A corridor that does not fit is tried shorter before giving up on it.
-            int[] lengths = kind == PieceKind.CORRIDOR ? new int[]{5 + rand.nextInt(10), 7, 5} : new int[]{0};
+            int[] lengths = kind.isCorridor() ? new int[]{5 + rand.nextInt(10), 7, 5} : new int[]{0};
             for (int length : lengths) {
                 Piece piece = build(kind, open.door, open.piece.depth + 1, length);
                 if (piece != null && fits(piece.box)) {
@@ -217,10 +229,10 @@ public final class StrongholdLayout {
     private boolean placePortalRoom(List<Open> free) {
         free.removeIf(o -> o.door.used);
         List<Open> sorted = new ArrayList<>(free);
-        sorted.removeIf(o -> o.piece.depth + 1 < PieceKind.PORTAL_ROOM.minDepth);
+        sorted.removeIf(o -> o.piece.depth + 1 < catalogue.goal.minDepth());
         sorted.sort(Comparator.comparingInt((Open o) -> -o.piece.depth));
         for (Open open : sorted) {
-            Piece room = build(PieceKind.PORTAL_ROOM, open.door, open.piece.depth + 1, 0);
+            Piece room = build(catalogue.goal, open.door, open.piece.depth + 1, 0);
             if (room != null && fits(room.box)) {
                 open.door.used = true;
                 add(room);
@@ -238,8 +250,9 @@ public final class StrongholdLayout {
     }
 
     private boolean fits(StructureBoundingBox box) {
-        if (box.minX < centreX - RADIUS || box.maxX > centreX + RADIUS || box.minZ < centreZ - RADIUS
-                || box.maxZ > centreZ + RADIUS || box.minY < MIN_FLOOR_Y) {
+        int radius = catalogue.radius;
+        if (box.minX < centreX - radius || box.maxX > centreX + radius || box.minZ < centreZ - radius
+                || box.maxZ > centreZ + radius || box.minY < MIN_FLOOR_Y) {
             return false;
         }
         for (Piece other : pieces) {
@@ -254,24 +267,24 @@ public final class StrongholdLayout {
      * Lays out a piece whose entry doorway is the block beyond {@code from}. Local frame: {@code a}
      * along the travel direction (0 = entry wall), {@code c} across (0 = left wall).
      */
-    private Piece build(PieceKind kind, Doorway from, int depth, int corridorLength) {
+    private Piece build(PieceSpec kind, Doorway from, int depth, int corridorLength) {
         EnumFacing f = from.out;
         EnumFacing right = f.rotateY();
         BlockPos entry = from.pos.offset(f);
         int floorY = entry.getY() - 1;
-        int length = kind.length > 0 ? kind.length : corridorLength;
-        int width = kind.width;
+        int length = kind.length() > 0 ? kind.length() : corridorLength;
+        int width = kind.width();
         int c0 = width / 2;
-        int rise = kind == PieceKind.STAIRS_UP ? STAIR_RISE : kind == PieceKind.STAIRS_DOWN ? -STAIR_RISE : 0;
+        int rise = kind.rise();
         int endFloor = floorY + rise;
         if (rise != 0 && (endFloor < MIN_FLOOR_Y || Math.abs(endFloor - baseFloor) > LEVEL_SPAN)) {
             return null;
         }
-        int height = rise != 0 ? PieceKind.CORRIDOR.height : kind.height;
+        int height = rise != 0 ? PieceKind.CORRIDOR.height : kind.height();
         BlockPos p0 = local(entry, f, right, 0, -c0);
         BlockPos p1 = local(entry, f, right, length - 1, width - 1 - c0);
         // The cistern's pool sinks two blocks below its floor: its box includes them.
-        int sink = kind == PieceKind.CISTERN ? 2 : 0;
+        int sink = kind.sink();
         StructureBoundingBox box = new StructureBoundingBox(Math.min(p0.getX(), p1.getX()), Math.min(floorY, endFloor) - sink,
                 Math.min(p0.getZ(), p1.getZ()), Math.max(p0.getX(), p1.getX()), Math.max(floorY, endFloor) + height - 1,
                 Math.max(p0.getZ(), p1.getZ()));
@@ -279,7 +292,7 @@ public final class StrongholdLayout {
         Doorway back = new Doorway(entry, f.getOpposite());
         back.used = true;
         piece.doors.add(back);
-        String exits = kind.exits;
+        String exits = kind.exits();
         if ("T".equals(exits)) {
             exits = rand.nextBoolean() ? "L" : "R";
         }
@@ -290,11 +303,11 @@ public final class StrongholdLayout {
                     piece.doors.add(new Doorway(local(entry, f, right, length - 1, 0).up(rise), f));
                     break;
                 case 'L':
-                    piece.doors.add(new Doorway(local(entry, f, right, kind == PieceKind.TURN ? length / 2 : mid, -c0),
+                    piece.doors.add(new Doorway(local(entry, f, right, kind.isTurn() ? length / 2 : mid, -c0),
                             f.rotateYCCW()));
                     break;
                 case 'R':
-                    piece.doors.add(new Doorway(local(entry, f, right, kind == PieceKind.TURN ? length / 2 : mid, width - 1 - c0),
+                    piece.doors.add(new Doorway(local(entry, f, right, kind.isTurn() ? length / 2 : mid, width - 1 - c0),
                             right));
                     break;
                 default:
