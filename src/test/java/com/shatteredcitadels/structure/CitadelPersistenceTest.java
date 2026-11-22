@@ -213,4 +213,21 @@ public class CitadelPersistenceTest {
         sanctum.setBossDefeated(true);
         assertTrue(c.isConqueredAt(new BlockPos(0, 40, 0)));
     }
+
+    /** Crypts from worlds made before 1.4.0 have no parts either; they must not pass for buried fragments. */
+    @Test
+    public void oldCryptsAreNotBuriedFragments() {
+        CitadelInstance oldCrypt = new CitadelInstance(UUID.randomUUID(), "Old", StructureType.CRYPT, CitadelArchetype.KEEPERS_CITADEL, 0,
+                new BlockPos(0, 40, 0), new StructureBoundingBox(0, 40, 0, 20, 74, 20));
+        org.junit.Assert.assertFalse(oldCrypt.isBuriedFragment());
+        org.junit.Assert.assertFalse(CitadelInstance.readFromNBT(oldCrypt.writeToNBT()).isBuriedFragment());
+        // A fragment saved by 1.6.0/1.6.1 (no flag yet): one low level, no parts.
+        CitadelInstance legacyFragment = new CitadelInstance(UUID.randomUUID(), "Frag", StructureType.CRYPT,
+                CitadelArchetype.KEEPERS_CITADEL, 0, new BlockPos(8, 30, 8), new StructureBoundingBox(-11, 29, -11, 27, 38, 27));
+        assertTrue(legacyFragment.isBuriedFragment());
+        CitadelInstance flagged = new CitadelInstance(UUID.randomUUID(), "Frag", StructureType.CRYPT,
+                CitadelArchetype.KEEPERS_CITADEL, 0, new BlockPos(8, 30, 8), new StructureBoundingBox(-11, 5, -11, 27, 90, 27));
+        flagged.setBuriedFragment(true);
+        assertTrue(CitadelInstance.readFromNBT(flagged.writeToNBT()).isBuriedFragment());
+    }
 }

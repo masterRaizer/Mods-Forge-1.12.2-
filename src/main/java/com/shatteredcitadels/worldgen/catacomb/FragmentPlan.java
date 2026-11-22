@@ -57,6 +57,7 @@ public final class FragmentPlan implements StructurePlan {
         CitadelInstance record = new CitadelInstance(MathHelper.getRandomUUID(random),
                 CitadelNameGenerator.generate("crypt", random), StructureType.CRYPT, archetype, dimension,
                 new BlockPos(centreX, levelY, centreZ), footprint());
+        record.setBuriedFragment(true);
         CatacombBuilder builder = new CatacombBuilder(writer, record, ModPaletteRegistry.forCitadel(archetype, random.nextLong()),
                 random, 1);
         return builder.buildFragment(centreX, centreZ, levelY, false, levelY) == 0 ? null : record;

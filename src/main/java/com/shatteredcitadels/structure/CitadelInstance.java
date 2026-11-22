@@ -44,6 +44,8 @@ public final class CitadelInstance {
     private final java.util.Set<Long> playerPlaced = new java.util.HashSet<>();
     private final List<TaggedRoom> rooms = new ArrayList<>();
     private boolean hasCrypt;
+    /** A buried catacomb fragment: never blocks a structure (NBT "buried", set since 1.6.2). */
+    private boolean buriedFragment;
 
     public CitadelInstance(UUID citadelId, String displayName, StructureType type, CitadelArchetype archetype,
                            int dimension, BlockPos origin, StructureBoundingBox totalBounds) {
@@ -97,10 +99,22 @@ public final class CitadelInstance {
 
     public List<StructureBoundingBox> getParts() { return Collections.unmodifiableList(parts); }
 
-    /** A buried catacomb fragment (no entrance, no protected parts): it never blocks a structure. */
+    /**
+     * A buried catacomb fragment: it never blocks a structure. Fragments saved by 1.6.0/1.6.1 carry
+     * no flag; they are the only crypts without parts that span a single low level (crypts from
+     * worlds before 1.4.0 have no parts either, but reach up to the surface).
+     */
     public boolean isBuriedFragment() {
-        return type == StructureType.CRYPT && parts.isEmpty();
+        return buriedFragment || type == StructureType.CRYPT && parts.isEmpty()
+                && totalBounds.maxY - totalBounds.minY <= LEGACY_FRAGMENT_MAX_HEIGHT;
     }
+
+    public void setBuriedFragment(boolean buriedFragment) {
+        this.buriedFragment = buriedFragment;
+    }
+
+    /** Height of a fragment's bounds: one level (floor to raised ceilings) plus a margin. */
+    private static final int LEGACY_FRAGMENT_MAX_HEIGHT = 12;
 
     /** @return true if the position is inside a built part (or anywhere, for records without parts). */
     public boolean isInPart(BlockPos pos) {
@@ -346,6 +360,9 @@ public final class CitadelInstance {
         }
         tag.setTag("rooms", roomList);
         tag.setBoolean("crypt", hasCrypt);
+        if (buriedFragment) {
+            tag.setBoolean("buried", true);
+        }
         return tag;
     }
 
@@ -405,6 +422,7 @@ public final class CitadelInstance {
             instance.addRoom(readBox(r.getIntArray("box")), RoomTag.byName(r.getString("tag")), r.getInteger("floor"));
         }
         instance.hasCrypt = tag.getBoolean("crypt");
+        instance.buriedFragment = tag.getBoolean("buried");
         return instance;
     }
 
