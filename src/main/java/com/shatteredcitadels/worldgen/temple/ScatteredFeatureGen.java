@@ -35,11 +35,13 @@ public class ScatteredFeatureGen extends MapGenScatteredFeature {
     /** Vanilla sites, except the desert ones: those get our temple. */
     @Override
     public boolean canSpawnStructureAtCoords(int chunkX, int chunkZ) {
-        return super.canSpawnStructureAtCoords(chunkX, chunkZ) && !isOurs(siteBiome(chunkX, chunkZ));
+        // Only the overworld gets our temple; other dimensions with an overworld generator keep the vanilla one.
+        return super.canSpawnStructureAtCoords(chunkX, chunkZ)
+                && (world.provider.getDimension() != 0 || !isOurs(siteBiome(chunkX, chunkZ)));
     }
 
     private boolean isOurSite(int chunkX, int chunkZ) {
-        return super.canSpawnStructureAtCoords(chunkX, chunkZ) && isOurs(siteBiome(chunkX, chunkZ));
+        return world.provider.getDimension() == 0 && super.canSpawnStructureAtCoords(chunkX, chunkZ) && isOurs(siteBiome(chunkX, chunkZ));
     }
 
     /** @return true if a vanilla temple started before the mod (older world) overlaps the box. */

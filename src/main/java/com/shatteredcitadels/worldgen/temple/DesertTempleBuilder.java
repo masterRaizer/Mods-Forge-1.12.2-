@@ -47,6 +47,16 @@ public class DesertTempleBuilder extends StrongholdBuilder {
     }
 
     @Override
+    protected IBlockState rubble() {
+        return rand.nextBoolean() ? Blocks.SAND.getDefaultState() : sand.wall(rand);
+    }
+
+    @Override
+    protected IBlockState walledUpDoor() {
+        return sand.wall(rand);
+    }
+
+    @Override
     public DesertTempleBuilder withMobs(ResourceLocation[] mobs) {
         super.withMobs(mobs);
         return this;
@@ -129,7 +139,7 @@ public class DesertTempleBuilder extends StrongholdBuilder {
             }
         }
         set(at(piece, piece.length - 2, width / 2, y + 1), Blocks.SKULL.getDefaultState().withProperty(BlockSkull.FACING, EnumFacing.UP));
-        spawner(at(piece, piece.length / 2, width / 2, y + 1), DEFAULT_MOBS[0]);
+        spawner(at(piece, piece.length / 2, width / 2, y + 1), mob());
         vase(at(piece, 1, 1, y + 1));
         vase(at(piece, 1, width - 2, y + 1));
     }
@@ -226,7 +236,7 @@ public class DesertTempleBuilder extends StrongholdBuilder {
         BlockPos chest = at(piece, sa, c0, y + 2);
         if (!pharaoh) {
             StructurePieces.chest(w, rec, chest, piece.facing.getOpposite(), LootTableList.CHESTS_DESERT_PYRAMID, rand.nextLong());
-            StructurePieces.chest(w, rec, at(piece, sa, c0 - 3, y + 1), piece.facing.getOpposite(),
+            StructurePieces.chest(w, rec, at(piece, sa, c0 - 2, y + 1), piece.facing.getOpposite(),
                     LootTableList.CHESTS_DESERT_PYRAMID, rand.nextLong());
             return;
         }

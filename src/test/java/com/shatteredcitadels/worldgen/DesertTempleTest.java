@@ -145,4 +145,52 @@ public class DesertTempleTest {
         assertEquals(1, com.shatteredcitadels.boss.BossFactory.candidateOrder(null,
                 java.util.Arrays.asList(new net.minecraft.util.ResourceLocation("minecraft", "zombie"))).size());
     }
+
+    /** A foundation fill runs at write time down to the first solid block: it must never pour into a planned opening. */
+    @Test
+    public void foundationFillsNeverPourIntoOpenings() {
+        for (long seed = 1; seed <= 4; seed++) {
+            // The same plan twice: one copy to query (sealing drops the block map), one sealed for its column ops.
+            BlockWriter writer = new BlockWriter(new Blueprint());
+            new com.shatteredcitadels.worldgen.temple.DesertTemplePlan(300, 66, -200, seed, 0, seed % 2 == 0).build(writer);
+            Blueprint blueprint = new Blueprint();
+            new com.shatteredcitadels.worldgen.temple.DesertTemplePlan(300, 66, -200, seed, 0, seed % 2 == 0).build(new BlockWriter(blueprint));
+            blueprint.seal();
+            for (Blueprint.ChunkPart part : blueprint.parts().values()) {
+                for (Blueprint.ColumnOp op : part.fills) {
+                    if (op.kind != Blueprint.ColumnOp.FILL_DOWN) {
+                        continue;
+                    }
+                    for (int d = 0; d < op.maxDepth; d++) {
+                        int y = op.y - d;
+                        if (writer.isPlanned(op.x, y, op.z) && writer.isSolid(op.x, y, op.z)) {
+                            break;
+                        }
+                        assertFalse("seed " + seed + ": fill at " + op.x + "," + op.z + " pours into planned opening at y " + y,
+                                writer.isPlanned(op.x, y, op.z));
+                    }
+                }
+            }
+        }
+    }
+
+    /** No tomb chest sits under a pillar (a chest with a solid block on top cannot be opened). */
+    @Test
+    public void tombChestsCanOpen() {
+        for (long seed = 1; seed <= 20; seed++) {
+            StrongholdLayout layout = layout(seed);
+            BlockWriter writer = new BlockWriter(new Blueprint());
+            new DesertTempleBuilder(writer, record(), new Random(seed), false).build(layout);
+            StructureBoundingBox b = layout.goal().box;
+            for (int x = b.minX; x <= b.maxX; x++) {
+                for (int y = b.minY; y <= b.maxY; y++) {
+                    for (int z = b.minZ; z <= b.maxZ; z++) {
+                        if (writer.get(x, y, z).getBlock() == net.minecraft.init.Blocks.CHEST) {
+                            assertFalse("seed " + seed + ": chest at " + x + "," + y + "," + z + " is covered", writer.isSolid(x, y + 1, z));
+                        }
+                    }
+                }
+            }
+        }
+    }
 }

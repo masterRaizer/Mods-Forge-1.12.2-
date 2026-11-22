@@ -147,14 +147,24 @@ public class StrongholdBuilder {
                     if (door.used) {
                         w.set(p, air);
                     } else if (collapsed) {
-                        w.set(p, rand.nextBoolean() ? Blocks.GRAVEL.getDefaultState() : Blocks.COBBLESTONE.getDefaultState());
+                        w.set(p, rubble());
                     } else {
-                        w.set(p, Blocks.STONEBRICK.getDefaultState().withProperty(net.minecraft.block.BlockStoneBrick.VARIANT,
-                                net.minecraft.block.BlockStoneBrick.EnumType.MOSSY));
+                        w.set(p, walledUpDoor());
                     }
                 }
             }
         }
+    }
+
+    /** Fill of a collapsed unused doorway. */
+    protected IBlockState rubble() {
+        return rand.nextBoolean() ? Blocks.GRAVEL.getDefaultState() : Blocks.COBBLESTONE.getDefaultState();
+    }
+
+    /** Fill of a walled-up unused doorway. */
+    protected IBlockState walledUpDoor() {
+        return Blocks.STONEBRICK.getDefaultState().withProperty(net.minecraft.block.BlockStoneBrick.VARIANT,
+                net.minecraft.block.BlockStoneBrick.EnumType.MOSSY);
     }
 
     // ------------------------------------------------------------------ corridors

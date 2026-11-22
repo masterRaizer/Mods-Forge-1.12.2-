@@ -40,7 +40,10 @@ final class Pyramid {
             for (int dz = -half; dz <= half; dz++) {
                 boolean ring = Math.max(Math.abs(dx), Math.abs(dz)) == 3;
                 w.set(cx + dx, sy, cz + dz, ring ? ((dx + dz) % 2 == 0 ? pal.orangeTerracotta() : pal.blueTerracotta()) : pal.floor(rand));
-                w.fillDown(cx + dx, cz + dz, sy - 1, pal.wall(rand), 12);
+                // The 5x5 core is the spiral shaft down to the temple: no foundation there.
+                if (Math.abs(dx) > 2 || Math.abs(dz) > 2) {
+                    w.fillDown(cx + dx, cz + dz, sy - 1, pal.wall(rand), 12);
+                }
             }
         }
         // Stepped shell; everything inside it is the hall.
