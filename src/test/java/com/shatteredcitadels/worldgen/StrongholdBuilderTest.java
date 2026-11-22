@@ -146,7 +146,7 @@ public class StrongholdBuilderTest {
             StrongholdLayout layout = StrongholdLayout.generate(seed, 0, 30, 0);
             BlockWriter writer = built(layout, seed);
             for (StrongholdLayout.Piece piece : layout.pieces()) {
-                switch (piece.kind) {
+                switch ((com.shatteredcitadels.worldgen.stronghold.PieceKind) piece.kind) {
                     case SMALL_LIBRARY:
                     case GRAND_LIBRARY:
                         libraries++;
