@@ -146,7 +146,7 @@ public final class CommandCitadel extends CommandBase {
         if (plan == null) {
             throw new CommandException("No room for that structure here (build limit or bedrock)");
         }
-        if (!CitadelWorldGenerator.isAreaFree(world, plan.footprint())) {
+        if (!CitadelWorldGenerator.isAreaFree(world, plan.footprint(), "fragment".equals(kind))) {
             throw new CommandException("Another structure is too close; move further away");
         }
         StructureJobs.get(world).submit(plan);
@@ -284,7 +284,7 @@ public final class CommandCitadel extends CommandBase {
         CitadelWorldSavedData data = CitadelWorldSavedData.get(world);
         for (int dx = 0; dx <= 1; dx++) {
             for (int dz = 0; dz <= 1; dz++) {
-                if (data.isChunkOccupied(chunkX + dx, chunkZ + dz)) {
+                if (data.isChunkOccupiedByStructure(chunkX + dx, chunkZ + dz)) {
                     throw new CommandException("Chunk " + (chunkX + dx) + "," + (chunkZ + dz)
                             + " already holds a citadel or dungeon; move at least two chunks away");
                 }

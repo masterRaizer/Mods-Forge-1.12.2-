@@ -97,6 +97,11 @@ public final class CitadelInstance {
 
     public List<StructureBoundingBox> getParts() { return Collections.unmodifiableList(parts); }
 
+    /** A buried catacomb fragment (no entrance, no protected parts): it never blocks a structure. */
+    public boolean isBuriedFragment() {
+        return type == StructureType.CRYPT && parts.isEmpty();
+    }
+
     /** @return true if the position is inside a built part (or anywhere, for records without parts). */
     public boolean isInPart(BlockPos pos) {
         if (parts.isEmpty()) {

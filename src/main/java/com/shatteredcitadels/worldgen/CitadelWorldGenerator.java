@@ -115,15 +115,24 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
         }
     }
 
-    /** @return true if no registered or queued structure overlaps the footprint. */
+    /**
+     * @return true if no registered or queued structure overlaps the footprint. Buried catacomb
+     * fragments do not count: a structure takes their place.
+     */
     public static boolean isAreaFree(World world, StructureBoundingBox footprint) {
-        if (StructureJobs.get(world).isReserved(footprint)) {
+        return isAreaFree(world, footprint, false);
+    }
+
+    /** @param countFragments true for placing a fragment, which must not overlap anything at all */
+    public static boolean isAreaFree(World world, StructureBoundingBox footprint, boolean countFragments) {
+        StructureJobs jobs = StructureJobs.get(world);
+        if (countFragments ? jobs.isReserved(footprint) : jobs.isReservedForStructures(footprint)) {
             return false;
         }
         CitadelWorldSavedData data = CitadelWorldSavedData.get(world);
         for (int cx = footprint.minX >> 4; cx <= footprint.maxX >> 4; cx++) {
             for (int cz = footprint.minZ >> 4; cz <= footprint.maxZ >> 4; cz++) {
-                if (data.isChunkOccupied(cx, cz)) {
+                if (countFragments ? data.isChunkOccupied(cx, cz) : data.isChunkOccupiedByStructure(cx, cz)) {
                     return false;
                 }
             }

@@ -5,6 +5,7 @@ import com.shatteredcitadels.ShatteredCitadelsMod;
 import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.structure.CitadelInstance;
 import com.shatteredcitadels.structure.CitadelWorldSavedData;
+import com.shatteredcitadels.worldgen.catacomb.FragmentPlan;
 import it.unimi.dsi.fastutil.longs.LongOpenHashSet;
 import net.minecraft.block.Block;
 import net.minecraft.block.material.Material;
@@ -88,11 +89,41 @@ public final class StructureJobs extends WorldSavedData {
 
     /** Queues a planned structure; it is built in the background and written over the next ticks. */
     public void submit(StructurePlan plan) {
+        if (!(plan instanceof FragmentPlan)) {
+            dropFragmentsUnder(plan.footprint());
+        }
         Job job = new Job(plan, null, new LongOpenHashSet());
         jobs.add(job);
         startBuild(job);
         markDirty();
         ShatteredCitadelsMod.LOGGER.info("Planned {}", plan.describe());
+    }
+
+    /**
+     * A structure takes precedence over buried fragments: queued fragments under it are dropped
+     * (whatever they already wrote is overwritten by the structure).
+     */
+    private void dropFragmentsUnder(StructureBoundingBox box) {
+        for (Iterator<Job> it = jobs.iterator(); it.hasNext(); ) {
+            Job job = it.next();
+            if (job.plan instanceof FragmentPlan
+                    && job.plan.footprint().intersectsWith(box.minX, box.minZ, box.maxX, box.maxZ)) {
+                it.remove();
+                dropCurrent(job);
+                ShatteredCitadelsMod.LOGGER.info("Dropped {}: a structure takes its place", job.plan.describe());
+            }
+        }
+    }
+
+    /** @return true if a queued structure other than a buried fragment reserves this area. */
+    public boolean isReservedForStructures(StructureBoundingBox box) {
+        for (Job job : jobs) {
+            if (!(job.plan instanceof FragmentPlan)
+                    && job.plan.footprint().intersectsWith(box.minX, box.minZ, box.maxX, box.maxZ)) {
+                return true;
+            }
+        }
+        return false;
     }
 
     /** @return true if a queued (not yet registered or unfinished) structure reserves this area. */
@@ -110,7 +141,7 @@ public final class StructureJobs extends WorldSavedData {
         long limit = (long) minDistanceChunks * minDistanceChunks;
         for (Job job : jobs) {
             // Underground pieces are not structure sites; overlap is still caught by isReserved.
-            if (job.plan instanceof CryptPlan || job.plan instanceof com.shatteredcitadels.worldgen.catacomb.FragmentPlan) {
+            if (job.plan instanceof CryptPlan || job.plan instanceof FragmentPlan) {
                 continue;
             }
             StructureBoundingBox box = job.plan.footprint();

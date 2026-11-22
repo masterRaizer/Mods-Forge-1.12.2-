@@ -258,4 +258,23 @@ public class BlueprintTest {
                 && CitadelWorldGenerator.isNearSiteCandidate(99L, site[0] + 20, site[1] + 20, 36, 12)
                 && CitadelWorldGenerator.isNearSiteCandidate(99L, site[0] - 20, site[1] - 20, 36, 12));
     }
+
+    /** A structure always wins over a buried fragment: fragments never block it, and queued ones are dropped. */
+    @Test
+    public void structuresTakePrecedenceOverFragments() {
+        StructureJobs jobs = new StructureJobs("test_jobs_precedence");
+        jobs.submit(new com.shatteredcitadels.worldgen.catacomb.FragmentPlan(8, 8, 30, 1L, 0));
+        StructureBoundingBox area = new StructureBoundingBox(-40, 5, -40, 60, 200, 60);
+        assertFalse(jobs.isReservedForStructures(area));
+        assertTrue(jobs.isReserved(area));
+        jobs.submit(new CitadelPlan(0, 0, 21, 70, 6, 12, false, CitadelArchetype.KEEPERS_CITADEL, 120, 0, 9L, 0, false, 0));
+        assertEquals("the fragment under the tower was dropped", 1, jobs.pendingJobs());
+
+        CitadelInstance fragment = new com.shatteredcitadels.worldgen.catacomb.FragmentPlan(8, 8, 30, 1L, 0)
+                .build(new BlockWriter(new Blueprint()));
+        assertTrue(fragment.isBuriedFragment());
+        CitadelInstance crypt = new CryptPlan(100, 100, 70, 1, CitadelArchetype.KEEPERS_CITADEL, 12L, 0)
+                .build(new BlockWriter(new Blueprint()));
+        assertFalse(crypt.isBuriedFragment());
+    }
 }

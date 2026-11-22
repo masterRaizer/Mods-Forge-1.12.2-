@@ -53,7 +53,7 @@ public final class VanillaDungeonReplacer {
         }
         StructureBoundingBox f = plan.footprint();
         StructureBoundingBox margin = new StructureBoundingBox(f.minX - 32, f.minY, f.minZ - 32, f.maxX + 32, f.maxY, f.maxZ + 32);
-        if (CitadelWorldGenerator.isAreaFree(world, margin)) {
+        if (CitadelWorldGenerator.isAreaFree(world, margin, true)) {
             StructureJobs.get(world).submit(plan);
         }
     }

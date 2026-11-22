@@ -98,6 +98,19 @@ public final class CitadelWorldSavedData extends WorldSavedData {
         return null;
     }
 
+    /** @return true when a tracked structure other than a buried fragment touches the chunk. */
+    public boolean isChunkOccupiedByStructure(int chunkX, int chunkZ) {
+        List<CitadelInstance> list = chunkIndex.get(ChunkPos.asLong(chunkX, chunkZ));
+        if (list != null) {
+            for (CitadelInstance instance : list) {
+                if (!instance.isBuriedFragment()) {
+                    return true;
+                }
+            }
+        }
+        return false;
+    }
+
     /** @return true when any tracked structure touches the chunk. */
     public boolean isChunkOccupied(int chunkX, int chunkZ) {
         List<CitadelInstance> list = chunkIndex.get(ChunkPos.asLong(chunkX, chunkZ));
