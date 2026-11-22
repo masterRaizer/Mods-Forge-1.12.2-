@@ -45,37 +45,37 @@ public final class ModLootInjector {
             {"ironapples:iron_apple", -1, 1, 2, 4}
     };
     private static final Object[][] TIER_5_PLUS = {
-            {"gb:globette", -1, 1, 3, 6}, {"gb:globette2", -1, 1, 2, 4},
-            {"gb:globette3", -1, 1, 2, 2}, {"tconstruct:ingots", 2, 1, 2, 4},
+            {"gb:globot", -1, 1, 3, 6}, {"gb:globot2", -1, 1, 2, 4},
+            {"gb:globot3", -1, 1, 2, 2}, {"tconstruct:ingots", 2, 1, 2, 4},
             {"xat:poison_stone", -1, 1, 1, 1}, {"xat:dragons_eye", -1, 1, 1, 1}, {"xat:weightless_stone", -1, 1, 1, 1},
             {"artifacts:everlasting_beef", -1, 1, 1, 1}, {"artifacts:bottled_cloud", -1, 1, 1, 1},
             {"draconicevolution:draconium_ingot", -1, 1, 3, 3}
     };
     private static final Object[][] UNDERGROUND = {
-            {"gb:globette", -1, 1, 3, 5}, {"tconstruct:ingots", 0, 1, 2, 4}, {"tconstruct:ingots", 1, 1, 2, 4},
+            {"gb:globot", -1, 1, 3, 5}, {"tconstruct:ingots", 0, 1, 2, 4}, {"tconstruct:ingots", 1, 1, 2, 4},
             {"xat:poison_stone", -1, 1, 1, 1}, {"xat:dwarf_ring", -1, 1, 1, 1}, {"artifacts:night_vision_goggles", -1, 1, 1, 1},
             {"artifacts:lucky_horseshoe", -1, 1, 1, 1}
     };
     private static final Object[][] BOSS = {
             {"draconicevolution:draconium_ingot", -1, 2, 6, 6}, {"draconicevolution:wyvern_core", -1, 1, 1, 2},
-            {"draconicevolution:draconic_core", -1, 1, 2, 3}, {"gb:globette3", -1, 2, 4, 4},
-            {"gb:globette2", -1, 2, 5, 4}
+            {"draconicevolution:draconic_core", -1, 1, 2, 3}, {"gb:globot3", -1, 2, 4, 4},
+            {"gb:globot2", -1, 2, 5, 4}
     };
     private static final Object[][] BOSS_SKY = {
             {"draconicevolution:awakened_core", -1, 1, 1, 2}, {"draconicevolution:draconic_ingot", -1, 1, 3, 4},
-            {"draconicevolution:wyvern_core", -1, 1, 2, 3}, {"gb:globette3", -1, 3, 6, 4}
+            {"draconicevolution:wyvern_core", -1, 1, 2, 3}, {"gb:globot3", -1, 3, 6, 4}
     };
     /** Food of the pack's mods for pantries. */
     private static final Object[][] PANTRY = {
             {"futuremc:sweet_berries", -1, 2, 6, 6}, {"futuremc:honey_bottle", -1, 1, 2, 3},
             {"ironapples:iron_apple", -1, 1, 1, 2},
-            {"aquaculture:food", 0, 1, 3, 3}, {"artifacts:everlasting_beef", -1, 1, 1, 1}
+            {"aquaculture:food", 4, 1, 3, 3}, {"aquaculture:food", 10, 1, 2, 2}, {"aquaculture:fish", 24, 1, 2, 2}, {"artifacts:everlasting_beef", -1, 1, 1, 1}
     };
     /** Personal trinkets for bedrooms. */
     private static final Object[][] BEDROOM = {
             {"xat:poison_stone", -1, 1, 1, 1}, {"xat:dwarf_ring", -1, 1, 1, 1}, {"xat:weightless_stone", -1, 1, 1, 1},
             {"artifacts:lucky_horseshoe", -1, 1, 1, 1}, {"artifacts:bottled_cloud", -1, 1, 1, 1},
-            {"gb:globette", -1, 1, 2, 3}
+            {"gb:globot", -1, 1, 2, 3}
     };
     /** Ores and ingots of the pack's tech mods for smelting workshops and vases. */
     private static final Object[][] SMELTERY = {
@@ -95,14 +95,14 @@ public final class ModLootInjector {
             {"xat:dwarf_ring", -1, 1, 1, 2}, {"xat:fairy_ring", -1, 1, 1, 2}, {"xat:inertia_null_stone", -1, 1, 1, 1},
             {"mowziesmobs:ice_crystal", -1, 1, 1, 1}, {"mowziesmobs:wrought_helmet", -1, 1, 1, 1},
             {"mowziesmobs:barako_mask", -1, 1, 1, 1}, {"mowziesmobs:earth_talisman", -1, 1, 1, 1},
-            {"gb:globette3", -1, 1, 3, 3}, {"gb:globette2", -1, 1, 3, 3},
+            {"gb:globot3", -1, 1, 3, 3}, {"gb:globot2", -1, 1, 3, 3},
             {"ironapples:diamond_apple", -1, 1, 1, 2}, {"ironapples:iron_apple", -1, 1, 2, 2}
     };
 
     /** Low-floor rare find (lowFloorRareLootChance). */
     private static final Object[][] RARE_FIND = {
             {"minecraft:diamond", -1, 1, 2, 6}, {"minecraft:emerald", -1, 1, 3, 6}, {"minecraft:golden_apple", -1, 1, 1, 4},
-            {"gb:globette", -1, 1, 2, 3}, {"tconstruct:ingots", 0, 1, 1, 3}
+            {"gb:globot", -1, 1, 2, 3}, {"tconstruct:ingots", 0, 1, 1, 3}
     };
 
     private static final Set<String> MISSING_LOGGED = java.util.Collections.newSetFromMap(
