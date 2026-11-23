@@ -17,7 +17,9 @@ public enum StructureType {
     /** The End stronghold that replaces the vanilla one: explorative, no floors, no protection. */
     STRONGHOLD,
     /** Desert temple: a pyramid over an underground temple; its tomb may hold a pharaoh boss. */
-    DESERT_TEMPLE;
+    DESERT_TEMPLE,
+    /** Jungle temple: stepped temple over an underground; an idol vault or a boss shrine on top. */
+    JUNGLE_TEMPLE;
 
     public static StructureType byName(String name) {
         for (StructureType type : values()) {

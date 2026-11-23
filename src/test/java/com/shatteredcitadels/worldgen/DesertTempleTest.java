@@ -62,7 +62,7 @@ public class DesertTempleTest {
                 for (int x = b.minX; x <= b.maxX; x++) {
                     for (int y = b.minY; y <= b.maxY; y++) {
                         for (int z = b.minZ; z <= b.maxZ; z++) {
-                            if (!writer.isPlanned(x, y, z) || writer.isSolid(x, y, z)) {
+                            if (!writer.isPlanned(x, y, z) || writer.get(x, y, z).getMaterial().blocksMovement()) {
                                 continue;
                             }
                             for (EnumFacing d : EnumFacing.values()) {

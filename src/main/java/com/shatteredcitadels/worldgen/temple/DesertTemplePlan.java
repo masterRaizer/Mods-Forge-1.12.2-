@@ -7,14 +7,10 @@ import com.shatteredcitadels.structure.CitadelNameGenerator;
 import com.shatteredcitadels.structure.StructureType;
 import com.shatteredcitadels.worldgen.BlockWriter;
 import com.shatteredcitadels.worldgen.StructurePlan;
-import com.shatteredcitadels.worldgen.catacomb.CatacombBuilder;
 import com.shatteredcitadels.worldgen.stronghold.StrongholdLayout;
 import com.shatteredcitadels.worldgen.stronghold.StrongholdMobs;
-import net.minecraft.block.BlockStairs;
-import net.minecraft.block.state.IBlockState;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
-import net.minecraft.util.EnumFacing;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.MathHelper;
 import net.minecraft.world.World;
@@ -104,39 +100,9 @@ public final class DesertTemplePlan implements StructurePlan {
                 .withMobs(StrongholdMobs.resolve(ConfigCache.get().getDesertTempleSpawnerMobs(), DesertTempleBuilder.DEFAULT_MOBS))
                 .build(layout);
         new Pyramid(writer, random, centreX, surfaceY, centreZ).build();
-        spiral(writer, random, floor);
+        TempleShaft.build(writer, random, new SandstonePalette(), Blocks.SANDSTONE_STAIRS, centreX, centreZ, surfaceY, floor,
+                TempleKind.ENTRY_HALL.height());
         return record;
-    }
-
-    /** 5x5 shaft from the pyramid floor down into the start hall: ring walls, core, steps. */
-    private void spiral(BlockWriter w, Random random, int floor) {
-        SandstonePalette pal = new SandstonePalette();
-        int startCeiling = floor + TempleKind.ENTRY_HALL.height() - 1;
-        for (int y = startCeiling; y < surfaceY; y++) {
-            for (int dx = -2; dx <= 2; dx++) {
-                for (int dz = -2; dz <= 2; dz++) {
-                    boolean ring = Math.abs(dx) == 2 || Math.abs(dz) == 2;
-                    w.set(centreX + dx, y, centreZ + dz, ring ? pal.wall(random) : Blocks.AIR.getDefaultState());
-                }
-            }
-        }
-        for (int y = floor + 1; y <= surfaceY; y++) {
-            w.set(centreX, y, centreZ, pal.pillar());
-            if (y == surfaceY) {
-                for (int dx = -1; dx <= 1; dx++) {
-                    for (int dz = -1; dz <= 1; dz++) {
-                        if (dx != 0 || dz != 0) {
-                            w.set(centreX + dx, y, centreZ + dz, Blocks.AIR.getDefaultState());
-                        }
-                    }
-                }
-            }
-        }
-        for (int[] step : CatacombBuilder.spiralPath(surfaceY, floor)) {
-            IBlockState stair = Blocks.SANDSTONE_STAIRS.getDefaultState().withProperty(BlockStairs.FACING, EnumFacing.byIndex(step[3]))
-                    .withProperty(BlockStairs.HALF, BlockStairs.EnumHalf.BOTTOM);
-            w.set(centreX + step[0], step[1], centreZ + step[2], stair);
-        }
     }
 
     @Override
