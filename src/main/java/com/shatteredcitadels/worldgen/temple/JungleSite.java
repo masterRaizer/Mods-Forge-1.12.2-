@@ -17,7 +17,10 @@ public final class JungleSite {
 
     /** Water at the top of a column. */
     public static final int WATER = -1;
-    public static final int MAX_SLOPE = 12;
+    /** Most of the site (10th to 90th percentile) spans at most this: hills are cut, dips filled. */
+    public static final int MAX_SPREAD = 24;
+    /** The low part of the site lies at most this far below the floor: the foundation reaches it. */
+    public static final int MAX_DIP = 14;
     private static final int STEP = 4;
 
     /** Block access for sampling (a world, or a map in tests). */
@@ -57,7 +60,8 @@ public final class JungleSite {
 
     /**
      * @return the median ground height on a 4-block grid over ±{@code half} of the centre, or null if
-     * more than an eighth of the samples are water or the ground spans more than {@link #MAX_SLOPE}.
+     * more than an eighth of the samples are water, most of the site spans more than
+     * {@link #MAX_SPREAD}, or its low part lies more than {@link #MAX_DIP} below the median.
      */
     public static Integer siteY(Column column, int centreX, int centreZ, int half) {
         List<Integer> heights = new ArrayList<>();
@@ -78,9 +82,12 @@ public final class JungleSite {
             return null;
         }
         Collections.sort(heights);
-        if (heights.get(heights.size() - 1) - heights.get(0) > MAX_SLOPE) {
+        int low = heights.get(heights.size() / 10);
+        int high = heights.get(heights.size() * 9 / 10);
+        int median = heights.get(heights.size() / 2);
+        if (high - low > MAX_SPREAD || median - low > MAX_DIP) {
             return null;
         }
-        return heights.get(heights.size() / 2);
+        return median;
     }
 }

@@ -126,7 +126,7 @@ public final class JungleTemple {
                     }
                 } else {
                     w.setIfNotSolid(x, sy, z, Blocks.GRASS.getDefaultState());
-                    w.fillDown(x, z, sy - 1, Blocks.DIRT.getDefaultState(), 8);
+                    w.fillDown(x, z, sy - 1, Blocks.DIRT.getDefaultState(), 16);
                 }
             }
         }

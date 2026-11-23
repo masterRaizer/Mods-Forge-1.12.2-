@@ -62,7 +62,19 @@ public class JungleSiteTest {
 
     @Test
     public void steepSiteRejected() {
-        assertNull(JungleSite.siteY(terrain((x, z) -> x >= 0 ? 83 : 70, false, false), 0, 0, 20));
+        assertNull(JungleSite.siteY(terrain((x, z) -> x >= 0 ? 95 : 70, false, false), 0, 0, 20));
+    }
+
+    /** Jungle hills: a spread the levelling can take (hills cut, dips filled) is accepted. */
+    @Test
+    public void hillySiteAccepted() {
+        assertEquals(Integer.valueOf(83), JungleSite.siteY(terrain((x, z) -> 70 + (x + 20) * 26 / 40, false, false), 0, 0, 20));
+    }
+
+    /** A deep dip on one side would leave the foundation hanging: rejected. */
+    @Test
+    public void deepDipRejected() {
+        assertNull(JungleSite.siteY(terrain((x, z) -> x <= -8 ? 60 : 80, false, false), 0, 0, 20));
     }
 
     @Test
