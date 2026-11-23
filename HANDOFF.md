@@ -66,6 +66,8 @@ Better Caves, Better Mineshafts, Traveler's Titles и YUNG's Law уже есть
    часть), `DesertTemplePlan` (винтовая лестница от пирамиды к входному залу), `ScatteredFeatureGen` (подкласс
    `MapGenScatteredFeature` через `InitMapGenEvent`: только пустынные места, остальное ваниль). Гробница фараона —
    `preferredBoss` записи (`BossFactory.candidateOrder`: фараон Atum → кадавр → пул уровня).
+   1.8.1: `ScatteredFeatureGen(TempleSites, spacing)` — правила мест ванили (`VanillaTempleSites`) или BOP
+   (`BopTempleSites`, рефлексия: списки биомов и `$Start` BOP); своя сетка мест, шаг генератора сохраняется.
 4. Храмы в джунглях: головоломки, ловушки, тайники.
 5. Мосты через реки.
 6. Хижины ведьм на болотах.
