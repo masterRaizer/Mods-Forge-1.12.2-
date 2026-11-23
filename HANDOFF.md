@@ -68,7 +68,11 @@ Better Caves, Better Mineshafts, Traveler's Titles и YUNG's Law уже есть
    `preferredBoss` записи (`BossFactory.candidateOrder`: фараон Atum → кадавр → пул уровня).
    1.8.1: `ScatteredFeatureGen(TempleSites, spacing)` — правила мест ванили (`VanillaTempleSites`) или BOP
    (`BopTempleSites`, рефлексия: списки биомов и `$Start` BOP); своя сетка мест, шаг генератора сохраняется.
-4. Храмы в джунглях: головоломки, ловушки, тайники.
+4. ✅ Храмы в джунглях (1.9.0, дизайн `docs/superpowers/specs/2026-11-23-jungle-temple-design.md`):
+   `JungleTemple` (поверхность, ярусы, тайники, святилище-арена Барако), `JungleTempleBuilder` + `JungleKind`
+   (подземелье), `JungleTemplePlan`, `JungleSite` (замер земли без деревьев), `VaultLock` в записи
+   (сокровищница защищена и её печати `GATE_FLOOR` закрыты до трёх идолов; `SealedGates.mayOpen`),
+   блоки `idol_socket`, `vault_brick`, предмет `jungle_idol`. Тайники — сундуки без таблицы лута (Lootr).
 5. Мосты через реки.
 6. Хижины ведьм на болотах.
 7. Крепости Незера → вместе с работой «Другие измерения».
