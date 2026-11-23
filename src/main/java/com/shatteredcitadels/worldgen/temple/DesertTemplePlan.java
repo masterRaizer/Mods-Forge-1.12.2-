@@ -56,11 +56,21 @@ public final class DesertTemplePlan implements StructurePlan {
 
     /** Plans the temple of the site chunk (which is loaded: it is being populated). */
     public static DesertTemplePlan plan(World world, int chunkX, int chunkZ, long seed) {
+        return plan(world, chunkX, chunkZ, seed, null);
+    }
+
+    /** @param pharaoh forced variant (a command), or null for the configured chance. */
+    public static DesertTemplePlan plan(World world, int chunkX, int chunkZ, long seed, Boolean pharaoh) {
         int x = (chunkX << 4) + 8;
         int z = (chunkZ << 4) + 8;
         int surface = Math.max(40, world.getHeight(x, z) - 1);
-        boolean pharaoh = new Random(seed ^ 0x5DEECE66DL).nextDouble() < ConfigCache.get().getDesertTempleBossChance();
-        return new DesertTemplePlan(x, surface, z, seed, world.provider.getDimension(), pharaoh);
+        boolean tomb = variantFor(pharaoh, ConfigCache.get().getDesertTempleBossChance(), new Random(seed ^ 0x5DEECE66DL));
+        return new DesertTemplePlan(x, surface, z, seed, world.provider.getDimension(), tomb);
+    }
+
+    /** @return the forced variant if any, else the boss variant with probability {@code chance}. */
+    public static boolean variantFor(Boolean forced, double chance, Random random) {
+        return forced != null ? forced : random.nextDouble() < chance;
     }
 
     @Override

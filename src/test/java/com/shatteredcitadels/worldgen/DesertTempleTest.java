@@ -193,4 +193,13 @@ public class DesertTempleTest {
             }
         }
     }
+
+    @Test
+    public void forcedVariantWins() {
+        Random rand = new Random(1);
+        assertTrue(com.shatteredcitadels.worldgen.temple.DesertTemplePlan.variantFor(Boolean.TRUE, 0.0, rand));
+        assertFalse(com.shatteredcitadels.worldgen.temple.DesertTemplePlan.variantFor(Boolean.FALSE, 1.0, rand));
+        assertTrue(com.shatteredcitadels.worldgen.temple.DesertTemplePlan.variantFor(null, 1.0, rand));
+        assertFalse(com.shatteredcitadels.worldgen.temple.DesertTemplePlan.variantFor(null, 0.0, rand));
+    }
 }

@@ -102,7 +102,7 @@ public final class CommandCitadel extends CommandBase {
         }
         World world = sender.getEntityWorld();
         BlockPos pos = sender.getPosition();
-        StructurePlan plan = planAndQueue(world, args[1], pos.getX() >> 4, pos.getZ() >> 4);
+        StructurePlan plan = planAndQueue(world, args[1], args.length > 2 ? args[2] : null, pos.getX() >> 4, pos.getZ() >> 4);
         sender.sendMessage(line("Queued ", TextFormatting.GREEN).appendText(plan.describe()
                 + ". It is built in the background and appears within seconds as its chunks are loaded."));
     }
@@ -112,6 +112,12 @@ public final class CommandCitadel extends CommandBase {
      * 2x2 chunks (a command may) so the site can be measured.
      */
     public static StructurePlan planAndQueue(World world, String rawKind, int chunkX, int chunkZ) throws CommandException {
+        return planAndQueue(world, rawKind, null, chunkX, chunkZ);
+    }
+
+    /** @param variant a forced variant where the kind has one ({@code desert_temple pharaoh|tomb}), or null. */
+    public static StructurePlan planAndQueue(World world, String rawKind, String variant, int chunkX, int chunkZ)
+            throws CommandException {
         ensureSiteFree(world, chunkX, chunkZ);
         for (int dx = 0; dx <= 1; dx++) {
             for (int dz = 0; dz <= 1; dz++) {
@@ -129,7 +135,8 @@ public final class CommandCitadel extends CommandBase {
             plan = CastlePlanner.plan(world, chunkX, chunkZ, random, null, true);
         } else if ("desert_temple".equals(kind)) {
             world.getChunk(chunkX, chunkZ);
-            plan = com.shatteredcitadels.worldgen.temple.DesertTemplePlan.plan(world, chunkX, chunkZ, random.nextLong());
+            plan = com.shatteredcitadels.worldgen.temple.DesertTemplePlan.plan(world, chunkX, chunkZ, random.nextLong(),
+                    variant(variant, "pharaoh", "tomb"));
         } else if ("stronghold".equals(kind)) {
             plan = com.shatteredcitadels.worldgen.stronghold.StrongholdPlan.plan(world, chunkX, chunkZ, random.nextLong());
         } else if ("fragment".equals(kind)) {
@@ -158,6 +165,20 @@ public final class CommandCitadel extends CommandBase {
         }
         StructureJobs.get(world).submit(plan);
         return plan;
+    }
+
+    /** @return TRUE for {@code yes}, FALSE for {@code no}, null when no variant is given. */
+    static Boolean variant(String variant, String yes, String no) throws CommandException {
+        if (variant == null) {
+            return null;
+        }
+        if (yes.equalsIgnoreCase(variant)) {
+            return Boolean.TRUE;
+        }
+        if (no.equalsIgnoreCase(variant)) {
+            return Boolean.FALSE;
+        }
+        throw new CommandException("Unknown variant '" + variant + "'. Use: " + yes + " or " + no);
     }
 
     /** /citadel locate - nearest tracked structure of the sender's dimension. */
@@ -332,6 +353,9 @@ public final class CommandCitadel extends CommandBase {
         }
         if (args.length == 2 && "spawn".equalsIgnoreCase(args[0])) {
             return getListOfStringsMatchingLastWord(args, kinds());
+        }
+        if (args.length == 3 && "spawn".equalsIgnoreCase(args[0]) && "desert_temple".equalsIgnoreCase(args[1])) {
+            return getListOfStringsMatchingLastWord(args, "pharaoh", "tomb");
         }
         if (args.length == 2 && "listmobs".equalsIgnoreCase(args[0])) {
             return getListOfStringsMatchingLastWord(args, "1", "2", "3", "4", "5", "underground");

@@ -172,7 +172,9 @@ public final class CommandShatteredCitadels extends CommandBase {
         BlockPos pos = sender.getPosition();
         int x = args.length >= 4 ? parseInt(args[2]) : pos.getX();
         int z = args.length >= 4 ? parseInt(args[3]) : pos.getZ();
-        StructurePlan plan = CommandCitadel.planAndQueue(world, args[1], x >> 4, z >> 4);
+        // generate <kind> [x z] [variant]
+        String variant = args.length == 3 ? args[2] : args.length >= 5 ? args[4] : null;
+        StructurePlan plan = CommandCitadel.planAndQueue(world, args[1], variant, x >> 4, z >> 4);
         send(sender, "Queued " + plan.describe() + "; it is written as its chunks load.");
     }
 
