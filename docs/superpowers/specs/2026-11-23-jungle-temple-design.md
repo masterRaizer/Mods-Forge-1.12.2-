@@ -21,6 +21,24 @@ every corner.
   plus a smaller underground part where the vault or the sanctuary is.
 - Traps throughout: tripwire arrow traps and pressure plates over a pit.
 
+## Pack check (user's server check, 2026-11-23) and decisions
+- **Biomes O' Plenty worlds (user's pick А: support them).** In the BOP world type the scattered
+  features come from `biomesoplenty.common.world.BOPMapGenScatteredFeature`; 1.8.0 leaves it alone, so
+  BOP worlds (the user's "Богач") have no Citadels temples at all, desert ones included. Our temples
+  must replace BOP's desert and jungle temples too, in BOP's own desert/jungle biome lists
+  (`lush_desert`, `cold_desert`, `bamboo_forest`, `eucalyptus_forest`...). BOP's witch huts and igloos
+  stay BOP's (witch spawning included). Done first, as its own release (1.8.1), since it also fixes
+  the desert temples in BOP worlds.
+- **Dynamic Trees:** jungle trees are `dynamictrees:` branches, roots, trunk shells and leaves over
+  `rootydirt`. Ground sampling skips wood, leaves and plants (any mod) and counts `rootydirt` as
+  ground; clearing removes them.
+- **Barako's sun strike needs the sky** (Mowzie's 1.5.8 checks `canBlockSeeSky`): the boss sanctuary
+  is the open shrine on the top tier of the surface temple, above the canopy, not underground. In
+  the boss variant the underground goal room is a plain treasure storeroom.
+- **Protection bypass:** Mekanism's cardboard box and IC2's miner take blocks without a break event.
+  The vault shell is a new unbreakable block that looks like mossy stone bricks (hardness -1), and
+  the cardboard box is refused (right click cancelled) in every protected part of every structure.
+
 ## Claude's calls (correct if wrong)
 - In the boss variant there are no idols and no sockets; the sanctuary is open, the caches still
   exist and hold loot.
@@ -32,7 +50,8 @@ every corner.
   boss variant.
 - **The whole vault is locked until the idols open it:** its walls, floor, ceiling, door and the
   sockets are a protected part of the record that only the sockets release (not conquest, not a
-  cleared floor). Digging around the door does not skip the puzzle.
+  cleared floor), and its shell is the unbreakable vault brick. Digging around the door does not
+  skip the puzzle.
 - **Terrain:** the site is levelled within the footprint: hills are cut down and dips filled with
   the foundation, trees and plants cleared. A site is rejected only if it is mostly water or the
   slope is extreme (more than about 12 blocks between the lowest and highest samples); then there is
@@ -40,8 +59,9 @@ every corner.
 - **Visible from afar:** the top tier carries a shrine that rises above the canopy (the temple is
   about 30–35 blocks tall), and trees are cleared in a ring of about 4 blocks around the footprint
   (included in the footprint and the `isAreaFree` check).
-- Jungle temples only in vanilla `JUNGLE`, `JUNGLE_HILLS` (where vanilla puts them), overworld only.
-  Desert, swamp and igloo sites unchanged; witch spawning untouched.
+- Jungle temples where the world's scattered-feature generator puts jungle temples: vanilla
+  `JUNGLE`, `JUNGLE_HILLS`, or BOP's jungle list in BOP worlds; overworld only. Swamp and igloo
+  sites unchanged; witch spawning untouched.
 
 ## Goals
 1. **Replace the vanilla jungle temple** (config `replaceJungleTemples`, default true) in the same
@@ -68,7 +88,7 @@ every corner.
    - The record stores the socket positions and their state; the state survives restarts; sockets
      and gates in unloaded chunks catch up when loaded.
    - Vault: chests with the jungle temple table plus the modded pool, gold, emeralds.
-5. **Sanctuary variant:** boss arena, altar, `preferredBoss = mowziesmobs:barako` (fallback order as
+5. **Sanctuary variant:** the open shrine on the top tier is the boss arena, with an altar, `preferredBoss = mowziesmobs:barako` (fallback order as
    in the desert temple: preferred, then a strong vanilla mob, then the tier pool), reward chest
    sealed until the boss dies (floor 0 boss floor, as the pharaoh's tomb).
 6. **Protection:** the vault variant is unprotected (players may dig, as YUNG) except the vault
@@ -82,8 +102,8 @@ every corner.
    shrine...).
 
 ## Non-goals
-Bridges, witch huts, igloos; redstone-based puzzles; temples in modded jungles (BOP) — vanilla
-does not place temples there either; other dimensions.
+Bridges, witch huts, igloos; redstone-based puzzles; modded jungles in non-BOP world types (their
+generator places no temples there either); other dimensions.
 
 ## Anti-goals
 - A vault that opens without all three idols (by conquest, reconcile, breaking, or a lever).
