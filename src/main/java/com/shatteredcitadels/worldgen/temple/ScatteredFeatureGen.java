@@ -3,48 +3,96 @@ package com.shatteredcitadels.worldgen.temple;
 import com.shatteredcitadels.ShatteredCitadelsMod;
 import com.shatteredcitadels.worldgen.CitadelWorldGenerator;
 import com.shatteredcitadels.worldgen.StructureJobs;
-import net.minecraft.init.Biomes;
+import com.shatteredcitadels.config.ConfigCache;
+import com.shatteredcitadels.worldgen.StructurePlan;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.util.math.ChunkPos;
 import net.minecraft.world.World;
 import net.minecraft.world.biome.Biome;
+import net.minecraft.world.gen.structure.ComponentScatteredFeaturePieces;
 import net.minecraft.world.gen.structure.MapGenScatteredFeature;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraft.world.gen.structure.StructureStart;
 
+import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
+
 import java.util.Random;
 
 /**
- * Replaces the vanilla scattered-feature generator: on desert sites (as vanilla chooses the desert
- * pyramid) it builds our desert temple instead; jungle temples, witch huts and igloos stay vanilla,
- * and so does the witch spawning of swamp huts.
+ * Replaces the scattered-feature generator (vanilla's or Biomes O' Plenty's, described by a
+ * {@link TempleSites}): on its desert sites it builds our desert temple instead; the sites we do not
+ * handle (witch huts, igloos, disabled kinds, other dimensions) keep that generator's own start, and
+ * swamp huts keep their witch spawning.
  */
 public class ScatteredFeatureGen extends MapGenScatteredFeature {
 
     private static final long SALT = 0x2545F4914F6CDD1DL;
+    private static final int SEPARATION = 8;
+    private static final int GRID_SALT = 14357617;
+
+    private final TempleSites sites;
+    private final int spacing;
+
+    public ScatteredFeatureGen(TempleSites sites, int spacing) {
+        this.sites = sites;
+        this.spacing = Math.max(SEPARATION + 1, spacing);
+        // Vanilla's nearest-site search reads its private spacing: keep it in step with ours.
+        ObfuscationReflectionHelper.setPrivateValue(MapGenScatteredFeature.class, this, this.spacing, "field_82669_g", "maxDistanceBetweenScatteredFeatures");
+    }
 
     /** @return true for the biomes where vanilla places the desert pyramid. */
     public static boolean isOurs(Biome biome) {
-        return biome == Biomes.DESERT || biome == Biomes.DESERT_HILLS;
+        return VanillaTempleSites.INSTANCE.kindOf(biome) == TempleSites.Kind.DESERT;
     }
 
-    private Biome siteBiome(int chunkX, int chunkZ) {
-        return world.getBiomeProvider().getBiome(new BlockPos(chunkX * 16 + 8, 0, chunkZ * 16 + 8));
+    /** @return true if this mod builds the temples of {@code kind} (by config). */
+    public static boolean handles(TempleSites.Kind kind) {
+        return kind == TempleSites.Kind.DESERT && ConfigCache.get().isReplaceDesertTemples();
     }
 
-    /** Vanilla sites, except the desert ones: those get our temple. */
+    private TempleSites.Kind siteKind(int chunkX, int chunkZ) {
+        return sites.kindOf(world.getBiomeProvider().getBiome(new BlockPos(chunkX * 16 + 8, 0, chunkZ * 16 + 8)));
+    }
+
+    /** The site grid of vanilla and BOP: one site per {@code spacing}² chunk region. */
+    private boolean isGridSite(int chunkX, int chunkZ) {
+        int x = chunkX < 0 ? chunkX - spacing + 1 : chunkX;
+        int z = chunkZ < 0 ? chunkZ - spacing + 1 : chunkZ;
+        int regionX = x / spacing;
+        int regionZ = z / spacing;
+        Random random = world.setRandomSeed(regionX, regionZ, GRID_SALT);
+        return chunkX == regionX * spacing + random.nextInt(spacing - SEPARATION)
+                && chunkZ == regionZ * spacing + random.nextInt(spacing - SEPARATION);
+    }
+
+    private boolean isOurs(TempleSites.Kind kind) {
+        return world.provider.getDimension() == 0 && handles(kind);
+    }
+
+    /** The generator's own sites, except the ones that get our temple. */
     @Override
     public boolean canSpawnStructureAtCoords(int chunkX, int chunkZ) {
-        // Only the overworld gets our temple; other dimensions with an overworld generator keep the vanilla one.
-        return super.canSpawnStructureAtCoords(chunkX, chunkZ)
-                && (world.provider.getDimension() != 0 || !isOurs(siteBiome(chunkX, chunkZ)));
+        if (!isGridSite(chunkX, chunkZ)) {
+            return false;
+        }
+        TempleSites.Kind kind = siteKind(chunkX, chunkZ);
+        return kind != TempleSites.Kind.NONE && !isOurs(kind);
     }
 
-    private boolean isOurSite(int chunkX, int chunkZ) {
-        return world.provider.getDimension() == 0 && super.canSpawnStructureAtCoords(chunkX, chunkZ) && isOurs(siteBiome(chunkX, chunkZ));
+    @Override
+    protected StructureStart getStructureStart(int chunkX, int chunkZ) {
+        return sites.otherStart(world, rand, chunkX, chunkZ);
     }
 
-    /** @return true if a vanilla temple started before the mod (older world) overlaps the box. */
+    /** Any swamp hut, whichever generator's start holds it (BOP's start is not vanilla's). */
+    @Override
+    public boolean isSwampHut(BlockPos pos) {
+        StructureStart start = getStructureAt(pos);
+        return start != null && !start.getComponents().isEmpty()
+                && start.getComponents().get(0) instanceof ComponentScatteredFeaturePieces.SwampHut;
+    }
+
+    /** @return true if a temple started before the mod (older world) overlaps the box. */
     public boolean hasLegacyStartIn(StructureBoundingBox box) {
         for (StructureStart start : structureMap.values()) {
             if (start != null && start.getBoundingBox() != null && start.getBoundingBox().intersectsWith(box)) {
@@ -56,21 +104,25 @@ public class ScatteredFeatureGen extends MapGenScatteredFeature {
 
     @Override
     public synchronized boolean generateStructure(World worldIn, Random randomIn, ChunkPos chunkCoord) {
-        boolean vanilla = super.generateStructure(worldIn, randomIn, chunkCoord);
+        boolean generated = super.generateStructure(worldIn, randomIn, chunkCoord);
         if (worldIn.isRemote || worldIn.provider.getDimension() != 0) {
-            return vanilla;
+            return generated;
         }
         this.world = worldIn;
-        if (!isOurSite(chunkCoord.x, chunkCoord.z)) {
-            return vanilla;
+        if (!isGridSite(chunkCoord.x, chunkCoord.z)) {
+            return generated;
+        }
+        TempleSites.Kind kind = siteKind(chunkCoord.x, chunkCoord.z);
+        if (!isOurs(kind)) {
+            return generated;
         }
         long seed = worldIn.getSeed() ^ ChunkPos.asLong(chunkCoord.x, chunkCoord.z) ^ SALT;
-        DesertTemplePlan plan = DesertTemplePlan.plan(worldIn, chunkCoord.x, chunkCoord.z, seed);
+        StructurePlan plan = DesertTemplePlan.plan(worldIn, chunkCoord.x, chunkCoord.z, seed);
         if (hasLegacyStartIn(plan.footprint())) {
-            ShatteredCitadelsMod.LOGGER.info("Desert site {},{} keeps its vanilla pyramid", chunkCoord.x, chunkCoord.z);
+            ShatteredCitadelsMod.LOGGER.info("Temple site {},{} keeps the temple started before", chunkCoord.x, chunkCoord.z);
         } else if (CitadelWorldGenerator.isAreaFree(worldIn, plan.footprint())) {
             StructureJobs.get(worldIn).submit(plan);
         }
-        return vanilla;
+        return generated;
     }
 }
