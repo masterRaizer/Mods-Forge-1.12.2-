@@ -65,7 +65,8 @@ public final class JungleTemple {
         this.cz = cz;
         this.boss = boss;
         this.rec = rec;
-        this.half = 15 + rand.nextInt(4);
+        // The top tier (half - 9) must take the last flight's landing at |x| = 8.
+        this.half = 17 + rand.nextInt(2);
     }
 
     public JungleTemple withMobs(ResourceLocation[] mobs) {
@@ -162,17 +163,18 @@ public final class JungleTemple {
 
     /**
      * The stair up to tier {@code k}'s roof: six steps along the strip in front of its south wall
-     * (the ground, or the terrace of the tier below), from |x| = 8 towards the centre, alternating
-     * sides so the climb zigzags.
+     * (the ground, or the terrace of the tier below), climbing outwards from |x| = 3 to |x| = 8 on
+     * alternating sides: from each landing the terrace leads past the door to the next flight's
+     * first step.
      */
     private void stairs(int k) {
         int s = k % 2 == 0 ? 1 : -1;
-        EnumFacing climb = s > 0 ? EnumFacing.WEST : EnumFacing.EAST;
+        EnumFacing climb = s > 0 ? EnumFacing.EAST : EnumFacing.WEST;
         IBlockState step = Blocks.STONE_BRICK_STAIRS.getDefaultState().withProperty(BlockStairs.FACING, climb)
                 .withProperty(BlockStairs.HALF, BlockStairs.EnumHalf.BOTTOM);
         int b = base(k);
         for (int j = 0; j < TIER_HEIGHT; j++) {
-            int x = cx + s * (8 - j);
+            int x = cx + s * (3 + j);
             int y = b + 1 + j;
             for (int z = cz + h(k) + 1; z <= cz + h(k) + 3; z++) {
                 for (int fy = b + 1; fy < y; fy++) {
@@ -365,15 +367,17 @@ public final class JungleTemple {
                 if (Math.max(Math.abs(dx), Math.abs(dz)) != hk) {
                     continue;
                 }
-                boolean arrival = dz == hk && dx >= -4 && dx <= -2;
+                // The last flight lands at x = -8 (tier 3 is odd: it climbs west).
+                boolean arrival = dz == hk && dx >= -9 && dx <= -7;
                 if (!arrival) {
                     w.set(cx + dx, top + 1, cz + dz, parapet);
                 }
             }
         }
         for (int[] c : new int[][]{{-1, -1}, {1, -1}, {-1, 1}, {1, 1}}) {
-            int px = cx + c[0] * (hk - 1);
-            int pz = cz + c[1] * (hk - 1);
+            // One in from the parapet's corner: the last flight's landing at x = -8 stays clear.
+            int px = cx + c[0] * (hk - 2);
+            int pz = cz + c[1] * (hk - 2);
             for (int y = top + 1; y <= top + 5; y++) {
                 w.set(px, y, pz, pal.pillar());
             }
@@ -432,7 +436,8 @@ public final class JungleTemple {
             int y = base(k) + 1;
             for (int dx = -h(k - 1); dx <= h(k - 1); dx++) {
                 for (int dz = -h(k - 1); dz <= h(k - 1); dz++) {
-                    if (Math.max(Math.abs(dx), Math.abs(dz)) > hk && rand.nextInt(10) == 0
+                    boolean climb = dz > hk && Math.abs(dx) <= 9;
+                    if (Math.max(Math.abs(dx), Math.abs(dz)) > hk && !climb && rand.nextInt(10) == 0
                             && !w.isPlanned(cx + dx, y, cz + dz)) {
                         w.set(cx + dx, y, cz + dz, leaves);
                     }

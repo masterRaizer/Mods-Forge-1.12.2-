@@ -48,7 +48,8 @@ public class BlockIdolSocket extends BlockVaultBrick {
             return true;
         }
         CitadelWorldSavedData data = CitadelWorldSavedData.get(world);
-        CitadelInstance citadel = data.getCitadelAt(pos);
+        // Not getCitadelAt: a buried fragment overlapping the vault would answer first.
+        CitadelInstance citadel = VaultLock.ownerOf(data.getAll(), pos);
         VaultLock vault = citadel == null ? null : citadel.getVault();
         if (vault == null || !vault.place(pos)) {
             status(player, "shatteredcitadels.socket.dead", TextFormatting.GRAY);

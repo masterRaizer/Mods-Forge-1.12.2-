@@ -536,11 +536,20 @@ public final class StructureJobs extends WorldSavedData {
                 return;
             }
             cursor.setPos(op.x, y, op.z);
-            if (isSolid(chunk.getBlockState(cursor))) {
+            if (stopsFill(chunk.getBlockState(cursor))) {
                 return;
             }
             put(world, chunk, cursor, state, false);
         }
+    }
+
+    /**
+     * A foundation fill stops on solid ground; leaves, plants and vines (a jungle's undergrowth)
+     * are filled through, so no void is left under them.
+     */
+    public static boolean stopsFill(IBlockState state) {
+        Material m = state.getMaterial();
+        return isSolid(state) && m != Material.LEAVES && m != Material.PLANTS && m != Material.VINE;
     }
 
     private static boolean isSolid(IBlockState state) {

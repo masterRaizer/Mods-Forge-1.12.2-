@@ -259,4 +259,73 @@ public class JungleTempleTest {
         assertEquals("mowziesmobs:barako", order.get(0).toString());
         assertEquals("minecraft:vindication_illager", order.get(1).toString());
     }
+
+    private static boolean blocks(BlockWriter w, int x, int y, int z) {
+        return w.get(x, y, z).getMaterial().blocksMovement();
+    }
+
+    /**
+     * Each flight tops out on its tier's roof; from there the terrace is clear to the next flight's
+     * first step; the last flight arrives on the top shrine through the parapet.
+     */
+    @Test
+    public void stairsConnectTheTiers() {
+        for (long seed = 1; seed <= 8; seed++) {
+            BlockWriter w = new BlockWriter(new Blueprint());
+            JungleTemple temple = new JungleTemple(w, new Random(seed), 0, SY, 0, seed % 2 == 0, record());
+            temple.build();
+            int half = temple.half();
+            for (int k = 0; k < JungleTemple.TIERS; k++) {
+                int hk = half - 3 * k;
+                int roof = SY + JungleTemple.TIER_HEIGHT * (k + 1);
+                int s = k % 2 == 0 ? 1 : -1;
+                assertTrue("seed " + seed + " flight " + k + " top",
+                        w.get(s * 8, roof, hk + 2).getBlock() instanceof net.minecraft.block.BlockStairs);
+                assertTrue("seed " + seed + " roof under the arrival of flight " + k, w.isSolid(s * 8, roof, hk));
+                assertFalse("seed " + seed + " arrival of flight " + k + " blocked", blocks(w, s * 8, roof + 1, hk));
+                assertFalse("seed " + seed + " arrival of flight " + k + " blocked", blocks(w, s * 8, roof + 2, hk));
+                if (k == JungleTemple.TIERS - 1) {
+                    assertFalse("seed " + seed + " no way onto the shrine", blocks(w, s * 8, roof + 1, hk - 1));
+                    continue;
+                }
+                for (int x = s * 8; x != -s * 3; x -= s) {
+                    assertFalse("seed " + seed + " terrace " + k + " blocked at x " + x, blocks(w, x, roof + 1, hk));
+                    assertFalse("seed " + seed + " terrace " + k + " blocked at x " + x, blocks(w, x, roof + 2, hk));
+                    assertTrue("seed " + seed + " terrace " + k + " has no floor at x " + x, w.isSolid(x, roof, hk));
+                }
+                assertTrue("seed " + seed + " flight " + (k + 1) + " bottom",
+                        w.get(-s * 3, roof + 1, hk - 1).getBlock() instanceof net.minecraft.block.BlockStairs);
+            }
+        }
+    }
+
+    /** Item stacks fire capability events: none is made on the builder thread, only when placed. */
+    @Test
+    public void idolStackMadeOnlyWhenPlaced() {
+        boolean[] made = {false};
+        net.minecraft.item.Item original = com.shatteredcitadels.item.ModItems.JUNGLE_IDOL;
+        com.shatteredcitadels.item.ModItems.JUNGLE_IDOL = new net.minecraft.item.Item() {
+            @Override
+            public net.minecraftforge.common.capabilities.ICapabilityProvider initCapabilities(net.minecraft.item.ItemStack stack,
+                                                                                            net.minecraft.nbt.NBTTagCompound nbt) {
+                made[0] = true;
+                return null;
+            }
+        };
+        try {
+            new JungleTempleBuilder(new BlockWriter(new Blueprint()), record(), new Random(1), false).build(layout(1));
+            assertFalse("an idol stack was made while building", made[0]);
+        } finally {
+            com.shatteredcitadels.item.ModItems.JUNGLE_IDOL = original;
+        }
+    }
+
+    @Test
+    public void foundationFillsPourThroughLeavesAndPlants() {
+        assertFalse(StructureJobs.stopsFill(Blocks.LEAVES.getDefaultState()));
+        assertFalse(StructureJobs.stopsFill(Blocks.TALLGRASS.getDefaultState()));
+        assertFalse(StructureJobs.stopsFill(Blocks.VINE.getDefaultState()));
+        assertTrue(StructureJobs.stopsFill(Blocks.STONE.getDefaultState()));
+        assertTrue(StructureJobs.stopsFill(Blocks.PLANKS.getDefaultState()));
+    }
 }

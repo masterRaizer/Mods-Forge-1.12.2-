@@ -36,21 +36,26 @@ final class JungleCaches {
     /** A chest holding an idol (if {@code idol}) and a little treasure. */
     static void chest(BlockWriter w, BlockPos pos, EnumFacing facing, boolean idol, Random rand) {
         w.set(pos, Blocks.CHEST.getDefaultState().withProperty(BlockChest.FACING, facing));
-        List<ItemStack> items = new ArrayList<>();
-        if (idol && ModItems.JUNGLE_IDOL != null) {
-            items.add(new ItemStack(ModItems.JUNGLE_IDOL));
-        }
-        items.add(new ItemStack(Items.GOLD_NUGGET, 3 + rand.nextInt(6)));
-        items.add(new ItemStack(Items.EMERALD, 1 + rand.nextInt(3)));
-        if (rand.nextInt(4) == 0) {
-            items.add(new ItemStack(Items.DIAMOND));
-        }
+        // Counts are drawn now (the build is deterministic); the stacks are made when the chest is
+        // placed, on the server thread: making one fires capability events.
+        int nuggets = 3 + rand.nextInt(6);
+        int emeralds = 1 + rand.nextInt(3);
+        boolean diamond = rand.nextInt(4) == 0;
         int[] slots = {4, 10, 13, 16, 22};
         w.afterPlace(pos, (world, at) -> {
+            List<ItemStack> items = new ArrayList<>();
+            if (idol && ModItems.JUNGLE_IDOL != null) {
+                items.add(new ItemStack(ModItems.JUNGLE_IDOL));
+            }
+            items.add(new ItemStack(Items.GOLD_NUGGET, nuggets));
+            items.add(new ItemStack(Items.EMERALD, emeralds));
+            if (diamond) {
+                items.add(new ItemStack(Items.DIAMOND));
+            }
             TileEntity tile = world.getTileEntity(at);
             if (tile instanceof IInventory) {
                 for (int i = 0; i < items.size() && i < slots.length; i++) {
-                    ((IInventory) tile).setInventorySlotContents(slots[i], items.get(i).copy());
+                    ((IInventory) tile).setInventorySlotContents(slots[i], items.get(i));
                 }
             }
         });

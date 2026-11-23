@@ -69,6 +69,16 @@ public final class VaultLock {
         return !isOpen() && box.isVecInside(pos);
     }
 
+    /** @return the structure whose vault has {@code socket} among its sockets, or null. */
+    public static CitadelInstance ownerOf(Iterable<CitadelInstance> citadels, BlockPos socket) {
+        for (CitadelInstance citadel : citadels) {
+            if (citadel.getVault() != null && citadel.getVault().sockets().contains(socket)) {
+                return citadel;
+            }
+        }
+        return null;
+    }
+
     public NBTTagCompound write() {
         NBTTagCompound tag = new NBTTagCompound();
         tag.setIntArray("box", new int[]{box.minX, box.minY, box.minZ, box.maxX, box.maxY, box.maxZ});

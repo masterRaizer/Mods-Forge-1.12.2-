@@ -98,4 +98,14 @@ public class VaultLockTest {
         vault.place(S3);
         assertTrue(SealedGates.mayOpen(rec, gate));
     }
+
+    /** A buried fragment overlapping the vault must not hide the temple from its sockets. */
+    @Test
+    public void socketOwnerFoundPastOtherRecords() {
+        CitadelInstance fragment = new CitadelInstance(UUID.randomUUID(), "", StructureType.CRYPT, CitadelArchetype.KEEPERS_CITADEL, 0,
+                BlockPos.ORIGIN, new StructureBoundingBox(0, 30, 0, 30, 45, 30));
+        CitadelInstance temple = temple(lock());
+        assertEquals(temple, VaultLock.ownerOf(Arrays.asList(fragment, temple), S2));
+        assertEquals(null, VaultLock.ownerOf(Arrays.asList(fragment, temple), new BlockPos(1, 2, 3)));
+    }
 }

@@ -30,8 +30,11 @@ public final class JungleTemplePlan implements StructurePlan {
     /** The underground start lies this far below the temple floor. */
     public static final int DEPTH = 16;
     private static final int REACH = 36;
-    /** Sampled ground: the bottom tier's half width plus the cleared ring. */
-    public static final int SITE_HALF = 22;
+    /**
+     * Half the sampled square: the site chunk and its +x/+z neighbours (the chunks population
+     * guarantees, so sampling never generates a chunk), centred on their shared corner.
+     */
+    public static final int SITE_HALF = 14;
 
     public final int centreX;
     public final int surfaceY;
@@ -59,14 +62,24 @@ public final class JungleTemplePlan implements StructurePlan {
      * @return null if the ground is unsuitable (water, too steep)
      */
     public static JungleTemplePlan plan(World world, int chunkX, int chunkZ, long seed, Boolean boss, double chance) {
-        int x = (chunkX << 4) + 8;
-        int z = (chunkZ << 4) + 8;
-        Integer ground = JungleSite.siteY(JungleSite.of(world), x, z, SITE_HALF);
+        int x = centreOf(chunkX);
+        int z = centreOf(chunkZ);
+        Integer ground = siteGround(JungleSite.of(world), chunkX, chunkZ);
         if (ground == null) {
             return null;
         }
         boolean shrine = DesertTemplePlan.variantFor(boss, chance, new Random(seed ^ 0x5DEECE66DL));
         return new JungleTemplePlan(x, Math.max(40, ground), z, seed, world.provider.getDimension(), shrine);
+    }
+
+    /** @return the temple's centre along one axis: the corner the site chunk shares with its +1 neighbour. */
+    public static int centreOf(int chunk) {
+        return (chunk << 4) + 16;
+    }
+
+    /** @return the site's ground, sampled within the site chunk and its +x/+z neighbours, or null. */
+    public static Integer siteGround(JungleSite.Column column, int chunkX, int chunkZ) {
+        return JungleSite.siteY(column, centreOf(chunkX), centreOf(chunkZ), SITE_HALF);
     }
 
     @Override

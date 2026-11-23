@@ -8,6 +8,7 @@ import org.junit.Test;
 
 import static org.junit.Assert.assertEquals;
 import static org.junit.Assert.assertNull;
+import static org.junit.Assert.assertTrue;
 
 public class JungleSiteTest {
 
@@ -81,5 +82,21 @@ public class JungleSiteTest {
     public void medianOfGentleSlope() {
         Integer y = JungleSite.siteY(terrain((x, z) -> 70 + (x + 20) / 8, true, false), 0, 0, 20);
         assertEquals(Integer.valueOf(72), y);
+    }
+
+    /** Population guarantees only the site chunk and its +x/+z neighbours: sampling stays in them. */
+    @Test
+    public void planSamplesOnlyTheLoadedChunks() {
+        int[] box = {Integer.MAX_VALUE, Integer.MIN_VALUE, Integer.MAX_VALUE, Integer.MIN_VALUE};
+        JungleSite.Column c = (x, y, z) -> {
+            box[0] = Math.min(box[0], x);
+            box[1] = Math.max(box[1], x);
+            box[2] = Math.min(box[2], z);
+            box[3] = Math.max(box[3], z);
+            return y <= 70 ? Blocks.DIRT.getDefaultState() : Blocks.AIR.getDefaultState();
+        };
+        assertEquals(Integer.valueOf(70), com.shatteredcitadels.worldgen.temple.JungleTemplePlan.siteGround(c, 3, -2));
+        assertTrue(box[0] >= 48 && box[1] <= 79 && box[2] >= -32 && box[3] <= -1);
+        assertEquals(64, com.shatteredcitadels.worldgen.temple.JungleTemplePlan.centreOf(3));
     }
 }
