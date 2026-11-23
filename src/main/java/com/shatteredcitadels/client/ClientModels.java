@@ -42,6 +42,11 @@ public final class ClientModels {
                         new ModelResourceLocation(ModBlocks.VASE_ITEM.getRegistryName(), "variant=" + variant.getName()));
             }
         }
+        for (Item item : new Item[]{ModItems.JUNGLE_IDOL, ModBlocks.IDOL_SOCKET_ITEM, ModBlocks.VAULT_BRICK_ITEM}) {
+            if (item != null) {
+                ModelLoader.setCustomModelResourceLocation(item, 0, new ModelResourceLocation(item.getRegistryName(), "inventory"));
+            }
+        }
         if (ModBlocks.TRIAL_SPAWNER_ITEM != null) {
             ModelLoader.setCustomModelResourceLocation(ModBlocks.TRIAL_SPAWNER_ITEM, 0,
                     new ModelResourceLocation(ModBlocks.TRIAL_SPAWNER_ITEM.getRegistryName(), "inventory"));

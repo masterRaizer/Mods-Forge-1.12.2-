@@ -36,6 +36,7 @@ import java.util.UUID;
 public final class CitadelProtectionHandler {
 
     private static final long MESSAGE_COOLDOWN_MS = 2000L;
+    static final String CARDBOARD_BOX = "mekanism:cardboardbox";
     private static final Map<UUID, Long> LAST_MESSAGE = new HashMap<>();
 
     private CitadelProtectionHandler() {
@@ -55,6 +56,10 @@ public final class CitadelProtectionHandler {
      * are mineable like vanilla), not conquered there, inside a built part, not placed by a player.
      */
     public static boolean protects(CitadelInstance citadel, BlockPos pos) {
+        // A locked idol vault holds whatever else applies: only its idols open it.
+        if (citadel != null && citadel.getVault() != null && citadel.getVault().locks(pos)) {
+            return true;
+        }
         return citadel != null && !citadel.isUnprotected() && !citadel.isConqueredAt(pos) && citadel.isInPart(pos)
                 && !citadel.isPlayerPlaced(pos);
     }
@@ -65,7 +70,8 @@ public final class CitadelProtectionHandler {
         if (block == Blocks.AIR || block == ModBlocks.VASE || block == Blocks.WEB) {
             return true;
         }
-        if (block == ModBlocks.TRIAL_SPAWNER || block == ModBlocks.BOSS_ALTAR || block == ModBlocks.SEALED_GATE) {
+        if (block == ModBlocks.TRIAL_SPAWNER || block == ModBlocks.BOSS_ALTAR || block == ModBlocks.SEALED_GATE
+                || block == ModBlocks.IDOL_SOCKET) {
             return false;
         }
         return block.hasTileEntity(state);
@@ -73,6 +79,22 @@ public final class CitadelProtectionHandler {
 
     private static boolean bypasses(EntityPlayer player) {
         return player != null && (player.capabilities.isCreativeMode || player.isSpectator());
+    }
+
+    /**
+     * Mekanism's cardboard box picks blocks up without a break event: refused on protected blocks
+     * (like breaking them).
+     */
+    @SubscribeEvent(priority = EventPriority.HIGH)
+    public static void onRightClick(net.minecraftforge.event.entity.player.PlayerInteractEvent.RightClickBlock event) {
+        net.minecraft.item.ItemStack held = event.getItemStack();
+        if (held.isEmpty() || held.getItem().getRegistryName() == null
+                || !CARDBOARD_BOX.equals(held.getItem().getRegistryName().toString())) {
+            return;
+        }
+        if (isProtected(event.getWorld(), event.getPos()) && !bypasses(event.getEntityPlayer())) {
+            event.setCanceled(true);
+        }
     }
 
     @SubscribeEvent(priority = EventPriority.HIGH)

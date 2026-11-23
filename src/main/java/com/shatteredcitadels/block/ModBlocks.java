@@ -26,6 +26,10 @@ public final class ModBlocks {
     public static Block VASE;
     public static Block MAGE_SIGIL;
     public static Item VASE_ITEM;
+    public static Block IDOL_SOCKET;
+    public static Item IDOL_SOCKET_ITEM;
+    public static Block VAULT_BRICK;
+    public static Item VAULT_BRICK_ITEM;
 
     private ModBlocks() {
     }
@@ -55,6 +59,14 @@ public final class ModBlocks {
                 .setRegistryName(Reference.MODID, "vase")
                 .setTranslationKey(Reference.MODID + ".vase");
         event.getRegistry().register(VASE);
+        IDOL_SOCKET = new BlockIdolSocket()
+                .setRegistryName(Reference.MODID, "idol_socket")
+                .setTranslationKey(Reference.MODID + ".idol_socket");
+        event.getRegistry().register(IDOL_SOCKET);
+        VAULT_BRICK = new BlockVaultBrick()
+                .setRegistryName(Reference.MODID, "vault_brick")
+                .setTranslationKey(Reference.MODID + ".vault_brick");
+        event.getRegistry().register(VAULT_BRICK);
     }
 
     @SubscribeEvent
@@ -68,5 +80,9 @@ public final class ModBlocks {
         VASE_ITEM = new ItemMultiTexture(VASE, VASE,
                 stack -> BlockVase.Variant.byMeta(stack.getMetadata()).getName()).setRegistryName(VASE.getRegistryName());
         event.getRegistry().register(VASE_ITEM);
+        IDOL_SOCKET_ITEM = new ItemBlock(IDOL_SOCKET).setRegistryName(IDOL_SOCKET.getRegistryName());
+        event.getRegistry().register(IDOL_SOCKET_ITEM);
+        VAULT_BRICK_ITEM = new ItemBlock(VAULT_BRICK).setRegistryName(VAULT_BRICK.getRegistryName());
+        event.getRegistry().register(VAULT_BRICK_ITEM);
     }
 }

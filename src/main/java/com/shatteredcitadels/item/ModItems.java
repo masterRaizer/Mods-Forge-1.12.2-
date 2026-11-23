@@ -26,6 +26,9 @@ public final class ModItems {
     public static Item GUARDIAN_STAFF;
     public static Item GUARDIAN_FOLIO;
     public static Item ASHEN_SIGHT_RING;
+    public static final ResourceLocation JUNGLE_IDOL_ID = new ResourceLocation(Reference.MODID, "jungle_idol");
+    /** Not a relic: kept out of {@link #all()} (the relic list). */
+    public static Item JUNGLE_IDOL;
 
     private ModItems() {
     }
@@ -41,6 +44,9 @@ public final class ModItems {
                 .setTranslationKey(Reference.MODID + "." + GUARDIAN_STAFF_ID.getPath());
         GUARDIAN_FOLIO = relic(RelicKind.GUARDIAN_FOLIO, GUARDIAN_FOLIO_ID);
         ASHEN_SIGHT_RING = relic(RelicKind.ASHEN_SIGHT_RING, ASHEN_SIGHT_RING_ID);
+        JUNGLE_IDOL = new ItemJungleIdol().setRegistryName(JUNGLE_IDOL_ID)
+                .setTranslationKey(Reference.MODID + "." + JUNGLE_IDOL_ID.getPath());
+        event.getRegistry().register(JUNGLE_IDOL);
         event.getRegistry().registerAll(CROWN_SHARD, CLOUDSPIRE_AEGIS, GOBLIN_FORGE_HEART, ARCHITECT_BLADE,
                 GUARDIAN_STAFF, GUARDIAN_FOLIO, ASHEN_SIGHT_RING);
     }

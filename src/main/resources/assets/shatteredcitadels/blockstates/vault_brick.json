@@ -1,0 +1,6 @@
+{
+  "variants": {
+    "normal": { "model": "shatteredcitadels:vault_brick" },
+    "inventory": { "model": "shatteredcitadels:vault_brick" }
+  }
+}

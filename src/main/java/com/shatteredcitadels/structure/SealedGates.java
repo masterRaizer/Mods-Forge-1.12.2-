@@ -41,6 +41,11 @@ public final class SealedGates {
         return gate.requiredFloor >= 0;
     }
 
+    /** @return false for the gates of a locked idol vault: nothing but the idols opens them. */
+    public static boolean mayOpen(CitadelInstance citadel, CitadelInstance.GatePoint gate) {
+        return gate.requiredFloor != VaultLock.GATE_FLOOR || citadel.getVault() != null && citadel.getVault().isOpen();
+    }
+
     /** Opens every loaded gate of the structure that conquest opens (boss defeated). */
     public static void openAll(World world, CitadelInstance citadel) {
         openMatching(world, citadel, 0, true);
@@ -69,6 +74,9 @@ public final class SealedGates {
         List<BlockPos> opened = new ArrayList<>();
         for (CitadelInstance.GatePoint gate : new ArrayList<>(citadel.getGates())) {
             if (all ? !opensOnConquest(gate) : gate.requiredFloor != floor) {
+                continue;
+            }
+            if (!mayOpen(citadel, gate)) {
                 continue;
             }
             if (!world.isBlockLoaded(gate.pos)) {

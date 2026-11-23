@@ -7,12 +7,12 @@ import com.shatteredcitadels.palette.ModPaletteRegistry;
 import net.minecraft.init.Bootstrap;
 
 /** Mod blocks and palettes for unit tests, which run without Forge's registries and mod loader. */
-final class TestBlocks {
+public final class TestBlocks {
 
     private TestBlocks() {
     }
 
-    static synchronized void install() {
+    public static synchronized void install() {
         Bootstrap.register();
         if (ModBlocks.SEALED_GATE == null) {
             ModBlocks.SEALED_GATE = new BlockSealedGate();

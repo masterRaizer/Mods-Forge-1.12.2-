@@ -1,0 +1,7 @@
+{
+  "variants": {
+    "filled=false": { "model": "shatteredcitadels:idol_socket_empty" },
+    "filled=true": { "model": "shatteredcitadels:idol_socket_filled" },
+    "inventory": { "model": "shatteredcitadels:idol_socket_empty" }
+  }
+}

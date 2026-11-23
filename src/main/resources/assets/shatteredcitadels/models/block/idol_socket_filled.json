@@ -1,0 +1,8 @@
+{
+  "parent": "block/cube_bottom_top",
+  "textures": {
+    "side": "minecraft:blocks/stonebrick_carved",
+    "bottom": "minecraft:blocks/stonebrick_mossy",
+    "top": "shatteredcitadels:blocks/idol_socket_filled"
+  }
+}

@@ -47,6 +47,7 @@ public final class CitadelInstance {
     /** A buried catacomb fragment: never blocks a structure (NBT "buried", set since 1.6.2). */
     private boolean buriedFragment;
     private net.minecraft.util.ResourceLocation preferredBoss;
+    private VaultLock vault;
 
     public CitadelInstance(UUID citadelId, String displayName, StructureType type, CitadelArchetype archetype,
                            int dimension, BlockPos origin, StructureBoundingBox totalBounds) {
@@ -121,6 +122,15 @@ public final class CitadelInstance {
     /** @return the boss the altar summons first (e.g. Atum's pharaoh), or null for the tier pool. */
     public net.minecraft.util.ResourceLocation getPreferredBoss() {
         return preferredBoss;
+    }
+
+    /** The idol vault of a jungle temple, or null. */
+    public VaultLock getVault() {
+        return vault;
+    }
+
+    public void setVault(VaultLock vault) {
+        this.vault = vault;
     }
 
     public void setPreferredBoss(net.minecraft.util.ResourceLocation preferredBoss) {
@@ -384,6 +394,9 @@ public final class CitadelInstance {
         if (preferredBoss != null) {
             tag.setString("preferredBoss", preferredBoss.toString());
         }
+        if (vault != null) {
+            tag.setTag("vault", vault.write());
+        }
         return tag;
     }
 
@@ -445,6 +458,7 @@ public final class CitadelInstance {
         instance.hasCrypt = tag.getBoolean("crypt");
         instance.buriedFragment = tag.getBoolean("buried");
         instance.preferredBoss = tag.hasKey("preferredBoss") ? new net.minecraft.util.ResourceLocation(tag.getString("preferredBoss")) : null;
+        instance.vault = tag.hasKey("vault") ? VaultLock.read(tag.getCompoundTag("vault")) : null;
         return instance;
     }
 
