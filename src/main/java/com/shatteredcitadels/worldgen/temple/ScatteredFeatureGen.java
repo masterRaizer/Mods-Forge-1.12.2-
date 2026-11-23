@@ -18,7 +18,7 @@ import java.util.Random;
 
 /**
  * Replaces the scattered-feature generator (vanilla's or Biomes O' Plenty's, described by a
- * {@link TempleSites}): on its desert sites it builds our desert temple instead; the sites we do not
+ * {@link TempleSites}): on its desert and jungle sites it builds our temples instead; the sites we do not
  * handle (witch huts, igloos, disabled kinds, other dimensions) keep that generator's own start, and
  * swamp huts keep their witch spawning.
  */
@@ -59,7 +59,8 @@ public class ScatteredFeatureGen extends MapGenScatteredFeature {
 
     /** @return true if this mod builds the temples of {@code kind} (by config). */
     public static boolean handles(TempleSites.Kind kind) {
-        return kind == TempleSites.Kind.DESERT && ConfigCache.get().isReplaceDesertTemples();
+        return kind == TempleSites.Kind.DESERT && ConfigCache.get().isReplaceDesertTemples()
+                || kind == TempleSites.Kind.JUNGLE && ConfigCache.get().isReplaceJungleTemples();
     }
 
     private TempleSites.Kind siteKind(int chunkX, int chunkZ) {
@@ -129,8 +130,11 @@ public class ScatteredFeatureGen extends MapGenScatteredFeature {
             return generated;
         }
         long seed = worldIn.getSeed() ^ ChunkPos.asLong(chunkCoord.x, chunkCoord.z) ^ SALT;
-        StructurePlan plan = DesertTemplePlan.plan(worldIn, chunkCoord.x, chunkCoord.z, seed);
-        if (hasLegacyStartIn(plan.footprint())) {
+        StructurePlan plan = kind == TempleSites.Kind.DESERT ? DesertTemplePlan.plan(worldIn, chunkCoord.x, chunkCoord.z, seed)
+                : JungleTemplePlan.plan(worldIn, chunkCoord.x, chunkCoord.z, seed, null, ConfigCache.get().getJungleTempleBossChance());
+        if (plan == null) {
+            ShatteredCitadelsMod.LOGGER.info("Jungle site {},{} is too wet or steep for a temple", chunkCoord.x, chunkCoord.z);
+        } else if (hasLegacyStartIn(plan.footprint())) {
             ShatteredCitadelsMod.LOGGER.info("Temple site {},{} keeps the temple started before", chunkCoord.x, chunkCoord.z);
         } else if (CitadelWorldGenerator.isAreaFree(worldIn, plan.footprint())) {
             StructureJobs.get(worldIn).submit(plan);

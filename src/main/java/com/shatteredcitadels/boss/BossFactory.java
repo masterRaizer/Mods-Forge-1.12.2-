@@ -88,8 +88,8 @@ public final class BossFactory {
     }
 
     /**
-     * A structure's preferred boss (e.g. Atum's pharaoh) goes first, then a husk in its place when
-     * the mod is missing, then the tier pool.
+     * A structure's preferred boss (Atum's pharaoh, Mowzie's Barako) goes first, then a vanilla
+     * stand-in for when its mod is missing, then the tier pool.
      */
     public static List<ResourceLocation> candidateOrder(ResourceLocation preferred, List<ResourceLocation> pool) {
         if (preferred == null) {
@@ -97,7 +97,9 @@ public final class BossFactory {
         }
         List<ResourceLocation> order = new java.util.ArrayList<>();
         order.add(preferred);
-        order.add(new ResourceLocation("minecraft", "husk"));
+        // Stand-in when the preferred boss's mod is missing: a husk for the pharaoh, else a vindicator.
+        order.add("atum".equals(preferred.getNamespace()) ? new ResourceLocation("minecraft", "husk")
+                : new ResourceLocation("minecraft", "vindication_illager"));
         order.addAll(pool);
         return order;
     }

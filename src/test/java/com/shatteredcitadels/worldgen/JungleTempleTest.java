@@ -221,4 +221,42 @@ public class JungleTempleTest {
             assertFalse(writer.isSolid(300 + step[0], step[1] + 2, -200 + step[2]));
         }
     }
+
+    @Test
+    public void planRoundTrip() {
+        JungleTemplePlan plan = new JungleTemplePlan(300, SY, -200, 9L, 0, true);
+        StructurePlan copy = StructurePlans.read(plan.writeToNBT());
+        assertEquals(plan.writeToNBT(), copy.writeToNBT());
+        CitadelInstance temple = copy.build(new BlockWriter(new Blueprint()));
+        assertNotNull(temple);
+        assertEquals(StructureType.JUNGLE_TEMPLE, temple.getType());
+        assertTrue(temple.getDisplayName(), temple.getDisplayName().startsWith("@name:jungle:"));
+    }
+
+    @Test
+    public void jungleSitesHandledOnlyWhenEnabled() {
+        com.shatteredcitadels.config.ModConfig.CastleGeneration gen = com.shatteredcitadels.config.ModConfig.CASTLE_GENERATION;
+        boolean original = gen.replaceJungleTemples;
+        try {
+            gen.replaceJungleTemples = true;
+            com.shatteredcitadels.config.ConfigCache.rebuild();
+            assertTrue(com.shatteredcitadels.worldgen.temple.ScatteredFeatureGen.handles(
+                    com.shatteredcitadels.worldgen.temple.TempleSites.Kind.JUNGLE));
+            gen.replaceJungleTemples = false;
+            com.shatteredcitadels.config.ConfigCache.rebuild();
+            assertFalse(com.shatteredcitadels.worldgen.temple.ScatteredFeatureGen.handles(
+                    com.shatteredcitadels.worldgen.temple.TempleSites.Kind.JUNGLE));
+        } finally {
+            gen.replaceJungleTemples = original;
+            com.shatteredcitadels.config.ConfigCache.rebuild();
+        }
+    }
+
+    @Test
+    public void barakoFallsBackToAVindicator() {
+        java.util.List<net.minecraft.util.ResourceLocation> order = com.shatteredcitadels.boss.BossFactory.candidateOrder(
+                JungleTemple.BARAKO, java.util.Arrays.asList(new net.minecraft.util.ResourceLocation("minecraft", "zombie")));
+        assertEquals("mowziesmobs:barako", order.get(0).toString());
+        assertEquals("minecraft:vindication_illager", order.get(1).toString());
+    }
 }

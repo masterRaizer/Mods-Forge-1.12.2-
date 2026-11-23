@@ -137,6 +137,12 @@ public final class CommandCitadel extends CommandBase {
             world.getChunk(chunkX, chunkZ);
             plan = com.shatteredcitadels.worldgen.temple.DesertTemplePlan.plan(world, chunkX, chunkZ, random.nextLong(),
                     variant(variant, "pharaoh", "tomb"));
+        } else if ("jungle_temple".equals(kind)) {
+            plan = com.shatteredcitadels.worldgen.temple.JungleTemplePlan.plan(world, chunkX, chunkZ, random.nextLong(),
+                    variant(variant, "boss", "vault"), ConfigCache.get().getJungleTempleBossChance());
+            if (plan == null) {
+                throw new CommandException("The ground here is too wet or too steep for a jungle temple");
+            }
         } else if ("stronghold".equals(kind)) {
             plan = com.shatteredcitadels.worldgen.stronghold.StrongholdPlan.plan(world, chunkX, chunkZ, random.nextLong());
         } else if ("fragment".equals(kind)) {
@@ -333,6 +339,7 @@ public final class CommandCitadel extends CommandBase {
         kinds.add("fragment");
         kinds.add("stronghold");
         kinds.add("desert_temple");
+        kinds.add("jungle_temple");
         return kinds;
     }
 
@@ -356,6 +363,9 @@ public final class CommandCitadel extends CommandBase {
         }
         if (args.length == 3 && "spawn".equalsIgnoreCase(args[0]) && "desert_temple".equalsIgnoreCase(args[1])) {
             return getListOfStringsMatchingLastWord(args, "pharaoh", "tomb");
+        }
+        if (args.length == 3 && "spawn".equalsIgnoreCase(args[0]) && "jungle_temple".equalsIgnoreCase(args[1])) {
+            return getListOfStringsMatchingLastWord(args, "boss", "vault");
         }
         if (args.length == 2 && "listmobs".equalsIgnoreCase(args[0])) {
             return getListOfStringsMatchingLastWord(args, "1", "2", "3", "4", "5", "underground");

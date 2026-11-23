@@ -123,6 +123,22 @@ public final class ModConfig {
         @Config.Comment("Mobs of the desert temple's spawners.")
         public String[] desertTempleSpawnerMobs = {"minecraft:husk", "minecraft:skeleton", "minecraft:spider"};
 
+        @Config.Name("replaceJungleTemples")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.replaceJungleTemples")
+        @Config.Comment("Replace the jungle temple with a stepped overgrown temple over an underground: an idol vault, or Barako's shrine on top.")
+        public boolean replaceJungleTemples = true;
+
+        @Config.Name("jungleTempleBossChance")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.jungleTempleBossChance")
+        @Config.Comment("Chance that a jungle temple ends in a boss shrine on top (Mowzie's Barako, or a vindicator) instead of the idol vault.")
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double jungleTempleBossChance = 0.4D;
+
+        @Config.Name("jungleTempleSpawnerMobs")
+        @Config.LangKey("config.shatteredcitadels.castle_generation.jungleTempleSpawnerMobs")
+        @Config.Comment("Mobs of the jungle temple's spawners.")
+        public String[] jungleTempleSpawnerMobs = {"minecraft:zombie", "minecraft:skeleton", "minecraft:cave_spider"};
+
         @Config.Name("strongholdSpawnerMobs")
         @Config.LangKey("config.shatteredcitadels.castle_generation.strongholdSpawnerMobs")
         @Config.Comment("Mobs of the stronghold's spawners (the portal room always has silverfish).")

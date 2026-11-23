@@ -72,6 +72,9 @@ public final class ConfigCache {
         next.fragmentChance = clamp01(gen.fragmentChance);
         next.replaceStrongholds = gen.replaceStrongholds;
         next.replaceDesertTemples = gen.replaceDesertTemples;
+        next.replaceJungleTemples = gen.replaceJungleTemples;
+        next.jungleTempleBossChance = clamp01(gen.jungleTempleBossChance);
+        next.jungleTempleSpawnerMobs = gen.jungleTempleSpawnerMobs == null ? new String[0] : gen.jungleTempleSpawnerMobs.clone();
         next.desertTempleBossChance = clamp01(gen.desertTempleBossChance);
         next.desertTempleSpawnerMobs = gen.desertTempleSpawnerMobs == null ? new String[0] : gen.desertTempleSpawnerMobs.clone();
         next.strongholdSpawnerMobs = gen.strongholdSpawnerMobs == null ? new String[0] : gen.strongholdSpawnerMobs.clone();
@@ -364,6 +367,9 @@ public final class ConfigCache {
         double fragmentChance = 0.6D;
         boolean replaceStrongholds = true;
         boolean replaceDesertTemples = true;
+        boolean replaceJungleTemples = true;
+        double jungleTempleBossChance = 0.4D;
+        String[] jungleTempleSpawnerMobs = {"minecraft:zombie", "minecraft:skeleton", "minecraft:cave_spider"};
         double desertTempleBossChance = 0.4D;
         String[] desertTempleSpawnerMobs = {"minecraft:husk", "minecraft:skeleton", "minecraft:spider"};
         String[] strongholdSpawnerMobs = {"minecraft:zombie", "minecraft:skeleton", "minecraft:spider", "minecraft:cave_spider",
@@ -450,6 +456,9 @@ public final class ConfigCache {
             c.fragmentChance = fragmentChance;
             c.replaceStrongholds = replaceStrongholds;
             c.replaceDesertTemples = replaceDesertTemples;
+            c.replaceJungleTemples = replaceJungleTemples;
+            c.jungleTempleBossChance = jungleTempleBossChance;
+            c.jungleTempleSpawnerMobs = jungleTempleSpawnerMobs.clone();
             c.desertTempleBossChance = desertTempleBossChance;
             c.desertTempleSpawnerMobs = desertTempleSpawnerMobs.clone();
             c.strongholdSpawnerMobs = strongholdSpawnerMobs.clone();
@@ -529,6 +538,9 @@ public final class ConfigCache {
         public double getFragmentChance() { return fragmentChance; }
         public boolean isReplaceStrongholds() { return replaceStrongholds; }
         public boolean isReplaceDesertTemples() { return replaceDesertTemples; }
+        public boolean isReplaceJungleTemples() { return replaceJungleTemples; }
+        public double getJungleTempleBossChance() { return jungleTempleBossChance; }
+        public String[] getJungleTempleSpawnerMobs() { return jungleTempleSpawnerMobs.clone(); }
         public double getDesertTempleBossChance() { return desertTempleBossChance; }
         public String[] getDesertTempleSpawnerMobs() { return desertTempleSpawnerMobs.clone(); }
         public String[] getStrongholdSpawnerMobs() { return strongholdSpawnerMobs.clone(); }

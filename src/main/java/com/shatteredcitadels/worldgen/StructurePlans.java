@@ -24,6 +24,8 @@ public final class StructurePlans {
                 return ManorPlan.read(tag);
             case FragmentPlan.KIND:
                 return FragmentPlan.read(tag);
+            case com.shatteredcitadels.worldgen.temple.JungleTemplePlan.KIND:
+                return com.shatteredcitadels.worldgen.temple.JungleTemplePlan.read(tag);
             case com.shatteredcitadels.worldgen.temple.DesertTemplePlan.KIND:
                 return com.shatteredcitadels.worldgen.temple.DesertTemplePlan.read(tag);
             case com.shatteredcitadels.worldgen.stronghold.StrongholdPlan.KIND:

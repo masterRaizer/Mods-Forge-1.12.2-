@@ -1,5 +1,6 @@
 package com.shatteredcitadels.worldgen.temple;
 
+import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.palette.CitadelArchetype;
 import com.shatteredcitadels.structure.CitadelInstance;
 import com.shatteredcitadels.structure.CitadelNameGenerator;
@@ -7,6 +8,7 @@ import com.shatteredcitadels.structure.StructureType;
 import com.shatteredcitadels.worldgen.BlockWriter;
 import com.shatteredcitadels.worldgen.StructurePlan;
 import com.shatteredcitadels.worldgen.stronghold.StrongholdLayout;
+import com.shatteredcitadels.worldgen.stronghold.StrongholdMobs;
 import net.minecraft.init.Blocks;
 import net.minecraft.nbt.NBTTagCompound;
 import net.minecraft.util.ResourceLocation;
@@ -37,7 +39,6 @@ public final class JungleTemplePlan implements StructurePlan {
     public final long seed;
     public final int dimension;
     public final boolean boss;
-    private ResourceLocation[] mobs = JungleTempleBuilder.DEFAULT_MOBS;
 
     public JungleTemplePlan(int centreX, int surfaceY, int centreZ, long seed, int dimension, boolean boss) {
         this.centreX = centreX;
@@ -46,11 +47,6 @@ public final class JungleTemplePlan implements StructurePlan {
         this.seed = seed;
         this.dimension = dimension;
         this.boss = boss;
-    }
-
-    public JungleTemplePlan withMobs(ResourceLocation[] mobs) {
-        this.mobs = mobs;
-        return this;
     }
 
     public static int undergroundFloor(int surfaceY) {
@@ -101,6 +97,7 @@ public final class JungleTemplePlan implements StructurePlan {
         CitadelInstance record = new CitadelInstance(MathHelper.getRandomUUID(random),
                 CitadelNameGenerator.generate("jungle", random), StructureType.JUNGLE_TEMPLE, CitadelArchetype.KEEPERS_CITADEL,
                 dimension, new BlockPos(centreX, surfaceY, centreZ), footprint());
+        ResourceLocation[] mobs = StrongholdMobs.resolve(ConfigCache.get().getJungleTempleSpawnerMobs(), JungleTempleBuilder.DEFAULT_MOBS);
         new JungleTempleBuilder(writer, record, random, boss).withMobs(mobs).build(layout);
         new JungleTemple(writer, random, centreX, surfaceY, centreZ, boss, record).withMobs(mobs).build();
         TempleShaft.build(writer, random, new JunglePalette(), Blocks.STONE_BRICK_STAIRS, centreX, centreZ, surfaceY, floor,

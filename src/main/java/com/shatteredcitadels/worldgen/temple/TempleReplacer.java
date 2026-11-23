@@ -15,7 +15,8 @@ public final class TempleReplacer {
 
     @SubscribeEvent
     public static void onInitMapGen(InitMapGenEvent event) {
-        if (event.getType() != InitMapGenEvent.EventType.SCATTERED_FEATURE || !ConfigCache.get().isReplaceDesertTemples()) {
+        if (event.getType() != InitMapGenEvent.EventType.SCATTERED_FEATURE
+                || !ConfigCache.get().isReplaceDesertTemples() && !ConfigCache.get().isReplaceJungleTemples()) {
             return;
         }
         MapGenBase gen = event.getNewGen();
@@ -26,7 +27,7 @@ public final class TempleReplacer {
         if (gen instanceof MapGenScatteredFeature) {
             BopTempleSites bop = BopTempleSites.from((MapGenScatteredFeature) gen);
             if (bop != null) {
-                ShatteredCitadelsMod.LOGGER.info("Biomes O' Plenty temples: our temples take its desert sites");
+                ShatteredCitadelsMod.LOGGER.info("Biomes O' Plenty temples: our temples take its desert and jungle sites");
                 event.setNewGen(new ScatteredFeatureGen(bop, BopTempleSites.spacingOf((MapGenScatteredFeature) gen)));
                 return;
             }
