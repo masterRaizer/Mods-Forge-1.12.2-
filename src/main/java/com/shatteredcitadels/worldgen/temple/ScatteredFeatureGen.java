@@ -14,8 +14,6 @@ import net.minecraft.world.gen.structure.MapGenScatteredFeature;
 import net.minecraft.world.gen.structure.StructureBoundingBox;
 import net.minecraft.world.gen.structure.StructureStart;
 
-import net.minecraftforge.fml.common.ObfuscationReflectionHelper;
-
 import java.util.Random;
 
 /**
@@ -37,7 +35,21 @@ public class ScatteredFeatureGen extends MapGenScatteredFeature {
         this.sites = sites;
         this.spacing = Math.max(SEPARATION + 1, spacing);
         // Vanilla's nearest-site search reads its private spacing: keep it in step with ours.
-        ObfuscationReflectionHelper.setPrivateValue(MapGenScatteredFeature.class, this, this.spacing, "field_82669_g", "maxDistanceBetweenScatteredFeatures");
+        setVanillaSpacing(this.spacing);
+    }
+
+    private void setVanillaSpacing(int value) {
+        for (String name : new String[]{"field_82669_g", "maxDistanceBetweenScatteredFeatures"}) {
+            try {
+                java.lang.reflect.Field field = MapGenScatteredFeature.class.getDeclaredField(name);
+                field.setAccessible(true);
+                field.setInt(this, value);
+                return;
+            } catch (ReflectiveOperationException ignored) {
+                // the other name (obfuscated or development)
+            }
+        }
+        ShatteredCitadelsMod.LOGGER.warn("Cannot set the temple spacing; /locate Temple may miss sites");
     }
 
     /** @return true for the biomes where vanilla places the desert pyramid. */
