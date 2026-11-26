@@ -26,8 +26,10 @@ Code lives in `com.shatteredcitadels.worldgen.dims` and `...dims.fortress`.
   Atum = top solid block like the overworld. Only the populated chunk and its +x/+z neighbours
   are read.
 - **Sites** (`DimensionWorldGenerator`): own section grid = overworld section size x spacing
-  multiplier (1.5 by default), up to three candidate chunks per section, the usual minimum
-  distance between structures. Neighbouring seeds are scrambled.
+  multiplier (1.5 by default), up to three candidate chunks per section; the minimum distance
+  between structures is the larger of the configured one and the section size, so the spare
+  candidates stand down once one is built. Neighbouring seeds are scrambled. Castles are 89-105
+  blocks across; where a castle or temple is rolled but has no room, a tower is tried.
 - **End**: only farther than `endMinDistance` (1000) blocks from 0,0, only on solid end stone.
   Castles only where every chunk of the footprint is an island chunk of the vanilla End
   generator (never asked from other generators: there only towers are built).
@@ -46,15 +48,25 @@ Code lives in `com.shatteredcitadels.worldgen.dims` and `...dims.fortress`.
 - At a vanilla fortress site chunk an own `FortressPlan` is queued through `StructureJobs`.
 - `FortressLayout` (pure, deterministic from the seed): a lattice of nodes 22 blocks apart, the
   keep with the treasure hall in the middle, a random tree with a few loops around it. Nodes:
-  keep, crossings, blaze platforms (vanilla blaze spawner), wart rooms (stairs, soul sand, nether
-  wart), turrets with a chest. Edges: open bridges on pillars down to the ground (through lava) or
-  roofed corridors.
+  keep, crossings, blaze platforms (vanilla blaze spawner), wart rooms (four soul sand beds with nether
+  wart; flush with the deck, no stairs), turrets with a chest. Edges: open bridges with a pillar
+  under the middle of the span or roofed corridors. Pillars go down until they meet solid ground,
+  at most 48 blocks (through lava). 18-30 nodes; everything stays within 96 blocks of the keep.
+- The deck is at y 52-63 by the seed (above the lava sea, the keep roof stays below the bedrock
+  roof); the plan needs no look at the world. The fortress carves its rooms and ways through
+  netherrack like the vanilla one.
 - Vanilla mechanics kept: `isInsideStructure` is true inside the pieces of an own fortress, so the
   vanilla and BOP generators return the fortress spawn list there (wither skeletons, blazes,
   magma cubes, pigmen, skeletons); chests use `minecraft:chests/nether_bridge`; blaze spawners are
-  vanilla spawner blocks, 2-4 per fortress; wart rooms grow nether wart.
+  vanilla spawner blocks, `fortressBlazeSpawners` (0-4, default 3) per fortress; wart rooms grow
+  nether wart. The keep holds four chests: two with the vanilla table, two with the mod's own.
+  `isPositionInStructure` is true inside the outer bounds, as for a vanilla fortress (spawns on
+  nether brick there).
 - The fortress is recorded as `StructureType.NETHER_FORTRESS` (appended), unprotected like the
-  stronghold. `/locate Fortress` keeps working (site rule unchanged).
+  stronghold. `/locate Fortress` keeps working: the generator answers with the nearest site by the vanilla
+  site rule (`FortressSpawns.siteInRegion`, pure, no chunk loading).
+- A site is skipped when a vanilla fortress of an older world or another structure of the mod
+  already stands there.
 
 ## Config (category `dimensions`)
 
