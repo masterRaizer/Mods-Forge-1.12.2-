@@ -21,7 +21,9 @@ public enum StructureType {
     /** Jungle temple: stepped temple over an underground; an idol vault or a boss shrine on top. */
     JUNGLE_TEMPLE,
     /** A bridge over a river: a landmark with no floors, no boss and no protection. */
-    BRIDGE;
+    BRIDGE,
+    /** The mod's own Nether fortress; mobs spawn inside it by the vanilla fortress rules. */
+    NETHER_FORTRESS;
 
     public static StructureType byName(String name) {
         for (StructureType type : values()) {

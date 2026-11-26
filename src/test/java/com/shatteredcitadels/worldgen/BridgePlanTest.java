@@ -69,9 +69,10 @@ public class BridgePlanTest {
     }
 
     @Test
-    public void structureTypeBridgeIsLast() {
+    public void structureTypeBridgeKeepsItsPlace() {
+        // Saves store the constant by position: later parts append after it, nothing moves.
         StructureType[] all = StructureType.values();
-        assertSame(StructureType.BRIDGE, all[all.length - 1]);
+        assertSame(StructureType.BRIDGE, all[StructureType.JUNGLE_TEMPLE.ordinal() + 1]);
         assertSame(StructureType.BRIDGE, StructureType.byName("BRIDGE"));
     }
 }

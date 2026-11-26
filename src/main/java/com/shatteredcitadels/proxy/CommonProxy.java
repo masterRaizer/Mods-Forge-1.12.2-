@@ -46,6 +46,8 @@ public class CommonProxy {
                 com.shatteredcitadels.worldgen.stronghold.StrongholdReplacer.class);
         net.minecraftforge.common.MinecraftForge.TERRAIN_GEN_BUS.register(
                 com.shatteredcitadels.worldgen.temple.TempleReplacer.class);
+        net.minecraftforge.common.MinecraftForge.TERRAIN_GEN_BUS.register(
+                com.shatteredcitadels.worldgen.dims.fortress.FortressReplacer.class);
         CustomAdvancementTriggers.register();
         QuestlineInstaller.install(event.getModConfigurationDirectory());
     }
@@ -54,6 +56,8 @@ public class CommonProxy {
         GameRegistry.registerWorldGenerator(WORLD_GENERATOR, CitadelWorldGenerator.WEIGHT);
         GameRegistry.registerWorldGenerator(new com.shatteredcitadels.worldgen.bridge.BridgeGenerator(),
                 com.shatteredcitadels.worldgen.bridge.BridgeGenerator.WEIGHT);
+        GameRegistry.registerWorldGenerator(new com.shatteredcitadels.worldgen.dims.DimensionWorldGenerator(),
+                com.shatteredcitadels.worldgen.dims.DimensionWorldGenerator.WEIGHT);
         // Citadels, crypts and adopted Castle Dungeons castles now place trial spawners.
         WaveSpawnerHooks.setPlacer(new TrialSpawnerPlacer());
         for (int tier = 1; tier <= 6; tier++) {

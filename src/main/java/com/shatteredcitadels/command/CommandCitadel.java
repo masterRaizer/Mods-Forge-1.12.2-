@@ -128,6 +128,11 @@ public final class CommandCitadel extends CommandBase {
                 world.getChunk(chunkX + dx, chunkZ + dz);
             }
         }
+        StructurePlan dimPlan = com.shatteredcitadels.worldgen.dims.DimensionCommands.planAndQueue(world, rawKind, variant,
+                chunkX, chunkZ);
+        if (dimPlan != null) {
+            return dimPlan;
+        }
         int minX = (chunkX << 4) + 1;
         int minZ = (chunkZ << 4) + 1;
         Random random = new Random(world.getSeed() ^ ((long) chunkX << 32) ^ chunkZ ^ System.nanoTime());
@@ -388,6 +393,7 @@ public final class CommandCitadel extends CommandBase {
         kinds.add("desert_temple");
         kinds.add("jungle_temple");
         kinds.add("bridge");
+        kinds.add("nether_fortress");
         return kinds;
     }
 
