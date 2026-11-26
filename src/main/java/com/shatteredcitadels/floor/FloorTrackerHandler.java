@@ -141,7 +141,8 @@ public final class FloorTrackerHandler {
         CitadelWorldSavedData data = CitadelWorldSavedData.get(player.world);
         BlockPos pos = new BlockPos(player.posX, player.posY, player.posZ);
         CitadelInstance citadel = data.getCitadelAt(pos);
-        if (citadel == null) {
+        // A bridge is a landmark: no panel, no title, no advancement.
+        if (citadel == null || citadel.getType() == com.shatteredcitadels.structure.StructureType.BRIDGE) {
             return FloorHudState.NONE;
         }
         // Gates that waited in unloaded chunks open as soon as someone is inside again.

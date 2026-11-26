@@ -30,6 +30,8 @@ public final class StructurePlans {
                 return com.shatteredcitadels.worldgen.temple.DesertTemplePlan.read(tag);
             case com.shatteredcitadels.worldgen.stronghold.StrongholdPlan.KIND:
                 return com.shatteredcitadels.worldgen.stronghold.StrongholdPlan.read(tag);
+            case com.shatteredcitadels.worldgen.bridge.BridgePlan.KIND:
+                return com.shatteredcitadels.worldgen.bridge.BridgePlan.read(tag);
             default:
                 ShatteredCitadelsMod.LOGGER.warn("Dropping saved structure job of unknown kind '{}'", kind);
                 return null;

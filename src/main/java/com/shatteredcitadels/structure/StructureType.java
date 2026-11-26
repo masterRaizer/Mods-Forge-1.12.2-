@@ -19,7 +19,9 @@ public enum StructureType {
     /** Desert temple: a pyramid over an underground temple; its tomb may hold a pharaoh boss. */
     DESERT_TEMPLE,
     /** Jungle temple: stepped temple over an underground; an idol vault or a boss shrine on top. */
-    JUNGLE_TEMPLE;
+    JUNGLE_TEMPLE,
+    /** A bridge over a river: a landmark with no floors, no boss and no protection. */
+    BRIDGE;
 
     public static StructureType byName(String name) {
         for (StructureType type : values()) {
