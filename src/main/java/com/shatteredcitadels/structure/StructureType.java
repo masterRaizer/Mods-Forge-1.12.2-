@@ -25,7 +25,9 @@ public enum StructureType {
     /** A witch hut on a swamp with a cellar lair: no floors, no boss, no protection. */
     WITCH_HUT,
     /** A lair of Herobrine: plain blocks, mineable, with the summoning altar inside. */
-    HEROBRINE_LAIR;
+    HEROBRINE_LAIR,
+    /** The mod's own Nether fortress; mobs spawn inside it by the vanilla fortress rules. */
+    NETHER_FORTRESS;
 
     public static StructureType byName(String name) {
         for (StructureType type : values()) {

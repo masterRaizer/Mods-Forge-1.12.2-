@@ -59,6 +59,10 @@ public final class ModConfig {
     @Config.LangKey("config.shatteredcitadels.herobrine")
     @Config.Comment("Herobrine: his lairs, the altar, the fight and the apparitions.")
     public static final Herobrine HEROBRINE = new Herobrine();
+    @Config.Name("dimensions")
+    @Config.LangKey("config.shatteredcitadels.dimensions")
+    @Config.Comment("Structures in the Nether, the End and Atum, and the mod's own Nether fortress.")
+    public static final Dimensions DIMENSIONS = new Dimensions();
 
     private ModConfig() {
     }
@@ -763,6 +767,95 @@ public final class ModConfig {
      * handler simply never fires.
      */
     @Mod.EventBusSubscriber(modid = Reference.MODID)
+    public static final class Dimensions {
+
+        @Config.Name("netherEnabled")
+        @Config.LangKey("config.shatteredcitadels.dimensions.netherEnabled")
+        @Config.Comment("Generate nether brick towers and castles in the Nether.")
+        public boolean netherEnabled = true;
+
+        @Config.Name("netherSpacing")
+        @Config.LangKey("config.shatteredcitadels.dimensions.netherSpacing")
+        @Config.Comment("How much sparser than in the overworld structures are in the Nether (1.5 = sections 1.5 times wider).")
+        @Config.RangeDouble(min = 1.0D, max = 8.0D)
+        public double netherSpacing = 1.5D;
+
+        @Config.Name("netherCastleChance")
+        @Config.LangKey("config.shatteredcitadels.dimensions.netherCastleChance")
+        @Config.Comment("Chance that a Nether site holds a walled castle instead of a tower.")
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double netherCastleChance = 0.25D;
+
+        @Config.Name("netherMobs")
+        @Config.LangKey("config.shatteredcitadels.dimensions.netherMobs")
+        @Config.Comment("Garrison of structures in the Nether (entity ids). Empty: the usual tier list.")
+        public String[] netherMobs = {"minecraft:wither_skeleton", "minecraft:blaze", "minecraft:zombie_pigman",
+                "minecraft:magma_cube"};
+
+        @Config.Name("endEnabled")
+        @Config.LangKey("config.shatteredcitadels.dimensions.endEnabled")
+        @Config.Comment("Generate purpur towers and castles on the outer islands of the End.")
+        public boolean endEnabled = true;
+
+        @Config.Name("endSpacing")
+        @Config.LangKey("config.shatteredcitadels.dimensions.endSpacing")
+        @Config.Comment("How much sparser than in the overworld structures are in the End.")
+        @Config.RangeDouble(min = 1.0D, max = 8.0D)
+        public double endSpacing = 1.5D;
+
+        @Config.Name("endCastleChance")
+        @Config.LangKey("config.shatteredcitadels.dimensions.endCastleChance")
+        @Config.Comment("Chance that an End site holds a walled castle instead of a tower (only where the island is wide enough).")
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double endCastleChance = 0.15D;
+
+        @Config.Name("endMinDistance")
+        @Config.LangKey("config.shatteredcitadels.dimensions.endMinDistance")
+        @Config.Comment("Nothing is generated in the End closer than this many blocks to the central island.")
+        @Config.RangeInt(min = 600, max = 100000)
+        public int endMinDistance = 1000;
+
+        @Config.Name("endMobs")
+        @Config.LangKey("config.shatteredcitadels.dimensions.endMobs")
+        @Config.Comment("Garrison of structures in the End (entity ids). Empty: the usual tier list.")
+        public String[] endMobs = {"minecraft:enderman", "minecraft:shulker", "minecraft:endermite"};
+
+        @Config.Name("atumEnabled")
+        @Config.LangKey("config.shatteredcitadels.dimensions.atumEnabled")
+        @Config.Comment("Generate limestone towers and the mod's desert temple in Atum (needs the Atum 2 mod).")
+        public boolean atumEnabled = true;
+
+        @Config.Name("atumSpacing")
+        @Config.LangKey("config.shatteredcitadels.dimensions.atumSpacing")
+        @Config.Comment("How much sparser than in the overworld structures are in Atum.")
+        @Config.RangeDouble(min = 1.0D, max = 8.0D)
+        public double atumSpacing = 1.5D;
+
+        @Config.Name("atumTempleChance")
+        @Config.LangKey("config.shatteredcitadels.dimensions.atumTempleChance")
+        @Config.Comment("Chance that an Atum site holds a desert temple instead of a tower.")
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double atumTempleChance = 0.4D;
+
+        @Config.Name("atumMobs")
+        @Config.LangKey("config.shatteredcitadels.dimensions.atumMobs")
+        @Config.Comment("Garrison of structures in Atum (entity ids; unknown ones are skipped). Empty: the usual tier list.")
+        public String[] atumMobs = {"atum:mummy", "atum:forsaken", "atum:bonestorm", "atum:wraith", "atum:stoneguard",
+                "minecraft:husk"};
+
+        @Config.Name("replaceNetherFortress")
+        @Config.LangKey("config.shatteredcitadels.dimensions.replaceNetherFortress")
+        @Config.Comment("Build the mod's own large fortress where a vanilla Nether fortress would be (new chunks only). Needs a restart.")
+        @Config.RequiresMcRestart
+        public boolean replaceNetherFortress = true;
+
+        @Config.Name("fortressBlazeSpawners")
+        @Config.LangKey("config.shatteredcitadels.dimensions.fortressBlazeSpawners")
+        @Config.Comment("Blaze spawner platforms in one fortress.")
+        @Config.RangeInt(min = 0, max = 4)
+        public int fortressBlazeSpawners = 3;
+    }
+
     public static final class ChangeHandler {
 
         private ChangeHandler() {

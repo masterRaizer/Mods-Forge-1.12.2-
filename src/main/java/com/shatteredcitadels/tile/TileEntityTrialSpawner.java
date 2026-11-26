@@ -350,6 +350,14 @@ public class TileEntityTrialSpawner extends TileEntity implements ITickable {
         // Same seed for every spawner of the floor: one themed combination per citadel floor.
         Random random = new Random(seed);
         int count = 2 + random.nextInt(3);
+        java.util.List<net.minecraft.util.ResourceLocation> garrison =
+                com.shatteredcitadels.worldgen.dims.DimensionMobs.combo(world, random, count);
+        if (garrison != null) {
+            // The Nether, the End and Atum man their structures with their own mobs.
+            assignedMobCombo.addAll(garrison);
+            markDirty();
+            return;
+        }
         for (MobEntry entry : registry.pickCombo(random, mobTier(), underground, count)) {
             assignedMobCombo.add(entry.getId());
         }

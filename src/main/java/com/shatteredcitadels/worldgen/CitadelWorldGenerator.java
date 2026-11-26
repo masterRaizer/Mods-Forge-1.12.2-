@@ -51,7 +51,8 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
     @Override
     public void generate(Random random, int chunkX, int chunkZ, World world, IChunkGenerator chunkGenerator,
                          IChunkProvider chunkProvider) {
-        if (world.isRemote || generating) {
+        if (world.isRemote || generating || com.shatteredcitadels.worldgen.dims.DimsConfig.active(world) != null) {
+            // The Nether, the End and Atum have their own generator.
             return;
         }
         ConfigCache.Snapshot config = ConfigCache.get();

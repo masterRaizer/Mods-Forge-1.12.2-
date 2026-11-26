@@ -116,7 +116,7 @@ public final class CitadelInstance {
      * (mineable like vanilla); a pharaoh's tomb protects only its tomb part.
      */
     public boolean isUnprotected() {
-        return type == StructureType.STRONGHOLD || type == StructureType.BRIDGE || type == StructureType.WITCH_HUT || type == StructureType.HEROBRINE_LAIR || isBuriedFragment() || (type == StructureType.DESERT_TEMPLE || type == StructureType.JUNGLE_TEMPLE) && parts.isEmpty();
+        return type == StructureType.STRONGHOLD || type == StructureType.BRIDGE || type == StructureType.WITCH_HUT || type == StructureType.HEROBRINE_LAIR || type == StructureType.NETHER_FORTRESS || isBuriedFragment() || (type == StructureType.DESERT_TEMPLE || type == StructureType.JUNGLE_TEMPLE) && parts.isEmpty();
     }
 
     /** @return the boss the altar summons first (e.g. Atum's pharaoh), or null for the tier pool. */

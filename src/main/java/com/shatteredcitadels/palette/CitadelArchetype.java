@@ -274,6 +274,65 @@ public enum CitadelArchetype {
                     "minecraft:glowstone")
             .slot(PaletteSlot.FURNITURE,
                     "cfm:*chair*|cfm:*table*|cfm:*cabinet*",
+                    "minecraft:bookshelf|minecraft:bookshelf|minecraft:crafting_table")),
+
+    /** Towers and castles of the Nether; never chosen in the overworld. */
+    NETHER_CITADEL("Nether Citadel", spec()
+            .slot(PaletteSlot.WALL,
+                    "minecraft:nether_brick|minecraft:nether_brick|minecraft:nether_brick|minecraft:red_nether_brick")
+            .slot(PaletteSlot.PILLAR,
+                    "modernbackports:polished_basalt",
+                    "minecraft:red_nether_brick")
+            .slot(PaletteSlot.FLOOR,
+                    "modernbackports:polished_blackstone_bricks",
+                    "minecraft:nether_brick")
+            .slot(PaletteSlot.STAIRS,
+                    "minecraft:nether_brick_stairs")
+            .slot(PaletteSlot.ACCENT,
+                    "modernbackports:gilded_blackstone|minecraft:magma",
+                    "minecraft:magma|minecraft:soul_sand")
+            .slot(PaletteSlot.LIGHT,
+                    "modernbackports:shroomlight",
+                    "minecraft:glowstone")
+            .slot(PaletteSlot.FURNITURE,
+                    "minecraft:bookshelf|minecraft:bookshelf|minecraft:crafting_table")),
+
+    /** Towers and castles of the outer End islands; never chosen in the overworld. */
+    END_CITADEL("End Citadel", spec()
+            .slot(PaletteSlot.WALL,
+                    "minecraft:purpur_block|minecraft:purpur_block|minecraft:end_bricks")
+            .slot(PaletteSlot.PILLAR,
+                    "minecraft:purpur_pillar")
+            .slot(PaletteSlot.FLOOR,
+                    "minecraft:end_bricks")
+            .slot(PaletteSlot.STAIRS,
+                    "minecraft:purpur_stairs")
+            .slot(PaletteSlot.ACCENT,
+                    "minecraft:end_bricks|minecraft:purpur_pillar")
+            .slot(PaletteSlot.LIGHT,
+                    "minecraft:sea_lantern")
+            .slot(PaletteSlot.FURNITURE,
+                    "minecraft:bookshelf|minecraft:bookshelf|minecraft:crafting_table")),
+
+    /** Towers of Atum in its limestone (sandstone without the mod); never chosen in the overworld. */
+    ATUM_CITADEL("Atum Citadel", spec()
+            .slot(PaletteSlot.WALL,
+                    "atum:limestone_brick_large|atum:limestone_brick_large|atum:limestone_brick_small|atum:limestone_brick_cracked_brick",
+                    "minecraft:sandstone@0|minecraft:sandstone@2")
+            .slot(PaletteSlot.PILLAR,
+                    "atum:limestone_brick_carved",
+                    "minecraft:sandstone@2")
+            .slot(PaletteSlot.FLOOR,
+                    "atum:limestone_brick_small",
+                    "minecraft:sandstone@2")
+            .slot(PaletteSlot.STAIRS,
+                    "minecraft:sandstone_stairs")
+            .slot(PaletteSlot.ACCENT,
+                    "atum:limestone_brick_chiseled",
+                    "minecraft:sandstone@1")
+            .slot(PaletteSlot.LIGHT,
+                    "minecraft:glowstone")
+            .slot(PaletteSlot.FURNITURE,
                     "minecraft:bookshelf|minecraft:bookshelf|minecraft:crafting_table"));
 
     private final String displayName;

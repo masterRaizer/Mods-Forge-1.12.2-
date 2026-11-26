@@ -121,6 +121,35 @@ public final class Blueprint {
         actions.add(action);
     }
 
+    /**
+     * Replaces block states of an unsealed blueprint (a structure moved to another dimension) and
+     * keeps terrain clearing at or below {@code clearCeiling}.
+     *
+     * @param stateIds maps a {@link Block#getStateId state id} to the id to place instead
+     */
+    public void remap(java.util.function.IntUnaryOperator stateIds, int clearCeiling) {
+        for (long key : states.keySet().toLongArray()) {
+            int old = states.get(key);
+            int mapped = stateIds.applyAsInt(old);
+            if (mapped != old) {
+                states.put(key, mapped);
+            }
+        }
+        for (int i = 0; i < ops.size(); i++) {
+            ColumnOp op = ops.get(i);
+            if (op.kind == ColumnOp.CLEAR) {
+                if (op.stateIdOrToY > clearCeiling) {
+                    ops.set(i, new ColumnOp(ColumnOp.CLEAR, op.x, op.z, op.y, clearCeiling, 0));
+                }
+            } else {
+                int mapped = stateIds.applyAsInt(op.stateIdOrToY);
+                if (mapped != op.stateIdOrToY) {
+                    ops.set(i, new ColumnOp(op.kind, op.x, op.z, op.y, mapped, op.maxDepth));
+                }
+            }
+        }
+    }
+
     public int blockCount() {
         return states.size();
     }
