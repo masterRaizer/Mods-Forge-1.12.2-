@@ -1,6 +1,6 @@
 # River Bridges (YUNG-inspired)
 
-Status: design, waiting for the user's approval. No code yet.
+Status: approved by the user 2026-11-26. Plan: `docs/superpowers/plans/2026-11-26-river-bridges.md`.
 
 ## Intent
 Rivers in the pack are bare. The user wants bridges over them in the spirit of YUNG's Bridges: they
@@ -64,6 +64,18 @@ with a reward. Bridges are small, frequent structures, unlike temples and citade
   chest position).
 - **Command for testing**: `/citadel spawn bridge [style] [fortified]` builds one at the nearest
   suitable crossing or, failing that, straight ahead of the player over whatever is there.
+
+## Amendments after reading the code (2026-11-26, approved design unchanged for the player)
+- **Spacing instead of sections.** No per-section saved state. A river chunk being populated may get
+  a bridge when its centre is a crossing, a seeded per-chunk roll passes (`bridgeChance`, 0.5) and
+  no other bridge (recorded or pending) lies within `bridgeMinDistanceChunks` (24). Replaces
+  `bridgeSpacing`.
+- **No "too steep cancels" rule.** `StructurePlan.build` has no world access, so ends adapt through
+  the write-time column operations (`fillDown`, `clearColumn`, `setIfNotSolid`). Sites whose bank
+  biome is mountain, ocean or mushroom are rejected from the biome map instead.
+- **Guards are spawned when the camp is written**, by a tile action, and made persistent; no
+  proximity tracking and no guard-spawned flag. None in Peaceful.
+- **Bridge records** show no HUD panel, title, floors or advancement and are unprotected.
 
 ## Goals
 - A player following a river in a new world meets a bridge every 400-600 blocks on average.
