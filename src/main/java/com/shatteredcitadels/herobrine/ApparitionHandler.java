@@ -1,7 +1,12 @@
 package com.shatteredcitadels.herobrine;
 
 import com.shatteredcitadels.Reference;
+import com.shatteredcitadels.boss.ModSounds;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
+import net.minecraft.network.play.server.SPacketSoundEffect;
+import net.minecraft.util.SoundCategory;
+import net.minecraft.util.SoundEvent;
 import net.minecraft.util.math.BlockPos;
 import net.minecraft.world.World;
 import net.minecraftforge.fml.common.Mod;
@@ -33,7 +38,14 @@ public final class ApparitionHandler {
         EntityPlayer player = event.player;
         World world = player.world;
         if (event.phase != TickEvent.Phase.END || world.isRemote || player.ticksExisted % CHECK_INTERVAL != 0
-                || !HerobrineSettings.apparitions() || world.provider.getDimension() != 0 || player.isSpectator()) {
+                || !HerobrineSettings.enabled() || world.provider.getDimension() != 0 || player.isSpectator()) {
+            return;
+        }
+        HerobrineSavedData lairs = HerobrineSavedData.get(world);
+        if (lairs.isHaunted(player.posX, player.posZ, ApparitionRule.WHISPER_RADIUS) && ApparitionRule.whispers(world.rand)) {
+            playTo(player, ModSounds.HEROBRINE_WHISPER, 0.4F);
+        }
+        if (!HerobrineSettings.apparitions()) {
             return;
         }
         long now = world.getTotalWorldTime();
@@ -44,7 +56,7 @@ public final class ApparitionHandler {
             return;
         }
         if (!ApparitionRule.isDue(now, next)
-                || !HerobrineSavedData.get(world).isHaunted(player.posX, player.posZ, HerobrineSettings.apparitionRadiusBlocks())) {
+                || !lairs.isHaunted(player.posX, player.posZ, HerobrineSettings.apparitionRadiusBlocks())) {
             return;
         }
         BlockPos feet = new BlockPos(player);
@@ -64,8 +76,17 @@ public final class ApparitionHandler {
                 figure.setLocationAndAngles(stand.getX() + 0.5D, stand.getY(), stand.getZ() + 0.5D, 0.0F, 0.0F);
                 figure.faceEntity(player, 360.0F, 360.0F);
                 world.spawnEntity(figure);
+                playTo(player, ModSounds.HEROBRINE_APPARITION, 1.0F);
                 return;
             }
+        }
+    }
+
+    /** Plays a sound that only this player hears, at the player's own position. */
+    private static void playTo(EntityPlayer player, SoundEvent sound, float volume) {
+        if (player instanceof EntityPlayerMP) {
+            ((EntityPlayerMP) player).connection.sendPacket(new SPacketSoundEffect(sound, SoundCategory.AMBIENT,
+                    player.posX, player.posY, player.posZ, volume, 1.0F));
         }
     }
 

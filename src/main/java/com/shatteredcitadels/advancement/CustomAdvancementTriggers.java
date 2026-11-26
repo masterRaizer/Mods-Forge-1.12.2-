@@ -39,6 +39,13 @@ public final class CustomAdvancementTriggers {
     /** conditions: optional "chapters" = minimum number of distinct chapters collected */
     public static final Trigger<CountInstance> LORE_COLLECTED = new Trigger<>("lore_collected", CountInstance::new);
 
+    /** No conditions: the player lit the altar that called Herobrine. */
+    public static final Trigger<SimpleInstance> HEROBRINE_SUMMONED =
+            new Trigger<>("herobrine_summoned", json -> new SimpleInstance(new ResourceLocation(Reference.MODID, "herobrine_summoned")));
+    /** No conditions: the player was in the fight when Herobrine fell. */
+    public static final Trigger<SimpleInstance> HEROBRINE_DEFEATED =
+            new Trigger<>("herobrine_defeated", json -> new SimpleInstance(new ResourceLocation(Reference.MODID, "herobrine_defeated")));
+
     private static boolean registered;
 
     private CustomAdvancementTriggers() {
@@ -56,6 +63,8 @@ public final class CustomAdvancementTriggers {
         CriteriaTriggers.register(SPAWNER_COMPLETED);
         CriteriaTriggers.register(BOSS_DEFEATED);
         CriteriaTriggers.register(LORE_COLLECTED);
+        CriteriaTriggers.register(HEROBRINE_SUMMONED);
+        CriteriaTriggers.register(HEROBRINE_DEFEATED);
     }
 
     // ------------------------------------------------------------------ firing helpers
@@ -82,6 +91,14 @@ public final class CustomAdvancementTriggers {
 
     public static void loreCollected(EntityPlayerMP player, int chapters) {
         LORE_COLLECTED.trigger(player, i -> chapters >= i.count);
+    }
+
+    public static void herobrineSummoned(EntityPlayerMP player) {
+        HEROBRINE_SUMMONED.trigger(player, i -> true);
+    }
+
+    public static void herobrineDefeated(EntityPlayerMP player) {
+        HEROBRINE_DEFEATED.trigger(player, i -> true);
     }
 
     // ------------------------------------------------------------------ trigger base
@@ -147,6 +164,13 @@ public final class CustomAdvancementTriggers {
     }
 
     // ------------------------------------------------------------------ instances
+
+    /** A criterion without conditions. */
+    public static final class SimpleInstance extends AbstractCriterionInstance {
+        SimpleInstance(ResourceLocation trigger) {
+            super(trigger);
+        }
+    }
 
     public static final class EnterInstance extends AbstractCriterionInstance {
         final String type;

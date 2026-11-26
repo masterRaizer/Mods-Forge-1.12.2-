@@ -13,6 +13,10 @@ public final class ApparitionRule {
     public static final int VANISH_LOOK_TICKS = 20;
     /** The figure vanishes by itself after this many ticks. */
     public static final int LIFETIME_TICKS = 600;
+    /** The lair whispers to players this close to it (blocks, horizontally). */
+    public static final int WHISPER_RADIUS = 48;
+    /** One look in this many ends in a whisper. */
+    private static final int WHISPER_ODDS = 6;
     private static final int TICKS_PER_MINUTE = 1200;
 
     private ApparitionRule() {
@@ -48,6 +52,11 @@ public final class ApparitionRule {
         double dx = playerX - lairX;
         double dz = playerZ - lairZ;
         return dx * dx + dz * dz <= (double) radius * radius;
+    }
+
+    /** @return true if this look of a player standing near a living lair ends in a whisper. */
+    public static boolean whispers(Random random) {
+        return random.nextInt(WHISPER_ODDS) == 0;
     }
 
     /** @return true if a due attempt at a fitting moment really shows the figure. */

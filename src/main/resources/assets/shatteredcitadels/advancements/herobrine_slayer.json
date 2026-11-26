@@ -1,0 +1,26 @@
+{
+  "display": {
+    "icon": {
+      "item": "shatteredcitadels:herobrine_eye"
+    },
+    "title": {
+      "translate": "advancements.shatteredcitadels.herobrine_slayer.title"
+    },
+    "description": {
+      "translate": "advancements.shatteredcitadels.herobrine_slayer.description"
+    },
+    "frame": "challenge",
+    "show_toast": true,
+    "announce_to_chat": true,
+    "hidden": false
+  },
+  "parent": "shatteredcitadels:herobrine_altar",
+  "criteria": {
+    "herobrine": {
+      "trigger": "shatteredcitadels:herobrine_defeated"
+    }
+  },
+  "rewards": {
+    "experience": 500
+  }
+}

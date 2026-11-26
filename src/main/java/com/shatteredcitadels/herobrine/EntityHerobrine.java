@@ -15,6 +15,8 @@ import net.minecraft.entity.effect.EntityLightningBolt;
 import net.minecraft.entity.monster.EntityMob;
 import net.minecraft.entity.monster.EntitySkeleton;
 import net.minecraft.entity.monster.EntityZombie;
+import com.shatteredcitadels.advancement.CustomAdvancementTriggers;
+import com.shatteredcitadels.boss.ModSounds;
 import net.minecraft.entity.player.EntityPlayer;
 import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
@@ -160,7 +162,7 @@ public class EntityHerobrine extends EntityMob {
         int now = HerobrinePhases.advance(phase, getHealth() / getMaxHealth());
         if (now != phase) {
             phase = now;
-            playSound(SoundEvents.ENTITY_ENDERDRAGON_GROWL, 1.5F, 0.7F);
+            playSound(ModSounds.HEROBRINE_PHASE, 1.5F, 1.0F);
             particles(EnumParticleTypes.SMOKE_LARGE, posX, posY + 1.0D, posZ, 40, 0.4D, 0.8D, 0.4D, 0.02D);
         }
         if (darknessCooldown > 0) {
@@ -220,8 +222,8 @@ public class EntityHerobrine extends EntityMob {
             double x = target.posX + bx * distance + (attempt == 0 ? 0.0D : rand.nextDouble() * 4.0D - 2.0D);
             double z = target.posZ + bz * distance + (attempt == 0 ? 0.0D : rand.nextDouble() * 4.0D - 2.0D);
             if (attemptTeleport(x, target.posY + 1.0D, z)) {
-                world.playSound(null, fromX, fromY, fromZ, SoundEvents.ENTITY_ENDERMEN_TELEPORT, SoundCategory.HOSTILE, 1.0F, 0.8F);
-                playSound(SoundEvents.ENTITY_ENDERMEN_TELEPORT, 1.0F, 0.8F);
+                world.playSound(null, fromX, fromY, fromZ, ModSounds.HEROBRINE_TELEPORT, SoundCategory.HOSTILE, 1.0F, 1.0F);
+                playSound(ModSounds.HEROBRINE_TELEPORT, 1.0F, 1.0F);
                 getNavigator().clearPath();
                 faceEntity(target, 360.0F, 360.0F);
                 return;
@@ -232,7 +234,7 @@ public class EntityHerobrine extends EntityMob {
     private void startLightning(EntityLivingBase target) {
         lightningTarget = new BlockPos(target.posX, target.getEntityBoundingBox().minY, target.posZ);
         lightningCountdown = HerobrineSettings.lightningWarningTicks();
-        world.playSound(null, lightningTarget, SoundEvents.ENTITY_CREEPER_PRIMED, SoundCategory.HOSTILE, 2.0F, 0.6F);
+        world.playSound(null, lightningTarget, ModSounds.HEROBRINE_LIGHTNING, SoundCategory.HOSTILE, 2.0F, 1.0F);
         swingArm(net.minecraft.util.EnumHand.MAIN_HAND);
     }
 
@@ -325,7 +327,7 @@ public class EntityHerobrine extends EntityMob {
             }
         }
         if (any) {
-            playSound(SoundEvents.ENTITY_WITHER_SHOOT, 1.5F, 0.6F);
+            playSound(ModSounds.HEROBRINE_SUMMON, 1.5F, 1.0F);
         }
     }
 
@@ -375,6 +377,9 @@ public class EntityHerobrine extends EntityMob {
             if (altar != null) {
                 HerobrineSavedData.get(world).advance(altar, HerobrineSavedData.DEFEATED);
             }
+            for (EntityPlayerMP fighter : bossInfo.getPlayers()) {
+                CustomAdvancementTriggers.herobrineDefeated(fighter);
+            }
         }
     }
 
@@ -393,7 +398,7 @@ public class EntityHerobrine extends EntityMob {
 
     @Override
     protected SoundEvent getDeathSound() {
-        return SoundEvents.ENTITY_WITHER_DEATH;
+        return ModSounds.HEROBRINE_DEATH;
     }
 
     // ------------------------------------------------------------------ boss bar

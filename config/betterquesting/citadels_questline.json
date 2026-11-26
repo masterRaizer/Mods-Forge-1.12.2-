@@ -742,6 +742,126 @@
           "isLevels:1": 1
         }
       }
+    },
+    "12:10": {
+      "questID:3": 12,
+      "preRequisites:11": [
+        0
+      ],
+      "properties:10": {
+        "betterquesting:10": {
+          "name:8": "Зря зажжённый огонь",
+          "desc:8": "В глухих местах прячутся логова Херобрина.\n\nНайдите логово и зажгите его алтарь огнивом.",
+          "icon:10": {
+            "id:8": "shatteredcitadels:herobrine_eye",
+            "Count:3": 1,
+            "Damage:2": 0,
+            "OreDict:8": ""
+          },
+          "isMain:1": 0,
+          "isSilent:1": 0,
+          "lockedProgress:1": 0,
+          "simultaneous:1": 0,
+          "globalShare:1": 0,
+          "isGlobal:1": 0,
+          "autoClaim:1": 0,
+          "partySingleReward:1": 0,
+          "questLogic:8": "AND",
+          "taskLogic:8": "AND",
+          "repeatTime:3": -1,
+          "repeat_relative:1": 1,
+          "visibility:8": "NORMAL",
+          "snd_complete:8": "minecraft:entity.player.levelup",
+          "snd_update:8": "minecraft:entity.player.levelup"
+        }
+      },
+      "tasks:9": {
+        "0:10": {
+          "index:3": 0,
+          "taskID:8": "bq_standard:advancement",
+          "advancement_id:8": "shatteredcitadels:herobrine_altar"
+        }
+      },
+      "rewards:9": {
+        "0:10": {
+          "index:3": 0,
+          "rewardID:8": "bq_standard:item",
+          "rewards:9": {
+            "0:10": {
+              "id:8": "minecraft:golden_apple",
+              "Count:3": 1,
+              "Damage:2": 0,
+              "OreDict:8": ""
+            }
+          }
+        },
+        "1:10": {
+          "index:3": 1,
+          "rewardID:8": "bq_standard:xp",
+          "amount:3": 5,
+          "isLevels:1": 1
+        }
+      }
+    },
+    "13:10": {
+      "questID:3": 13,
+      "preRequisites:11": [
+        12
+      ],
+      "properties:10": {
+        "betterquesting:10": {
+          "name:8": "Конец легенды",
+          "desc:8": "Он ответил на зов. Бой тяжёлый, но честный.\n\nПобедите Херобрина.",
+          "icon:10": {
+            "id:8": "shatteredcitadels:herobrine_eye",
+            "Count:3": 1,
+            "Damage:2": 0,
+            "OreDict:8": ""
+          },
+          "isMain:1": 0,
+          "isSilent:1": 0,
+          "lockedProgress:1": 0,
+          "simultaneous:1": 0,
+          "globalShare:1": 0,
+          "isGlobal:1": 0,
+          "autoClaim:1": 0,
+          "partySingleReward:1": 0,
+          "questLogic:8": "AND",
+          "taskLogic:8": "AND",
+          "repeatTime:3": -1,
+          "repeat_relative:1": 1,
+          "visibility:8": "NORMAL",
+          "snd_complete:8": "minecraft:entity.player.levelup",
+          "snd_update:8": "minecraft:entity.player.levelup"
+        }
+      },
+      "tasks:9": {
+        "0:10": {
+          "index:3": 0,
+          "taskID:8": "bq_standard:advancement",
+          "advancement_id:8": "shatteredcitadels:herobrine_slayer"
+        }
+      },
+      "rewards:9": {
+        "0:10": {
+          "index:3": 0,
+          "rewardID:8": "bq_standard:item",
+          "rewards:9": {
+            "0:10": {
+              "id:8": "minecraft:nether_star",
+              "Count:3": 1,
+              "Damage:2": 0,
+              "OreDict:8": ""
+            }
+          }
+        },
+        "1:10": {
+          "index:3": 1,
+          "rewardID:8": "bq_standard:xp",
+          "amount:3": 30,
+          "isLevels:1": 1
+        }
+      }
     }
   },
   "questLines:9": {
@@ -845,6 +965,20 @@
           "id:3": 11,
           "x:3": 144,
           "y:3": 96,
+          "sizeX:3": 24,
+          "sizeY:3": 24
+        },
+        "12:10": {
+          "id:3": 12,
+          "x:3": 48,
+          "y:3": 192,
+          "sizeX:3": 24,
+          "sizeY:3": 24
+        },
+        "13:10": {
+          "id:3": 13,
+          "x:3": 96,
+          "y:3": 192,
           "sizeX:3": 24,
           "sizeY:3": 24
         }

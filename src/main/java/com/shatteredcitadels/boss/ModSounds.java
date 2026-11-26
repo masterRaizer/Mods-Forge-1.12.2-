@@ -20,6 +20,19 @@ public final class ModSounds {
     /** Telegraph of the Arcane Shield. */
     public static SoundEvent BOSS_SHIELD_CHARGE;
 
+    /** Herobrine answers the altar. */
+    public static SoundEvent HEROBRINE_APPEAR;
+    public static SoundEvent HEROBRINE_TELEPORT;
+    /** The warning before his bolt. */
+    public static SoundEvent HEROBRINE_LIGHTNING;
+    public static SoundEvent HEROBRINE_SUMMON;
+    public static SoundEvent HEROBRINE_PHASE;
+    public static SoundEvent HEROBRINE_DEATH;
+    /** The distant figure; sent only to the player it is shown to. */
+    public static SoundEvent HEROBRINE_APPARITION;
+    /** A quiet whisper near a lair; sent only to the player who stands there. */
+    public static SoundEvent HEROBRINE_WHISPER;
+
     private ModSounds() {
     }
 
@@ -27,7 +40,16 @@ public final class ModSounds {
     public static void register(RegistryEvent.Register<SoundEvent> event) {
         BOSS_SHIELD_ACTIVATE = create("boss.shield_activate");
         BOSS_SHIELD_CHARGE = create("boss.shield_charge");
-        event.getRegistry().registerAll(BOSS_SHIELD_ACTIVATE, BOSS_SHIELD_CHARGE);
+        HEROBRINE_APPEAR = create("herobrine.appear");
+        HEROBRINE_TELEPORT = create("herobrine.teleport");
+        HEROBRINE_LIGHTNING = create("herobrine.lightning");
+        HEROBRINE_SUMMON = create("herobrine.summon");
+        HEROBRINE_PHASE = create("herobrine.phase");
+        HEROBRINE_DEATH = create("herobrine.death");
+        HEROBRINE_APPARITION = create("herobrine.apparition");
+        HEROBRINE_WHISPER = create("herobrine.whisper");
+        event.getRegistry().registerAll(BOSS_SHIELD_ACTIVATE, BOSS_SHIELD_CHARGE, HEROBRINE_APPEAR, HEROBRINE_TELEPORT,
+                HEROBRINE_LIGHTNING, HEROBRINE_SUMMON, HEROBRINE_PHASE, HEROBRINE_DEATH, HEROBRINE_APPARITION, HEROBRINE_WHISPER);
     }
 
     private static SoundEvent create(String name) {

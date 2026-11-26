@@ -13,5 +13,69 @@
     "sounds": [
       { "name": "minecraft:mob/evocation_illager/prepare_wololo", "pitch": 1.3 }
     ]
+  },
+  "herobrine.appear": {
+    "category": "hostile",
+    "subtitle": "shatteredcitadels.subtitle.herobrine.appear",
+    "sounds": [
+      { "name": "minecraft:mob/wither/spawn", "pitch": 0.6 }
+    ]
+  },
+  "herobrine.teleport": {
+    "category": "hostile",
+    "subtitle": "shatteredcitadels.subtitle.herobrine.teleport",
+    "sounds": [
+      { "name": "minecraft:mob/endermen/portal", "pitch": 0.8 },
+      { "name": "minecraft:mob/endermen/portal2", "pitch": 0.8 }
+    ]
+  },
+  "herobrine.lightning": {
+    "category": "hostile",
+    "subtitle": "shatteredcitadels.subtitle.herobrine.lightning",
+    "sounds": [
+      { "name": "minecraft:random/fuse", "pitch": 0.6 }
+    ]
+  },
+  "herobrine.summon": {
+    "category": "hostile",
+    "subtitle": "shatteredcitadels.subtitle.herobrine.summon",
+    "sounds": [
+      { "name": "minecraft:mob/wither/shoot", "pitch": 0.6 }
+    ]
+  },
+  "herobrine.phase": {
+    "category": "hostile",
+    "subtitle": "shatteredcitadels.subtitle.herobrine.phase",
+    "sounds": [
+      { "name": "minecraft:mob/enderdragon/growl1", "pitch": 0.7 },
+      { "name": "minecraft:mob/enderdragon/growl2", "pitch": 0.7 },
+      { "name": "minecraft:mob/enderdragon/growl3", "pitch": 0.7 },
+      { "name": "minecraft:mob/enderdragon/growl4", "pitch": 0.7 }
+    ]
+  },
+  "herobrine.death": {
+    "category": "hostile",
+    "subtitle": "shatteredcitadels.subtitle.herobrine.death",
+    "sounds": [
+      { "name": "minecraft:mob/wither/death", "pitch": 0.8 }
+    ]
+  },
+  "herobrine.apparition": {
+    "category": "ambient",
+    "subtitle": "shatteredcitadels.subtitle.herobrine.apparition",
+    "sounds": [
+      { "name": "minecraft:mob/endermen/stare", "pitch": 0.6 }
+    ]
+  },
+  "herobrine.whisper": {
+    "category": "ambient",
+    "subtitle": "shatteredcitadels.subtitle.herobrine.whisper",
+    "sounds": [
+      { "name": "minecraft:mob/endermen/idle1", "pitch": 0.5, "volume": 0.4 },
+      { "name": "minecraft:mob/endermen/idle2", "pitch": 0.5, "volume": 0.4 },
+      { "name": "minecraft:mob/endermen/idle3", "pitch": 0.5, "volume": 0.4 },
+      { "name": "minecraft:mob/endermen/idle4", "pitch": 0.5, "volume": 0.4 },
+      { "name": "minecraft:mob/endermen/idle5", "pitch": 0.5, "volume": 0.4 }
+    ]
   }
 }

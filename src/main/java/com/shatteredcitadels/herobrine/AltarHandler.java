@@ -1,12 +1,14 @@
 package com.shatteredcitadels.herobrine;
 
 import com.shatteredcitadels.Reference;
+import com.shatteredcitadels.advancement.CustomAdvancementTriggers;
+import com.shatteredcitadels.boss.ModSounds;
 import net.minecraft.block.Block;
 import net.minecraft.entity.effect.EntityLightningBolt;
 import net.minecraft.entity.player.EntityPlayer;
+import net.minecraft.entity.player.EntityPlayerMP;
 import net.minecraft.init.Blocks;
 import net.minecraft.init.Items;
-import net.minecraft.init.SoundEvents;
 import net.minecraft.item.Item;
 import net.minecraft.util.EnumActionResult;
 import net.minecraft.util.SoundCategory;
@@ -75,6 +77,9 @@ public final class AltarHandler {
             data.advance(pos, HerobrineSavedData.SUMMONED);
         }
         summon(world, pos.up(), lair != null ? pos : null);
+        if (player instanceof EntityPlayerMP) {
+            CustomAdvancementTriggers.herobrineSummoned((EntityPlayerMP) player);
+        }
         event.setCanceled(true);
         event.setCancellationResult(EnumActionResult.SUCCESS);
     }
@@ -110,7 +115,7 @@ public final class AltarHandler {
         boss.setAltar(altar);
         world.addWeatherEffect(new EntityLightningBolt(world, at.getX() + 0.5D, at.getY(), at.getZ() + 0.5D, true));
         world.spawnEntity(boss);
-        world.playSound(null, at, SoundEvents.ENTITY_WITHER_SPAWN, SoundCategory.HOSTILE, 1.0F, 0.6F);
+        world.playSound(null, at, ModSounds.HEROBRINE_APPEAR, SoundCategory.HOSTILE, 1.0F, 1.0F);
         TextComponentTranslation message = new TextComponentTranslation("shatteredcitadels.herobrine.summoned");
         message.getStyle().setColor(TextFormatting.DARK_RED);
         for (EntityPlayer player : world.getEntitiesWithinAABB(EntityPlayer.class, new AxisAlignedBB(at).grow(BUSY_RANGE))) {

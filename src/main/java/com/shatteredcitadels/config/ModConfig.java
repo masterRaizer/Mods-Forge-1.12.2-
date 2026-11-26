@@ -713,7 +713,7 @@ public final class ModConfig {
         @Config.LangKey("config.shatteredcitadels.herobrine.apparitionChance")
         @Config.Comment("Chance that a due attempt really shows the figure.")
         @Config.RangeDouble(min = 0.0D, max = 1.0D)
-        public double apparitionChance = 0.35D;
+        public double apparitionChance = 0.0003D;
 
         @Config.Name("apparitionRadiusBlocks")
         @Config.LangKey("config.shatteredcitadels.herobrine.apparitionRadiusBlocks")
