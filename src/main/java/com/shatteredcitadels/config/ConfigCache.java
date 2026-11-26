@@ -110,6 +110,20 @@ public final class ConfigCache {
         }
         next.dimensionWhitelist = Collections.unmodifiableSet(dims);
 
+        ModConfig.Bridges bridges = ModConfig.BRIDGES;
+        next.bridgesEnabled = bridges.bridgesEnabled;
+        next.bridgeMinDistanceChunks = clamp(bridges.bridgeMinDistanceChunks, 8, 128);
+        next.bridgeChance = clamp01(bridges.bridgeChance);
+        next.bridgeFortifiedChance = clamp01(bridges.bridgeFortifiedChance);
+        next.bridgeSpecialChance = clamp01(bridges.bridgeSpecialChance);
+        Set<Integer> bridgeDims = new LinkedHashSet<>();
+        if (bridges.bridgeDimensions != null) {
+            for (int dim : bridges.bridgeDimensions) {
+                bridgeDims.add(dim);
+            }
+        }
+        next.bridgeDimensions = Collections.unmodifiableSet(bridgeDims);
+
         int[] waveRange = orderedRange("spawner_and_waves.wavesPerFloorMin/wavesPerFloorMax",
                 waves.wavesPerFloorMin, waves.wavesPerFloorMax, 1, 10);
         next.wavesPerFloorMin = waveRange[0];
@@ -392,6 +406,12 @@ public final class ConfigCache {
         int towerMinFloors = 12;
         int towerMaxFloors = 30;
         Set<Integer> dimensionWhitelist = Collections.singleton(0);
+        boolean bridgesEnabled = true;
+        int bridgeMinDistanceChunks = 24;
+        double bridgeChance = 0.5D;
+        double bridgeFortifiedChance = 0.2D;
+        double bridgeSpecialChance = 0.1D;
+        Set<Integer> bridgeDimensions = Collections.singleton(0);
 
         int wavesPerFloorMin = 2;
         int wavesPerFloorMax = 4;
@@ -480,6 +500,12 @@ public final class ConfigCache {
             c.towerMinFloors = towerMinFloors;
             c.towerMaxFloors = towerMaxFloors;
             c.dimensionWhitelist = dimensionWhitelist;
+            c.bridgesEnabled = bridgesEnabled;
+            c.bridgeMinDistanceChunks = bridgeMinDistanceChunks;
+            c.bridgeChance = bridgeChance;
+            c.bridgeFortifiedChance = bridgeFortifiedChance;
+            c.bridgeSpecialChance = bridgeSpecialChance;
+            c.bridgeDimensions = bridgeDimensions;
             c.wavesPerFloorMin = wavesPerFloorMin;
             c.wavesPerFloorMax = wavesPerFloorMax;
             c.maxActiveMobsPerFloor = maxActiveMobsPerFloor;
@@ -570,6 +596,16 @@ public final class ConfigCache {
             return towerMinFloors + random.nextInt(towerMaxFloors - towerMinFloors + 1);
         }
         public Set<Integer> getDimensionWhitelist() { return dimensionWhitelist; }
+
+        public boolean isBridgesEnabled() { return bridgesEnabled; }
+        public int getBridgeMinDistanceChunks() { return bridgeMinDistanceChunks; }
+        public double getBridgeChance() { return bridgeChance; }
+        public double getBridgeFortifiedChance() { return bridgeFortifiedChance; }
+        public double getBridgeSpecialChance() { return bridgeSpecialChance; }
+
+        public boolean isBridgeDimension(int dimension) {
+            return bridgeDimensions.contains(dimension);
+        }
 
         public boolean isDimensionAllowed(int dimension) {
             return dimensionWhitelist.contains(dimension);

@@ -46,6 +46,11 @@ public final class ModConfig {
     @Config.Comment("Castle Dungeons patching and block palettes taken from installed mods.")
     public static final Integration INTEGRATION = new Integration();
 
+    @Config.Name("bridges")
+    @Config.LangKey("config.shatteredcitadels.bridges")
+    @Config.Comment("Bridges over rivers and the bandit camps on some of them.")
+    public static final Bridges BRIDGES = new Bridges();
+
     private ModConfig() {
     }
 
@@ -540,6 +545,43 @@ public final class ModConfig {
         @Config.Comment("Chance for a rare item in loot of the lower floors (0.025 = 2.5%).")
         @Config.RangeDouble(min = 0.0D, max = 1.0D)
         public double lowFloorRareLootChance = 0.025D;
+    }
+
+    public static final class Bridges {
+
+        @Config.Name("bridgesEnabled")
+        @Config.LangKey("config.shatteredcitadels.bridges.bridgesEnabled")
+        @Config.Comment("Generate bridges over rivers in new chunks.")
+        public boolean bridgesEnabled = true;
+
+        @Config.Name("bridgeMinDistanceChunks")
+        @Config.LangKey("config.shatteredcitadels.bridges.bridgeMinDistanceChunks")
+        @Config.Comment("Minimum distance between two bridges, in chunks.")
+        @Config.RangeInt(min = 8, max = 128)
+        public int bridgeMinDistanceChunks = 24;
+
+        @Config.Name("bridgeChance")
+        @Config.LangKey("config.shatteredcitadels.bridges.bridgeChance")
+        @Config.Comment("Chance that a suitable river crossing gets a bridge.")
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double bridgeChance = 0.5D;
+
+        @Config.Name("bridgeFortifiedChance")
+        @Config.LangKey("config.shatteredcitadels.bridges.bridgeFortifiedChance")
+        @Config.Comment("Chance that a bridge over a wide river is held by bandits (barricades, guards, a chest).")
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double bridgeFortifiedChance = 0.2D;
+
+        @Config.Name("bridgeSpecialChance")
+        @Config.LangKey("config.shatteredcitadels.bridges.bridgeSpecialChance")
+        @Config.Comment("Chance of a rare bridge: ruined, covered or with gate towers.")
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double bridgeSpecialChance = 0.1D;
+
+        @Config.Name("bridgeDimensions")
+        @Config.LangKey("config.shatteredcitadels.bridges.bridgeDimensions")
+        @Config.Comment("Dimension ids where bridges generate.")
+        public int[] bridgeDimensions = {0};
     }
 
     public static final class Integration {

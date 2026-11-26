@@ -124,7 +124,24 @@ public final class CitadelWorldSavedData extends WorldSavedData {
     public boolean isFarEnough(int chunkX, int chunkZ, int minDistanceChunks) {
         long limit = (long) minDistanceChunks * minDistanceChunks;
         for (CitadelInstance instance : citadels.values()) {
-            if (instance.isUnderground()) {
+            // A bridge is a landmark, not a site: it does not push citadels away.
+            if (instance.isUnderground() || instance.getType() == StructureType.BRIDGE) {
+                continue;
+            }
+            long dx = instance.getOriginChunkX() - chunkX;
+            long dz = instance.getOriginChunkZ() - chunkZ;
+            if (dx * dx + dz * dz < limit) {
+                return false;
+            }
+        }
+        return true;
+    }
+
+    /** @return true if no structure of {@code type} has its origin within {@code minDistanceChunks}. */
+    public boolean isFarFromType(StructureType type, int chunkX, int chunkZ, int minDistanceChunks) {
+        long limit = (long) minDistanceChunks * minDistanceChunks;
+        for (CitadelInstance instance : citadels.values()) {
+            if (instance.getType() != type) {
                 continue;
             }
             long dx = instance.getOriginChunkX() - chunkX;

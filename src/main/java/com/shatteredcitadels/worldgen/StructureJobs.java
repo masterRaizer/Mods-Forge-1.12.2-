@@ -142,10 +142,37 @@ public final class StructureJobs extends WorldSavedData {
         for (Job job : jobs) {
             // Underground pieces are not structure sites; overlap is still caught by isReserved.
             if (job.plan instanceof CryptPlan || job.plan instanceof FragmentPlan
-                    || job.plan instanceof com.shatteredcitadels.worldgen.stronghold.StrongholdPlan) {
+                    || job.plan instanceof com.shatteredcitadels.worldgen.stronghold.StrongholdPlan
+                    || job.plan instanceof com.shatteredcitadels.worldgen.bridge.BridgePlan) {
                 continue;
             }
             StructureBoundingBox box = job.plan.footprint();
+            long dx = ((box.minX + box.maxX) >> 5) - chunkX;
+            long dz = ((box.minZ + box.maxZ) >> 5) - chunkZ;
+            if (dx * dx + dz * dz < limit) {
+                return true;
+            }
+        }
+        return false;
+    }
+
+    /** @return true if a queued structure of this kind has its centre within {@code minDistanceChunks}. */
+    public boolean isNearKind(String kind, int chunkX, int chunkZ, int minDistanceChunks) {
+        List<StructurePlan> plans = new ArrayList<>(jobs.size());
+        for (Job job : jobs) {
+            plans.add(job.plan);
+        }
+        return isNearKind(plans, kind, chunkX, chunkZ, minDistanceChunks);
+    }
+
+    public static boolean isNearKind(Iterable<StructurePlan> plans, String kind, int chunkX, int chunkZ,
+                                     int minDistanceChunks) {
+        long limit = (long) minDistanceChunks * minDistanceChunks;
+        for (StructurePlan plan : plans) {
+            if (!kind.equals(plan.kind())) {
+                continue;
+            }
+            StructureBoundingBox box = plan.footprint();
             long dx = ((box.minX + box.maxX) >> 5) - chunkX;
             long dz = ((box.minZ + box.maxZ) >> 5) - chunkZ;
             if (dx * dx + dz * dz < limit) {
