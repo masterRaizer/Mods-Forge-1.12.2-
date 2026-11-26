@@ -23,7 +23,9 @@ public enum StructureType {
     /** A bridge over a river: a landmark with no floors, no boss and no protection. */
     BRIDGE,
     /** A witch hut on a swamp with a cellar lair: no floors, no boss, no protection. */
-    WITCH_HUT;
+    WITCH_HUT,
+    /** A lair of Herobrine: plain blocks, mineable, with the summoning altar inside. */
+    HEROBRINE_LAIR;
 
     public static StructureType byName(String name) {
         for (StructureType type : values()) {

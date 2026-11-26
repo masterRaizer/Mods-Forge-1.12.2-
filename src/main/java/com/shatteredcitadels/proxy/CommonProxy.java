@@ -54,6 +54,7 @@ public class CommonProxy {
         GameRegistry.registerWorldGenerator(WORLD_GENERATOR, CitadelWorldGenerator.WEIGHT);
         GameRegistry.registerWorldGenerator(new com.shatteredcitadels.worldgen.bridge.BridgeGenerator(),
                 com.shatteredcitadels.worldgen.bridge.BridgeGenerator.WEIGHT);
+        com.shatteredcitadels.herobrine.HerobrineContent.init();
         // Citadels, crypts and adopted Castle Dungeons castles now place trial spawners.
         WaveSpawnerHooks.setPlacer(new TrialSpawnerPlacer());
         for (int tier = 1; tier <= 6; tier++) {
