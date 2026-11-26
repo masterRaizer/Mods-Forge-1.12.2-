@@ -157,9 +157,9 @@ public final class BridgeGenerator implements IWorldGenerator {
     public static BridgePlan planAt(RiverCrossing.BiomeMap map, BiFunction<Integer, Integer, BridgeStyle.Bank> bankAt,
                                     int chunkX, int chunkZ, long worldSeed, int seaLevel, int dimension, double chance,
                                     double fortified, double special) {
-        Random rand = new Random(worldSeed ^ ChunkPos.asLong(chunkX, chunkZ) ^ SALT);
-        // The first values of neighbouring seeds are close; one spare draw separates them.
-        rand.nextInt();
+        // Seeds of neighbouring chunks differ in a bit or two, and java.util.Random answers such seeds with
+        // values that only step: whole rows of chunks rolled alike. Scrambling the seed makes each chunk its own.
+        Random rand = new Random(scramble(worldSeed ^ scramble(ChunkPos.asLong(chunkX, chunkZ) ^ SALT)));
         if (rand.nextDouble() >= chance) {
             return null;
         }
@@ -173,6 +173,14 @@ public final class BridgeGenerator implements IWorldGenerator {
             return null;
         }
         return plan(crossing, null, null, near, rand, seaLevel, dimension, fortified, special);
+    }
+
+    /** The finishing step of SplitMix64: every bit of the input reaches every bit of the result. */
+    static long scramble(long value) {
+        long z = value + 0x9E3779B97F4A7C15L;
+        z = (z ^ (z >>> 30)) * 0xBF58476D1CE4E5B9L;
+        z = (z ^ (z >>> 27)) * 0x94D049BB133111EBL;
+        return z ^ (z >>> 31);
     }
 
     private static BridgeStyle.Bank bank(BiFunction<Integer, Integer, BridgeStyle.Bank> bankAt, RiverCrossing crossing,

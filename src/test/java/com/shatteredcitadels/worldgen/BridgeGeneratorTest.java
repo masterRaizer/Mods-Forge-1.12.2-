@@ -108,6 +108,70 @@ public class BridgeGeneratorTest {
     }
 
     @Test
+    public void specialsStayRareAcrossTheChunksOfOneWorld() {
+        RiverCrossing.BiomeMap map = new RiverCrossing.BiomeMap() {
+            @Override
+            public boolean isRiver(int x, int z) {
+                return x >= 4 && x <= 14;
+            }
+
+            @Override
+            public boolean isWater(int x, int z) {
+                return isRiver(x, z);
+            }
+        };
+        for (long seed : new long[]{0L, 77L, -4502399128455731L}) {
+            int made = 0;
+            int special = 0;
+            for (int cz = -1000; cz < 1000; cz++) {
+                BridgePlan plan = BridgeGenerator.planAt(map, FOREST, 0, cz, seed, 63, 0, 0.5, 0.2, 0.1);
+                if (plan != null) {
+                    made++;
+                    if (plan.style().special) {
+                        special++;
+                    }
+                }
+            }
+            assertTrue("made " + made, made > 850 && made < 1150);
+            assertTrue("special " + special + " of " + made, special > made * 0.05 && special < made * 0.16);
+        }
+    }
+
+    @Test
+    public void neighbouringChunksRollIndependently() {
+        RiverCrossing.BiomeMap map = new RiverCrossing.BiomeMap() {
+            @Override
+            public boolean isRiver(int x, int z) {
+                int m = Math.floorMod(x, 32);
+                return m >= 4 && m <= 14;
+            }
+
+            @Override
+            public boolean isWater(int x, int z) {
+                return isRiver(x, z);
+            }
+        };
+        long seed = 2274807239826543300L;
+        int both = 0;
+        int pairs = 0;
+        for (int cx = -40; cx <= 40; cx += 2) {
+            boolean previous = false;
+            for (int cz = -100; cz < 100; cz++) {
+                boolean made = BridgeGenerator.planAt(map, FOREST, cx, cz, seed, 63, 0, 0.5, 0.2, 0.1) != null;
+                if (cz > -100) {
+                    pairs++;
+                    if (made && previous) {
+                        both++;
+                    }
+                }
+                previous = made;
+            }
+        }
+        // Independent halves meet in a quarter of the pairs; a seed that only steps does it far more often.
+        assertTrue("both " + both + " of " + pairs, both > pairs * 0.21 && both < pairs * 0.29);
+    }
+
+    @Test
     public void noBridgeNearTheSpawn() {
         assertTrue(BridgeGenerator.isNearSpawn(3, -4, 0, 0));
         assertTrue(BridgeGenerator.isNearSpawn(18, 12, 10, 10));
