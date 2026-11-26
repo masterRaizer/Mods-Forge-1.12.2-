@@ -1,7 +1,7 @@
 # Citadels of the Shattered Crown
 
 Мод подземелий для Minecraft 1.12.2 (Forge 14.23.5.2860, Java 8, MixinBooter).
-modid: `shatteredcitadels`, версия 1.5.0.
+modid: `shatteredcitadels`, версия 1.11.1.
 
 ## Что добавляет мод
 - Многоэтажные цитадели пяти архетипов (Цитадель Хранителей, Обсидиановая Бастилия, Техно-арканный Шпиль,
@@ -166,5 +166,5 @@ modid: `shatteredcitadels`, версия 1.5.0.
 - `/shatteredcitadels` (`/scitadels`) — расширенная диагностика: list, info, status, spawners, boss, relics, lore и др.
 
 ## Сборка из исходников
-`./gradlew build` → `build/libs/shatteredcitadels-1.5.0.jar` (refmap миксинов включён в jar).
+`./gradlew build` → `build/libs/shatteredcitadels-1.11.1.jar` (refmap миксинов включён в jar).
 Для тестов с Castle Dungeons/Baubles: `./gradlew runServer -PwithCastleDungeons -PwithBaubles`.

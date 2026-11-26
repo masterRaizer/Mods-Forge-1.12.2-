@@ -38,6 +38,22 @@ public class HerobrineAmbienceTest {
         assertFalse(ApparitionRule.isHaunted(ApparitionRule.WHISPER_RADIUS + 1.0D, 0.0D, 0, 0, false, ApparitionRule.WHISPER_RADIUS));
     }
 
+    /** The whisper is a feature of its own: it has its own switch, named in both languages. */
+    @Test
+    public void whisperHasItsOwnSwitch() throws java.io.IOException {
+        assertTrue(new ModConfig.Herobrine().whispers);
+        for (String lang : new String[]{"en_us", "ru_ru"}) {
+            String text = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+                    "src/main/resources/assets/shatteredcitadels/lang/" + lang + ".lang")),
+                    java.nio.charset.StandardCharsets.UTF_8);
+            assertTrue(lang, text.contains("config.shatteredcitadels.herobrine.whispers="));
+        }
+        String handler = new String(java.nio.file.Files.readAllBytes(java.nio.file.Paths.get(
+                "src/main/java/com/shatteredcitadels/herobrine/ApparitionHandler.java")),
+                java.nio.charset.StandardCharsets.UTF_8);
+        assertTrue(handler.contains("HerobrineSettings.whispers()"));
+    }
+
     /** One look every five seconds: a whisper about once in half a minute, never a drone. */
     @Test
     public void whisperIsOccasional() {

@@ -703,6 +703,11 @@ public final class ModConfig {
         @Config.Comment("A silent figure sometimes watches players near a lair whose master is not yet defeated. Harmless.")
         public boolean apparitions = true;
 
+        @Config.Name("whispers")
+        @Config.LangKey("config.shatteredcitadels.herobrine.whispers")
+        @Config.Comment("A quiet whisper is sometimes heard within 48 blocks of a lair whose master is not yet defeated.")
+        public boolean whispers = true;
+
         @Config.Name("apparitionIntervalMinutes")
         @Config.LangKey("config.shatteredcitadels.herobrine.apparitionIntervalMinutes")
         @Config.Comment("At most one apparition attempt per player in this many minutes.")

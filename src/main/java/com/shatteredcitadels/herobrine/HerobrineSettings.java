@@ -78,6 +78,10 @@ public final class HerobrineSettings {
         return config().herobrineGriefing;
     }
 
+    public static boolean whispers() {
+        return enabled() && config().whispers;
+    }
+
     public static boolean apparitions() {
         return enabled() && config().apparitions;
     }

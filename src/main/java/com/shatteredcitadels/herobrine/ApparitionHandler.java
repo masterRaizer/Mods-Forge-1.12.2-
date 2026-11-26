@@ -42,8 +42,9 @@ public final class ApparitionHandler {
             return;
         }
         HerobrineSavedData lairs = HerobrineSavedData.get(world);
-        if (lairs.isHaunted(player.posX, player.posZ, ApparitionRule.WHISPER_RADIUS) && ApparitionRule.whispers(world.rand)) {
-            playTo(player, ModSounds.HEROBRINE_WHISPER, 0.4F);
+        if (HerobrineSettings.whispers() && lairs.isHaunted(player.posX, player.posZ, ApparitionRule.WHISPER_RADIUS)
+                && ApparitionRule.whispers(world.rand)) {
+            playTo(player, ModSounds.HEROBRINE_WHISPER, 1.0F);
         }
         if (!HerobrineSettings.apparitions()) {
             return;
@@ -84,7 +85,7 @@ public final class ApparitionHandler {
 
     /** Plays a sound that only this player hears, at the player's own position. */
     private static void playTo(EntityPlayer player, SoundEvent sound, float volume) {
-        if (player instanceof EntityPlayerMP) {
+        if (player instanceof EntityPlayerMP && ((EntityPlayerMP) player).connection != null) {
             ((EntityPlayerMP) player).connection.sendPacket(new SPacketSoundEffect(sound, SoundCategory.AMBIENT,
                     player.posX, player.posY, player.posZ, volume, 1.0F));
         }

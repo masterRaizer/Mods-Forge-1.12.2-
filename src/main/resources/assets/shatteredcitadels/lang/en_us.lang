@@ -371,6 +371,7 @@ config.shatteredcitadels.herobrine.lightningWarningTicks=Lightning warning (tick
 config.shatteredcitadels.herobrine.lightningDamage=Lightning damage
 config.shatteredcitadels.herobrine.herobrineGriefing=Lightning starts fires
 config.shatteredcitadels.herobrine.apparitions=Apparitions near lairs
+config.shatteredcitadels.herobrine.whispers=Whispers near lairs
 config.shatteredcitadels.herobrine.apparitionIntervalMinutes=Apparition interval (minutes)
 config.shatteredcitadels.herobrine.apparitionChance=Apparition chance
 config.shatteredcitadels.herobrine.apparitionRadiusBlocks=Apparition radius around a lair (blocks)

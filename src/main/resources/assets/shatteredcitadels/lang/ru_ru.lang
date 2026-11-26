@@ -371,6 +371,7 @@ config.shatteredcitadels.herobrine.lightningWarningTicks=Предупрежде�
 config.shatteredcitadels.herobrine.lightningDamage=Урон молнии
 config.shatteredcitadels.herobrine.herobrineGriefing=Молния поджигает землю
 config.shatteredcitadels.herobrine.apparitions=Видения возле логов
+config.shatteredcitadels.herobrine.whispers=Шёпот возле логов
 config.shatteredcitadels.herobrine.apparitionIntervalMinutes=Интервал видений (минуты)
 config.shatteredcitadels.herobrine.apparitionChance=Шанс видения
 config.shatteredcitadels.herobrine.apparitionRadiusBlocks=Радиус видений вокруг логова (блоки)
