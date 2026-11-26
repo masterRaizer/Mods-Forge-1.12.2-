@@ -28,6 +28,19 @@ public final class SealedGates {
     private SealedGates() {
     }
 
+    /** Line a sealed gate shows when touched: the idol vault names idols, not floor guardians. */
+    public static String sealedKey(int requiredFloor) {
+        return requiredFloor == VaultLock.GATE_FLOOR ? "shatteredcitadels.gate.vault_sealed"
+                : "shatteredcitadels.gate.sealed";
+    }
+
+    /** Line shown when gates open. */
+    public static String openKey(boolean all, int floor) {
+        return all ? "shatteredcitadels.gate.all_open"
+                : floor == VaultLock.GATE_FLOOR ? "shatteredcitadels.gate.vault_open"
+                : floor < 0 ? "shatteredcitadels.gate.open_down" : "shatteredcitadels.gate.open_up";
+    }
+
     /** Opens every loaded gate that waits for {@code clearedFloor}. */
     public static void open(World world, CitadelInstance citadel, int clearedFloor) {
         openMatching(world, citadel, clearedFloor, false);
@@ -101,8 +114,7 @@ public final class SealedGates {
                         pos.getZ() + 0.5D, 24, 0.4D, 0.4D, 0.4D, 0.4D);
             }
         }
-        TextComponentTranslation line = new TextComponentTranslation(all ? "shatteredcitadels.gate.all_open"
-                : floor < 0 ? "shatteredcitadels.gate.open_down" : "shatteredcitadels.gate.open_up");
+        TextComponentTranslation line = new TextComponentTranslation(openKey(all, floor));
         line.getStyle().setColor(TextFormatting.LIGHT_PURPLE);
         for (EntityPlayer player : world.playerEntities) {
             if (citadel.contains(new BlockPos(player))) {

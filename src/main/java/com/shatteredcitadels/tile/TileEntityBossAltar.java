@@ -274,6 +274,8 @@ public class TileEntityBossAltar extends TileEntity implements ITickable {
             bossInfo = new BossInfoServer(name, BossInfo.Color.PURPLE, BossInfo.Overlay.NOTCHED_10);
             bossInfo.setDarkenSky(true);
             bossInfo.setCreateFog(false);
+            // Hidden until the first sync knows whether the boss draws a bar of its own.
+            bossInfo.setVisible(false);
         }
     }
 
@@ -282,6 +284,8 @@ public class TileEntityBossAltar extends TileEntity implements ITickable {
             return;
         }
         if (boss != null) {
+            // Bosses from other mods often bring their own bar: two bars for one boss is one too many.
+            bossInfo.setVisible(!BossBars.hasOwnBar(boss));
             bossInfo.setPercent(Math.max(0.0F, Math.min(1.0F, boss.getHealth() / Math.max(1.0F, boss.getMaxHealth()))));
             bossInfo.setColor(controller.getPhase() >= 3 ? BossInfo.Color.RED
                     : controller.getPhase() == 2 ? BossInfo.Color.YELLOW : BossInfo.Color.PURPLE);

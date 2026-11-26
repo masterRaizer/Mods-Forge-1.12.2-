@@ -1,5 +1,8 @@
 package com.shatteredcitadels.block;
 
+import com.shatteredcitadels.structure.CitadelInstance;
+import com.shatteredcitadels.structure.CitadelWorldSavedData;
+import com.shatteredcitadels.structure.SealedGates;
 import net.minecraft.block.Block;
 import net.minecraft.block.SoundType;
 import net.minecraft.block.material.Material;
@@ -43,11 +46,24 @@ public class BlockSealedGate extends Block {
     public boolean onBlockActivated(World world, BlockPos pos, IBlockState state, EntityPlayer player, EnumHand hand,
                                     EnumFacing facing, float hitX, float hitY, float hitZ) {
         if (!world.isRemote && hand == EnumHand.MAIN_HAND) {
-            TextComponentTranslation line = new TextComponentTranslation("shatteredcitadels.gate.sealed");
+            TextComponentTranslation line = new TextComponentTranslation(SealedGates.sealedKey(requiredFloor(world, pos)));
             line.getStyle().setColor(TextFormatting.DARK_PURPLE);
             player.sendStatusMessage(line, true);
         }
         return true;
+    }
+
+    /** Floor the gate at {@code pos} waits for; 0 when no structure record knows it. */
+    private static int requiredFloor(World world, BlockPos pos) {
+        CitadelInstance citadel = CitadelWorldSavedData.get(world).getCitadelAt(pos);
+        if (citadel != null) {
+            for (CitadelInstance.GatePoint gate : citadel.getGates()) {
+                if (gate.pos.equals(pos)) {
+                    return gate.requiredFloor;
+                }
+            }
+        }
+        return 0;
     }
 
     @Override
