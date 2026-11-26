@@ -1185,9 +1185,9 @@ final class ManorBuilder {
             case STORAGE:
             case WINE:
                 for (int x = x0; x <= x1; x += 2) {
-                    putIfFree(x, y, z0, theme == Theme.WINE ? ModPaletteRegistry.resolveDecor("futuremc:barrel", "minecraft:chest")
+                    putIfFree(x, y, z0, theme == Theme.WINE ? ModPaletteRegistry.resolveDecor("modernbackports:barrel", "futuremc:barrel", "minecraft:chest")
                             : Blocks.HAY_BLOCK.getDefaultState());
-                    putIfFree(x, y, z1, theme == Theme.WINE ? ModPaletteRegistry.resolveDecor("futuremc:barrel", "minecraft:chest")
+                    putIfFree(x, y, z1, theme == Theme.WINE ? ModPaletteRegistry.resolveDecor("modernbackports:barrel", "futuremc:barrel", "minecraft:chest")
                             : darkPlanks);
                 }
                 return theme == Theme.WINE ? RoomTag.UNDERGROUND_LAIR : RoomTag.PANTRY;

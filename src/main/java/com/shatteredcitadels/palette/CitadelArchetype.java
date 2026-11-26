@@ -31,6 +31,7 @@ public enum CitadelArchetype {
                     "projectred-exploration:stone[*marble_brick*]",
                     "minecraft:stonebrick@3")
             .slot(PaletteSlot.FLOOR,
+                    "modernbackports:smooth_stone",
                     "futuremc:smooth_stone",
                     "quark:world_stone_pavement[variant=stone_andesite_pavement]|quark:world_stone_pavement[variant=stone_diorite_pavement]",
                     "quark:world_stone_pavement[variant=stone_slate_pavement]",
@@ -54,6 +55,7 @@ public enum CitadelArchetype {
                     "minecraft:glowstone")
             .slot(PaletteSlot.FURNITURE,
                     "cfm:*chair*|cfm:*table*|cfm:*cabinet*",
+                    "modernbackports:barrel",
                     "futuremc:barrel",
                     "minecraft:bookshelf|minecraft:bookshelf|minecraft:crafting_table")),
 
@@ -96,6 +98,7 @@ public enum CitadelArchetype {
                     "quark:blaze_lantern",
                     "minecraft:glowstone")
             .slot(PaletteSlot.FURNITURE,
+                    "modernbackports:blast_furnace|modernbackports:smoker",
                     "futuremc:blast_furnace|futuremc:smoker",
                     "minecraft:cauldron|minecraft:brewing_stand")),
 
@@ -190,6 +193,7 @@ public enum CitadelArchetype {
                     "appliedenergistics2:quartz_pillar",
                     "minecraft:purpur_pillar")
             .slot(PaletteSlot.FLOOR,
+                    "modernbackports:smooth_quartz",
                     "futuremc:smooth_quartz",
                     "quark:world_stone_pavement[variant=stone_marble_pavement]",
                     "quark:world_stone_pavement[variant=stone_diorite_pavement]",

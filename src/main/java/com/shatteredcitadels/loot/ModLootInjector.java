@@ -67,6 +67,7 @@ public final class ModLootInjector {
     };
     /** Food of the pack's mods for pantries. */
     private static final Object[][] PANTRY = {
+            {"modernbackports:sweet_berries", -1, 2, 6, 6}, {"modernbackports:honey_bottle", -1, 1, 2, 3},
             {"futuremc:sweet_berries", -1, 2, 6, 6}, {"futuremc:honey_bottle", -1, 1, 2, 3},
             {"ironapples:iron_apple", -1, 1, 1, 2},
             {"aquaculture:food", 4, 1, 3, 3}, {"aquaculture:food", 10, 1, 2, 2}, {"aquaculture:fish", 24, 1, 2, 2}, {"artifacts:everlasting_beef", -1, 1, 1, 1}

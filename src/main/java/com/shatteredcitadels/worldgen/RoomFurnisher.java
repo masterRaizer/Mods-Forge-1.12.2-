@@ -122,14 +122,14 @@ public final class RoomFurnisher {
                 }
             }
             if (!oven && roll == 1) {
-                IBlockState stove = ModPaletteRegistry.resolveDecor("cfm:oven", "cfm:*oven*", "futuremc:smoker");
+                IBlockState stove = ModPaletteRegistry.resolveDecor("cfm:oven", "cfm:*oven*", "modernbackports:smoker", "futuremc:smoker");
                 if (stove != null && place(c[0], y, c[2], stove, facing)) {
                     oven = true;
                     continue;
                 }
             }
             if (roll <= 4) {
-                IBlockState barrel = ModPaletteRegistry.resolveDecor("futuremc:barrel");
+                IBlockState barrel = ModPaletteRegistry.resolveDecor("modernbackports:barrel", "futuremc:barrel");
                 if (barrel != null && place(c[0], y, c[2], barrel, EnumFacing.UP)) {
                     stock(new BlockPos(c[0], y, c[2]), ModLootTables.PANTRY, 0.35F);
                     continue;
@@ -144,7 +144,7 @@ public final class RoomFurnisher {
             IBlockState food = roll <= 8 ? Blocks.HAY_BLOCK.getDefaultState()
                     : roll == 9 ? Blocks.MELON_BLOCK.getDefaultState()
                     : roll == 10 ? orient(Blocks.PUMPKIN.getDefaultState(), facing)
-                    : ModPaletteRegistry.resolveDecor("futuremc:honeycomb_block", "minecraft:hay_block");
+                    : ModPaletteRegistry.resolveDecor("modernbackports:honeycomb_block", "futuremc:honeycomb_block", "minecraft:hay_block");
             place(c[0], y, c[2], food, facing);
             if (rand.nextInt(4) == 0 && site.free(c[0], y + 1, c[2])) {
                 // Stacked crates of food.
@@ -218,9 +218,9 @@ public final class RoomFurnisher {
             if (roll < 4) {
                 block = Blocks.FURNACE.getDefaultState();
             } else if (roll < 6) {
-                block = ModPaletteRegistry.resolveDecor("futuremc:blast_furnace", "minecraft:furnace");
+                block = ModPaletteRegistry.resolveDecor("modernbackports:blast_furnace", "futuremc:blast_furnace", "minecraft:furnace");
             } else if (roll == 6) {
-                block = ModPaletteRegistry.resolveDecor("futuremc:smoker", "minecraft:furnace");
+                block = ModPaletteRegistry.resolveDecor("modernbackports:smoker", "futuremc:smoker", "minecraft:furnace");
             } else if (roll == 7 && !cauldron) {
                 block = Blocks.CAULDRON.getDefaultState().withProperty(BlockCauldron.LEVEL, rand.nextInt(2));
                 cauldron = true;
