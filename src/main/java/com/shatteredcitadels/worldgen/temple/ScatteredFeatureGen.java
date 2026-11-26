@@ -60,7 +60,8 @@ public class ScatteredFeatureGen extends MapGenScatteredFeature {
     /** @return true if this mod builds the temples of {@code kind} (by config). */
     public static boolean handles(TempleSites.Kind kind) {
         return kind == TempleSites.Kind.DESERT && ConfigCache.get().isReplaceDesertTemples()
-                || kind == TempleSites.Kind.JUNGLE && ConfigCache.get().isReplaceJungleTemples();
+                || kind == TempleSites.Kind.JUNGLE && ConfigCache.get().isReplaceJungleTemples()
+                || kind == TempleSites.Kind.SWAMP && ConfigCache.get().isWitchHutsEnabled();
     }
 
     private TempleSites.Kind siteKind(int chunkX, int chunkZ) {
@@ -130,7 +131,9 @@ public class ScatteredFeatureGen extends MapGenScatteredFeature {
             return generated;
         }
         long seed = worldIn.getSeed() ^ ChunkPos.asLong(chunkCoord.x, chunkCoord.z) ^ SALT;
-        StructurePlan plan = kind == TempleSites.Kind.DESERT ? DesertTemplePlan.plan(worldIn, chunkCoord.x, chunkCoord.z, seed)
+        StructurePlan plan = kind == TempleSites.Kind.SWAMP
+                ? com.shatteredcitadels.worldgen.hut.WitchHutPlan.plan(worldIn, chunkCoord.x, chunkCoord.z, seed, null)
+                : kind == TempleSites.Kind.DESERT ? DesertTemplePlan.plan(worldIn, chunkCoord.x, chunkCoord.z, seed)
                 : JungleTemplePlan.plan(worldIn, chunkCoord.x, chunkCoord.z, seed, null, ConfigCache.get().getJungleTempleBossChance());
         if (plan == null) {
             ShatteredCitadelsMod.LOGGER.info("Jungle site {},{} is too wet or steep for a temple", chunkCoord.x, chunkCoord.z);

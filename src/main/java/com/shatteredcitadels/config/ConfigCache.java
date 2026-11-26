@@ -124,6 +124,12 @@ public final class ConfigCache {
         }
         next.bridgeDimensions = Collections.unmodifiableSet(bridgeDims);
 
+        ModConfig.WitchHuts huts = ModConfig.WITCH_HUTS;
+        next.witchHutsEnabled = huts.witchHutsEnabled;
+        next.witchHutCellar = huts.witchHutCellar;
+        next.witchHutMinWitches = clamp(Math.min(huts.witchHutMinWitches, huts.witchHutMaxWitches), 0, 12);
+        next.witchHutMaxWitches = clamp(Math.max(huts.witchHutMinWitches, huts.witchHutMaxWitches), 0, 12);
+
         int[] waveRange = orderedRange("spawner_and_waves.wavesPerFloorMin/wavesPerFloorMax",
                 waves.wavesPerFloorMin, waves.wavesPerFloorMax, 1, 10);
         next.wavesPerFloorMin = waveRange[0];
@@ -412,6 +418,10 @@ public final class ConfigCache {
         double bridgeFortifiedChance = 0.2D;
         double bridgeSpecialChance = 0.1D;
         Set<Integer> bridgeDimensions = Collections.singleton(0);
+        boolean witchHutsEnabled = true;
+        boolean witchHutCellar = true;
+        int witchHutMinWitches = 2;
+        int witchHutMaxWitches = 5;
 
         int wavesPerFloorMin = 2;
         int wavesPerFloorMax = 4;
@@ -506,6 +516,10 @@ public final class ConfigCache {
             c.bridgeFortifiedChance = bridgeFortifiedChance;
             c.bridgeSpecialChance = bridgeSpecialChance;
             c.bridgeDimensions = bridgeDimensions;
+            c.witchHutsEnabled = witchHutsEnabled;
+            c.witchHutCellar = witchHutCellar;
+            c.witchHutMinWitches = witchHutMinWitches;
+            c.witchHutMaxWitches = witchHutMaxWitches;
             c.wavesPerFloorMin = wavesPerFloorMin;
             c.wavesPerFloorMax = wavesPerFloorMax;
             c.maxActiveMobsPerFloor = maxActiveMobsPerFloor;
@@ -602,6 +616,10 @@ public final class ConfigCache {
         public double getBridgeChance() { return bridgeChance; }
         public double getBridgeFortifiedChance() { return bridgeFortifiedChance; }
         public double getBridgeSpecialChance() { return bridgeSpecialChance; }
+        public boolean isWitchHutsEnabled() { return witchHutsEnabled; }
+        public boolean isWitchHutCellar() { return witchHutCellar; }
+        public int getWitchHutMinWitches() { return witchHutMinWitches; }
+        public int getWitchHutMaxWitches() { return witchHutMaxWitches; }
 
         public boolean isBridgeDimension(int dimension) {
             return bridgeDimensions.contains(dimension);

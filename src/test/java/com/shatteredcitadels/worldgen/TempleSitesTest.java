@@ -32,7 +32,7 @@ public class TempleSitesTest {
         assertEquals(TempleSites.Kind.DESERT, s.kindOf(Biomes.DESERT));
         assertEquals(TempleSites.Kind.DESERT, s.kindOf(Biomes.DESERT_HILLS));
         assertEquals(TempleSites.Kind.JUNGLE, s.kindOf(Biomes.JUNGLE_HILLS));
-        assertEquals(TempleSites.Kind.OTHER, s.kindOf(Biomes.SWAMPLAND));
+        assertEquals(TempleSites.Kind.SWAMP, s.kindOf(Biomes.SWAMPLAND));
         assertEquals(TempleSites.Kind.OTHER, s.kindOf(Biomes.COLD_TAIGA));
         assertEquals(TempleSites.Kind.NONE, s.kindOf(Biomes.PLAINS));
     }
@@ -43,7 +43,7 @@ public class TempleSitesTest {
                 list(Biomes.ICE_PLAINS), (world, rand, cx, cz) -> null);
         assertEquals(TempleSites.Kind.DESERT, s.kindOf(Biomes.MESA));
         assertEquals(TempleSites.Kind.JUNGLE, s.kindOf(Biomes.FOREST));
-        assertEquals(TempleSites.Kind.OTHER, s.kindOf(Biomes.SWAMPLAND));
+        assertEquals(TempleSites.Kind.SWAMP, s.kindOf(Biomes.SWAMPLAND));
         assertEquals(TempleSites.Kind.OTHER, s.kindOf(Biomes.ICE_PLAINS));
         assertEquals(TempleSites.Kind.NONE, s.kindOf(Biomes.PLAINS));
     }

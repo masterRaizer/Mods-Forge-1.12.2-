@@ -24,6 +24,9 @@ public final class VanillaTempleSites implements TempleSites {
         if (biome == Biomes.JUNGLE || biome == Biomes.JUNGLE_HILLS) {
             return Kind.JUNGLE;
         }
+        if (biome == Biomes.SWAMPLAND) {
+            return Kind.SWAMP;
+        }
         if (biome == Biomes.SWAMPLAND || biome == Biomes.ICE_PLAINS || biome == Biomes.COLD_TAIGA) {
             return Kind.OTHER;
         }

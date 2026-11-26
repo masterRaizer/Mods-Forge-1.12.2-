@@ -16,7 +16,8 @@ public final class TempleReplacer {
     @SubscribeEvent
     public static void onInitMapGen(InitMapGenEvent event) {
         if (event.getType() != InitMapGenEvent.EventType.SCATTERED_FEATURE
-                || !ConfigCache.get().isReplaceDesertTemples() && !ConfigCache.get().isReplaceJungleTemples()) {
+                || !ConfigCache.get().isReplaceDesertTemples() && !ConfigCache.get().isReplaceJungleTemples()
+                && !ConfigCache.get().isWitchHutsEnabled()) {
             return;
         }
         MapGenBase gen = event.getNewGen();

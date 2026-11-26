@@ -86,6 +86,9 @@ public final class BopTempleSites implements TempleSites {
         if (jungle.contains(biome)) {
             return Kind.JUNGLE;
         }
+        if (swamp.contains(biome)) {
+            return Kind.SWAMP;
+        }
         if (swamp.contains(biome) || ice.contains(biome)) {
             return Kind.OTHER;
         }

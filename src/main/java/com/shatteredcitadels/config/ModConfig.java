@@ -51,6 +51,11 @@ public final class ModConfig {
     @Config.Comment("Bridges over rivers and the bandit camps on some of them.")
     public static final Bridges BRIDGES = new Bridges();
 
+    @Config.Name("witchHuts")
+    @Config.LangKey("config.shatteredcitadels.witchHuts")
+    @Config.Comment("Witch huts on swamps (instead of the vanilla swamp hut) and the cellar lair under them.")
+    public static final WitchHuts WITCH_HUTS = new WitchHuts();
+
     private ModConfig() {
     }
 
@@ -582,6 +587,31 @@ public final class ModConfig {
         @Config.LangKey("config.shatteredcitadels.bridges.bridgeDimensions")
         @Config.Comment("Dimension ids where bridges generate.")
         public int[] bridgeDimensions = {0};
+    }
+
+    public static final class WitchHuts {
+
+        @Config.Name("witchHutsEnabled")
+        @Config.LangKey("config.shatteredcitadels.witchHuts.witchHutsEnabled")
+        @Config.Comment("Build the witch hut of this mod instead of the vanilla swamp hut (new sites only; restart the world to apply).")
+        public boolean witchHutsEnabled = true;
+
+        @Config.Name("witchHutCellar")
+        @Config.LangKey("config.shatteredcitadels.witchHuts.witchHutCellar")
+        @Config.Comment("Build the cellar lair (rooms, witches, potion traps, final chest) under the hut.")
+        public boolean witchHutCellar = true;
+
+        @Config.Name("witchHutMinWitches")
+        @Config.LangKey("config.shatteredcitadels.witchHuts.witchHutMinWitches")
+        @Config.Comment("Fewest witches placed in a cellar.")
+        @Config.RangeInt(min = 0, max = 12)
+        public int witchHutMinWitches = 2;
+
+        @Config.Name("witchHutMaxWitches")
+        @Config.LangKey("config.shatteredcitadels.witchHuts.witchHutMaxWitches")
+        @Config.Comment("Most witches placed in a cellar.")
+        @Config.RangeInt(min = 0, max = 12)
+        public int witchHutMaxWitches = 5;
     }
 
     public static final class Integration {

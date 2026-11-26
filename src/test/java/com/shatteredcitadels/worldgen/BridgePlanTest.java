@@ -69,9 +69,9 @@ public class BridgePlanTest {
     }
 
     @Test
-    public void structureTypeBridgeIsLast() {
-        StructureType[] all = StructureType.values();
-        assertSame(StructureType.BRIDGE, all[all.length - 1]);
+    public void structureTypeBridgeKeepsItsPlace() {
+        // Saves store the name, but the order is kept anyway: new types are only appended after it.
+        assertEquals(9, StructureType.BRIDGE.ordinal());
         assertSame(StructureType.BRIDGE, StructureType.byName("BRIDGE"));
     }
 }

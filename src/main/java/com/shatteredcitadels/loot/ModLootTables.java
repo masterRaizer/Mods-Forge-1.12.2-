@@ -48,7 +48,8 @@ public final class ModLootTables {
         LootFunctionManager.registerFunction(new LootFunctionLoreBook.Serializer());
         for (ResourceLocation table : new ResourceLocation[]{FLOOR_TIER_1_2, FLOOR_TIER_3_4, FLOOR_TIER_5_PLUS,
                 UNDERGROUND_CRYPT, CATACOMB_DEEP, MAGE_PEDESTAL, MAGE_PEDESTAL_FOLIO, BOSS_CHEST_NORMAL, BOSS_CHEST_SKY, PANTRY, BEDROOM, SMELTERY, BRIDGE_CAMP,
-                VASE_LOW, VASE_MID, VASE_HIGH}) {
+                VASE_LOW, VASE_MID, VASE_HIGH,
+                com.shatteredcitadels.worldgen.hut.WitchHutLoot.CELLAR, com.shatteredcitadels.worldgen.hut.WitchHutLoot.HUT}) {
             LootTableList.register(table);
         }
     }

@@ -147,6 +147,13 @@ public final class CommandCitadel extends CommandBase {
             if (plan == null) {
                 throw new CommandException("The ground here is too wet or too steep for a jungle temple");
             }
+        } else if ("witch_hut".equals(kind)) {
+            world.getChunk(chunkX, chunkZ);
+            com.shatteredcitadels.worldgen.hut.HutVariant hut = com.shatteredcitadels.worldgen.hut.HutVariant.byId(variant);
+            if (variant != null && hut == null) {
+                throw new CommandException("Unknown witch hut variant: " + variant + " (small, tall, dock)");
+            }
+            plan = com.shatteredcitadels.worldgen.hut.WitchHutPlan.plan(world, chunkX, chunkZ, random.nextLong(), hut);
         } else if ("stronghold".equals(kind)) {
             plan = com.shatteredcitadels.worldgen.stronghold.StrongholdPlan.plan(world, chunkX, chunkZ, random.nextLong());
         } else if ("fragment".equals(kind)) {
@@ -388,6 +395,7 @@ public final class CommandCitadel extends CommandBase {
         kinds.add("desert_temple");
         kinds.add("jungle_temple");
         kinds.add("bridge");
+        kinds.add("witch_hut");
         return kinds;
     }
 
@@ -422,6 +430,9 @@ public final class CommandCitadel extends CommandBase {
         }
         if (args.length == 4 && "spawn".equalsIgnoreCase(args[0]) && "bridge".equalsIgnoreCase(args[1])) {
             return getListOfStringsMatchingLastWord(args, "fortified");
+        }
+        if (args.length == 3 && "spawn".equalsIgnoreCase(args[0]) && "witch_hut".equalsIgnoreCase(args[1])) {
+            return getListOfStringsMatchingLastWord(args, com.shatteredcitadels.worldgen.hut.HutVariant.ids());
         }
         if (args.length == 2 && "listmobs".equalsIgnoreCase(args[0])) {
             return getListOfStringsMatchingLastWord(args, "1", "2", "3", "4", "5", "underground");

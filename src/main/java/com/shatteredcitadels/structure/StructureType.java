@@ -21,7 +21,9 @@ public enum StructureType {
     /** Jungle temple: stepped temple over an underground; an idol vault or a boss shrine on top. */
     JUNGLE_TEMPLE,
     /** A bridge over a river: a landmark with no floors, no boss and no protection. */
-    BRIDGE;
+    BRIDGE,
+    /** A witch hut on a swamp with a cellar lair: no floors, no boss, no protection. */
+    WITCH_HUT;
 
     public static StructureType byName(String name) {
         for (StructureType type : values()) {

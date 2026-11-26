@@ -12,7 +12,7 @@ import java.util.Random;
  */
 public interface TempleSites {
 
-    enum Kind { DESERT, JUNGLE, OTHER, NONE }
+    enum Kind { DESERT, JUNGLE, OTHER, NONE, SWAMP }
 
     /** Creates the generator's own start (witch hut, igloo, or a temple we do not replace). */
     interface StartFactory {
