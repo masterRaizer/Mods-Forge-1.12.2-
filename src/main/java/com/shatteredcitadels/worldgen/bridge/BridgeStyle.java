@@ -9,7 +9,7 @@ public enum BridgeStyle {
     STONE_ARCH(5, 4, true, false),
     SPRUCE(3, 3, true, false),
     SANDSTONE(5, 3, true, false),
-    ROPE(3, 3, false, false),
+    ROPE(3, 4, false, false),
     BOARDWALK(3, 1, false, false),
     SNOW_STONE(5, 3, true, false),
     RUINED(5, 4, false, true),
