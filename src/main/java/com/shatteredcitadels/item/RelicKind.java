@@ -13,7 +13,8 @@ public enum RelicKind {
     /** Guardian Folio: trinket, from the catacomb mage's pedestals. */
     GUARDIAN_FOLIO("TRINKET"),
     /** Ring of Ashen Sight: ring, from the catacomb mage's pedestals. */
-    ASHEN_SIGHT_RING("RING");
+    ASHEN_SIGHT_RING("RING"),
+    HEROBRINE_EYE("CHARM");
 
     private final String baubleSlot;
 

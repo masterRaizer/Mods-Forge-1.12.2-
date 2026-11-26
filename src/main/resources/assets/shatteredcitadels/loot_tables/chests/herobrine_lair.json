@@ -1,0 +1,38 @@
+{
+  "pools": [
+    {
+      "name": "hoard",
+      "rolls": { "min": 5, "max": 8 },
+      "entries": [
+        { "type": "item", "name": "minecraft:gold_ingot", "weight": 10,
+          "functions": [ { "function": "set_count", "count": { "min": 3, "max": 9 } } ] },
+        { "type": "item", "name": "minecraft:diamond", "weight": 6,
+          "functions": [ { "function": "set_count", "count": { "min": 1, "max": 4 } } ] },
+        { "type": "item", "name": "minecraft:emerald", "weight": 6,
+          "functions": [ { "function": "set_count", "count": { "min": 2, "max": 6 } } ] },
+        { "type": "item", "name": "minecraft:redstone", "weight": 8,
+          "functions": [ { "function": "set_count", "count": { "min": 4, "max": 12 } } ] },
+        { "type": "item", "name": "minecraft:obsidian", "weight": 6,
+          "functions": [ { "function": "set_count", "count": { "min": 2, "max": 6 } } ] },
+        { "type": "item", "name": "minecraft:ender_pearl", "weight": 5,
+          "functions": [ { "function": "set_count", "count": { "min": 1, "max": 3 } } ] },
+        { "type": "item", "name": "minecraft:golden_apple", "weight": 4 },
+        { "type": "item", "name": "minecraft:experience_bottle", "weight": 6,
+          "functions": [ { "function": "set_count", "count": { "min": 2, "max": 6 } } ] },
+        { "type": "item", "name": "minecraft:book", "weight": 5,
+          "functions": [ { "function": "enchant_with_levels", "levels": 30, "treasure": true } ] },
+        { "type": "item", "name": "minecraft:diamond_sword", "weight": 2,
+          "functions": [ { "function": "enchant_with_levels", "levels": { "min": 20, "max": 30 }, "treasure": true } ] },
+        { "type": "item", "name": "minecraft:diamond_chestplate", "weight": 2,
+          "functions": [ { "function": "enchant_with_levels", "levels": { "min": 20, "max": 30 }, "treasure": true } ] }
+      ]
+    },
+    {
+      "name": "tools",
+      "rolls": 1,
+      "entries": [
+        { "type": "item", "name": "minecraft:flint_and_steel", "weight": 1 }
+      ]
+    }
+  ]
+}

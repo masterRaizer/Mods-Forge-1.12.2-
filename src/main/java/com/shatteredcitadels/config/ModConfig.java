@@ -51,6 +51,11 @@ public final class ModConfig {
     @Config.Comment("Bridges over rivers and the bandit camps on some of them.")
     public static final Bridges BRIDGES = new Bridges();
 
+    @Config.Name("herobrine")
+    @Config.LangKey("config.shatteredcitadels.herobrine")
+    @Config.Comment("Herobrine: his lairs, the altar, the fight and the apparitions.")
+    public static final Herobrine HEROBRINE = new Herobrine();
+
     private ModConfig() {
     }
 
@@ -582,6 +587,106 @@ public final class ModConfig {
         @Config.LangKey("config.shatteredcitadels.bridges.bridgeDimensions")
         @Config.Comment("Dimension ids where bridges generate.")
         public int[] bridgeDimensions = {0};
+    }
+
+    public static final class Herobrine {
+
+        @Config.Name("herobrineEnabled")
+        @Config.LangKey("config.shatteredcitadels.herobrine.herobrineEnabled")
+        @Config.Comment("Master switch: the altar summons Herobrine. Off = no boss, no lairs, no apparitions.")
+        public boolean herobrineEnabled = true;
+
+        @Config.Name("lairsEnabled")
+        @Config.LangKey("config.shatteredcitadels.herobrine.lairsEnabled")
+        @Config.Comment("Generate lairs of Herobrine (ruined keep, obsidian tower, underground shrine) in new chunks of the overworld.")
+        public boolean lairsEnabled = true;
+
+        @Config.Name("lairSpacingChunks")
+        @Config.LangKey("config.shatteredcitadels.herobrine.lairSpacingChunks")
+        @Config.Comment("Size of the region that holds at most one lair, in chunks (112 = about 1800 blocks).")
+        @Config.RangeInt(min = 32, max = 512)
+        public int lairSpacingChunks = 112;
+
+        @Config.Name("lairChance")
+        @Config.LangKey("config.shatteredcitadels.herobrine.lairChance")
+        @Config.Comment("Chance that a region gets a lair at all.")
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double lairChance = 0.6D;
+
+        @Config.Name("lairSpawnClearanceChunks")
+        @Config.LangKey("config.shatteredcitadels.herobrine.lairSpawnClearanceChunks")
+        @Config.Comment("No lair closer than this to the world spawn, in chunks.")
+        @Config.RangeInt(min = 0, max = 256)
+        public int lairSpawnClearanceChunks = 32;
+
+        @Config.Name("playerBuiltAltar")
+        @Config.LangKey("config.shatteredcitadels.herobrine.playerBuiltAltar")
+        @Config.Comment("Also accept an altar built by a player anywhere in the overworld (gold 3x3, netherrack on the centre, four redstone torches).")
+        public boolean playerBuiltAltar = false;
+
+        @Config.Name("herobrineHealth")
+        @Config.LangKey("config.shatteredcitadels.herobrine.herobrineHealth")
+        @Config.Comment("Health of Herobrine.")
+        @Config.RangeDouble(min = 20.0D, max = 1024.0D)
+        public double herobrineHealth = 600.0D;
+
+        @Config.Name("herobrineDamage")
+        @Config.LangKey("config.shatteredcitadels.herobrine.herobrineDamage")
+        @Config.Comment("Melee damage of Herobrine before armour.")
+        @Config.RangeDouble(min = 1.0D, max = 100.0D)
+        public double herobrineDamage = 11.0D;
+
+        @Config.Name("herobrineArmor")
+        @Config.LangKey("config.shatteredcitadels.herobrine.herobrineArmor")
+        @Config.Comment("Armour points of Herobrine.")
+        @Config.RangeDouble(min = 0.0D, max = 30.0D)
+        public double herobrineArmor = 10.0D;
+
+        @Config.Name("herobrineMaxMinions")
+        @Config.LangKey("config.shatteredcitadels.herobrine.herobrineMaxMinions")
+        @Config.Comment("Most undead servants alive at once in the third phase (0 = none).")
+        @Config.RangeInt(min = 0, max = 16)
+        public int herobrineMaxMinions = 6;
+
+        @Config.Name("lightningWarningTicks")
+        @Config.LangKey("config.shatteredcitadels.herobrine.lightningWarningTicks")
+        @Config.Comment("Ticks of warning (particles and a hiss) before his lightning strikes; 20 ticks = 1 second.")
+        @Config.RangeInt(min = 20, max = 100)
+        public int lightningWarningTicks = 30;
+
+        @Config.Name("lightningDamage")
+        @Config.LangKey("config.shatteredcitadels.herobrine.lightningDamage")
+        @Config.Comment("Damage of his lightning to everyone within 3 blocks of the marked spot.")
+        @Config.RangeDouble(min = 0.0D, max = 40.0D)
+        public double lightningDamage = 12.0D;
+
+        @Config.Name("herobrineGriefing")
+        @Config.LangKey("config.shatteredcitadels.herobrine.herobrineGriefing")
+        @Config.Comment("His lightning sets the ground on fire. Off = no block is ever changed by the fight.")
+        public boolean herobrineGriefing = false;
+
+        @Config.Name("apparitions")
+        @Config.LangKey("config.shatteredcitadels.herobrine.apparitions")
+        @Config.Comment("A silent figure sometimes watches players near a lair whose master is not yet defeated. Harmless.")
+        public boolean apparitions = true;
+
+        @Config.Name("apparitionIntervalMinutes")
+        @Config.LangKey("config.shatteredcitadels.herobrine.apparitionIntervalMinutes")
+        @Config.Comment("At most one apparition attempt per player in this many minutes.")
+        @Config.RangeInt(min = 1, max = 240)
+        public int apparitionIntervalMinutes = 8;
+
+        @Config.Name("apparitionChance")
+        @Config.LangKey("config.shatteredcitadels.herobrine.apparitionChance")
+        @Config.Comment("Chance that a due attempt really shows the figure.")
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double apparitionChance = 0.35D;
+
+        @Config.Name("apparitionRadiusBlocks")
+        @Config.LangKey("config.shatteredcitadels.herobrine.apparitionRadiusBlocks")
+        @Config.Comment("Apparitions happen only this close to a lair, in blocks (0 = never).")
+        @Config.RangeInt(min = 0, max = 2048)
+        public int apparitionRadiusBlocks = 256;
     }
 
     public static final class Integration {

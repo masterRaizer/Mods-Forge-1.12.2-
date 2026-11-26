@@ -52,7 +52,7 @@ import java.util.Random;
  */
 public final class CommandCitadel extends CommandBase {
 
-    private static final String[] SUBCOMMANDS = {"spawn", "locate", "floorinfo", "listmobs", "testboss"};
+    private static final String[] SUBCOMMANDS = {"spawn", "locate", "floorinfo", "listmobs", "testboss", "summon"};
 
     @Override
     public String getName() {
@@ -90,6 +90,9 @@ public final class CommandCitadel extends CommandBase {
             case "testboss":
                 testBoss(sender);
                 break;
+            case com.shatteredcitadels.herobrine.HerobrineCommands.SUMMON:
+                com.shatteredcitadels.herobrine.HerobrineCommands.summon(sender, args);
+                break;
             default:
                 throw new WrongUsageException(getUsage(sender));
         }
@@ -104,6 +107,10 @@ public final class CommandCitadel extends CommandBase {
         BlockPos pos = sender.getPosition();
         if ("bridge".equalsIgnoreCase(args[1])) {
             spawnBridge(sender, world, pos, args);
+            return;
+        }
+        if (com.shatteredcitadels.herobrine.HerobrineCommands.LAIR.equalsIgnoreCase(args[1])) {
+            com.shatteredcitadels.herobrine.HerobrineCommands.spawnLair(sender, world, pos, args);
             return;
         }
         StructurePlan plan = planAndQueue(world, args[1], args.length > 2 ? args[2] : null, pos.getX() >> 4, pos.getZ() >> 4);
@@ -388,6 +395,7 @@ public final class CommandCitadel extends CommandBase {
         kinds.add("desert_temple");
         kinds.add("jungle_temple");
         kinds.add("bridge");
+        kinds.add(com.shatteredcitadels.herobrine.HerobrineCommands.LAIR);
         return kinds;
     }
 
@@ -403,6 +411,10 @@ public final class CommandCitadel extends CommandBase {
 
     @Override
     public List<String> getTabCompletions(MinecraftServer server, ICommandSender sender, String[] args, BlockPos targetPos) {
+        List<String> herobrine = com.shatteredcitadels.herobrine.HerobrineCommands.complete(args);
+        if (herobrine != null) {
+            return herobrine;
+        }
         if (args.length == 1) {
             return getListOfStringsMatchingLastWord(args, SUBCOMMANDS);
         }
