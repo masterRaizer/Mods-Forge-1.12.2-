@@ -102,6 +102,10 @@ public final class CommandCitadel extends CommandBase {
         }
         World world = sender.getEntityWorld();
         BlockPos pos = sender.getPosition();
+        if ("bridge".equalsIgnoreCase(args[1])) {
+            spawnBridge(sender, world, pos, args);
+            return;
+        }
         StructurePlan plan = planAndQueue(world, args[1], args.length > 2 ? args[2] : null, pos.getX() >> 4, pos.getZ() >> 4);
         sender.sendMessage(line("Queued ", TextFormatting.GREEN).appendText(plan.describe()
                 + ". It is built in the background and appears within seconds as its chunks are loaded."));
@@ -173,6 +177,45 @@ public final class CommandCitadel extends CommandBase {
         return plan;
     }
 
+    /** /citadel spawn bridge [style] [fortified] - over the river ahead, or a short span where there is none. */
+    private void spawnBridge(ICommandSender sender, World world, BlockPos pos, String[] args) throws CommandException {
+        com.shatteredcitadels.worldgen.bridge.BridgeStyle style = null;
+        Boolean fortified = null;
+        for (int i = 2; i < args.length; i++) {
+            if ("fortified".equalsIgnoreCase(args[i])) {
+                fortified = Boolean.TRUE;
+                continue;
+            }
+            style = com.shatteredcitadels.worldgen.bridge.BridgeStyle.byId(args[i].toLowerCase(Locale.ROOT));
+            if (style == null || i != 2) {
+                throw new CommandException("Unknown bridge style '" + args[i] + "'. Use: "
+                        + String.join(", ", bridgeStyles()) + " and optionally fortified");
+            }
+        }
+        Entity entity = sender.getCommandSenderEntity();
+        net.minecraft.util.EnumFacing facing = entity == null ? net.minecraft.util.EnumFacing.EAST
+                : entity.getHorizontalFacing();
+        StructurePlan plan = com.shatteredcitadels.worldgen.bridge.BridgeGenerator.planForCommand(com.shatteredcitadels.worldgen.bridge.BridgeGenerator.biomeMap(world),
+                pos.getX(), pos.getZ(), facing.getAxis() == net.minecraft.util.EnumFacing.Axis.X,
+                facing.getAxisDirection().getOffset(), style, fortified,
+                com.shatteredcitadels.worldgen.bridge.BridgeGenerator.bankOf(world.getBiome(pos)), world.getSeed() ^ System.nanoTime(),
+                world.getSeaLevel(), world.provider.getDimension());
+        if (!CitadelWorldGenerator.isAreaFree(world, plan.footprint())) {
+            throw new CommandException("Another structure is too close; move further away");
+        }
+        StructureJobs.get(world).submit(plan);
+        sender.sendMessage(line("Queued ", TextFormatting.GREEN).appendText(plan.describe()
+                + ". It is built in the background and appears within seconds as its chunks are loaded."));
+    }
+
+    private static List<String> bridgeStyles() {
+        List<String> ids = new ArrayList<>();
+        for (com.shatteredcitadels.worldgen.bridge.BridgeStyle style : com.shatteredcitadels.worldgen.bridge.BridgeStyle.values()) {
+            ids.add(style.id());
+        }
+        return ids;
+    }
+
     /** @return TRUE for {@code yes}, FALSE for {@code no}, null when no variant is given. */
     static Boolean variant(String variant, String yes, String no) throws CommandException {
         if (variant == null) {
@@ -194,6 +237,10 @@ public final class CommandCitadel extends CommandBase {
         CitadelInstance nearest = null;
         double best = Double.MAX_VALUE;
         for (CitadelInstance citadel : CitadelWorldSavedData.get(world).getAll()) {
+            // A bridge is a landmark on the way, not a place to be sent to.
+            if (citadel.getType() == com.shatteredcitadels.structure.StructureType.BRIDGE) {
+                continue;
+            }
             StructureBoundingBox b = citadel.getTotalBounds();
             double dx = (b.minX + b.maxX) / 2.0D - pos.getX();
             double dz = (b.minZ + b.maxZ) / 2.0D - pos.getZ();
@@ -340,6 +387,7 @@ public final class CommandCitadel extends CommandBase {
         kinds.add("stronghold");
         kinds.add("desert_temple");
         kinds.add("jungle_temple");
+        kinds.add("bridge");
         return kinds;
     }
 
@@ -366,6 +414,14 @@ public final class CommandCitadel extends CommandBase {
         }
         if (args.length == 3 && "spawn".equalsIgnoreCase(args[0]) && "jungle_temple".equalsIgnoreCase(args[1])) {
             return getListOfStringsMatchingLastWord(args, "boss", "vault");
+        }
+        if (args.length == 3 && "spawn".equalsIgnoreCase(args[0]) && "bridge".equalsIgnoreCase(args[1])) {
+            List<String> options = bridgeStyles();
+            options.add("fortified");
+            return getListOfStringsMatchingLastWord(args, options);
+        }
+        if (args.length == 4 && "spawn".equalsIgnoreCase(args[0]) && "bridge".equalsIgnoreCase(args[1])) {
+            return getListOfStringsMatchingLastWord(args, "fortified");
         }
         if (args.length == 2 && "listmobs".equalsIgnoreCase(args[0])) {
             return getListOfStringsMatchingLastWord(args, "1", "2", "3", "4", "5", "underground");
