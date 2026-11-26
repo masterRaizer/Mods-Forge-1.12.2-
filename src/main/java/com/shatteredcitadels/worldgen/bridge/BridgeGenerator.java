@@ -36,6 +36,10 @@ public final class BridgeGenerator implements IWorldGenerator {
     private static final int COMMAND_REACH = 24;
     private static final int COMMAND_SPAN = 12;
     private static final int COMMAND_AHEAD = 10;
+    /** No bridge (and so no camp of bandits) this close to the world spawn. */
+    static final int SPAWN_CLEARANCE_CHUNKS = 8;
+    /** A castle, manor or tower site keeps this many chunks around it free of bridges. */
+    static final int SITE_CLEARANCE_CHUNKS = 6;
 
     @Override
     public void generate(Random random, int chunkX, int chunkZ, World world, IChunkGenerator chunkGenerator,
@@ -58,6 +62,17 @@ public final class BridgeGenerator implements IWorldGenerator {
             if (!isRiver(biomes.getBiome(pos.setPos((chunkX << 4) + 8, 0, (chunkZ << 4) + 8)))) {
                 return;
             }
+            // The cheap refusals first: finding the crossing reads a few hundred biome columns.
+            int distance = config.getBridgeMinDistanceChunks();
+            StructureJobs jobs = StructureJobs.get(world);
+            BlockPos spawn = world.getSpawnPoint();
+            if (isNearSpawn(chunkX, chunkZ, spawn.getX() >> 4, spawn.getZ() >> 4)
+                    || !CitadelWorldSavedData.get(world).isFarFromType(StructureType.BRIDGE, chunkX, chunkZ, distance)
+                    || jobs.isNearKind(BridgePlan.KIND, chunkX, chunkZ, distance)
+                    || CitadelWorldGenerator.isNearSiteCandidate(world.getSeed(), chunkX, chunkZ,
+                    config.getCastleSectionSize(), SITE_CLEARANCE_CHUNKS)) {
+                return;
+            }
             RiverCrossing.BiomeMap map = biomeMap(world);
             BridgePlan plan = planAt(map, (x, z) -> bankOf(biomes.getBiome(new BlockPos(x, 0, z))), chunkX, chunkZ,
                     world.getSeed(), world.getSeaLevel(), dimension, config.getBridgeChance(),
@@ -65,17 +80,19 @@ public final class BridgeGenerator implements IWorldGenerator {
             if (plan == null) {
                 return;
             }
-            int distance = config.getBridgeMinDistanceChunks();
-            StructureJobs jobs = StructureJobs.get(world);
-            if (!CitadelWorldSavedData.get(world).isFarFromType(StructureType.BRIDGE, chunkX, chunkZ, distance)
-                    || jobs.isNearKind(BridgePlan.KIND, chunkX, chunkZ, distance)
-                    || !CitadelWorldGenerator.isAreaFree(world, plan.footprint())) {
+            if (!CitadelWorldGenerator.isAreaFree(world, plan.footprint())) {
                 return;
             }
             jobs.submit(plan);
         } catch (RuntimeException e) {
             ShatteredCitadelsMod.LOGGER.error("Bridge planning failed in chunk [{}, {}]", chunkX, chunkZ, e);
         }
+    }
+
+    /** @return true if the chunk lies within {@link #SPAWN_CLEARANCE_CHUNKS} of the spawn chunk. */
+    public static boolean isNearSpawn(int chunkX, int chunkZ, int spawnChunkX, int spawnChunkZ) {
+        return Math.abs(chunkX - spawnChunkX) <= SPAWN_CLEARANCE_CHUNKS
+                && Math.abs(chunkZ - spawnChunkZ) <= SPAWN_CLEARANCE_CHUNKS;
     }
 
     /** The biome map of a world, read through the biome provider (never through chunks). */
@@ -140,14 +157,14 @@ public final class BridgeGenerator implements IWorldGenerator {
     public static BridgePlan planAt(RiverCrossing.BiomeMap map, BiFunction<Integer, Integer, BridgeStyle.Bank> bankAt,
                                     int chunkX, int chunkZ, long worldSeed, int seaLevel, int dimension, double chance,
                                     double fortified, double special) {
-        RiverCrossing crossing = RiverCrossing.find(map, (chunkX << 4) + 8, (chunkZ << 4) + 8);
-        if (crossing == null) {
-            return null;
-        }
         Random rand = new Random(worldSeed ^ ChunkPos.asLong(chunkX, chunkZ) ^ SALT);
         // The first values of neighbouring seeds are close; one spare draw separates them.
         rand.nextInt();
         if (rand.nextDouble() >= chance) {
+            return null;
+        }
+        RiverCrossing crossing = RiverCrossing.find(map, (chunkX << 4) + 8, (chunkZ << 4) + 8);
+        if (crossing == null) {
             return null;
         }
         BridgeStyle.Bank near = bank(bankAt, crossing, crossing.start - BANK_OFFSET);

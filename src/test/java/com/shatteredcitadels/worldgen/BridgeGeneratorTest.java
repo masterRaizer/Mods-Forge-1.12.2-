@@ -108,6 +108,14 @@ public class BridgeGeneratorTest {
     }
 
     @Test
+    public void noBridgeNearTheSpawn() {
+        assertTrue(BridgeGenerator.isNearSpawn(3, -4, 0, 0));
+        assertTrue(BridgeGenerator.isNearSpawn(18, 12, 10, 10));
+        assertFalse(BridgeGenerator.isNearSpawn(9, 0, 0, 0));
+        assertFalse(BridgeGenerator.isNearSpawn(0, -9, 0, 0));
+    }
+
+    @Test
     public void commandPlanOverNonRiverUsesFallbackSpan() {
         RiverCrossing.BiomeMap land = RiverCrossingTest.map("....");
         BridgePlan plan = BridgeGenerator.planForCommand(land, 100, 200, true, 1, BridgeStyle.ROPE, null,

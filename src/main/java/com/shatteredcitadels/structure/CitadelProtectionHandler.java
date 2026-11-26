@@ -131,7 +131,7 @@ public final class CitadelProtectionHandler {
             return;
         }
         CitadelInstance citadel = CitadelWorldSavedData.get(world).getCitadelAt(event.getPos());
-        if (citadel != null && !citadel.isConqueredAt(event.getPos())) {
+        if (citadel != null && !citadel.isUnprotected() && !citadel.isConqueredAt(event.getPos())) {
             citadel.markPlayerPlaced(event.getPos());
             CitadelWorldSavedData.get(world).markDirty();
         }

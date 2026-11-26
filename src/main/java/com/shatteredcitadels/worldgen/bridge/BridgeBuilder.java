@@ -246,7 +246,8 @@ public final class BridgeBuilder {
         int steps = approachLength(style);
         for (int a = first - steps; a <= last + steps; a++) {
             for (int c = -edge; c <= edge; c++) {
-                clearColumn(a, c, deckY + 1, deckY + 4);
+                // Under the roof of a covered bridge too.
+                clearColumn(a, c, deckY + 1, deckY + (style == BridgeStyle.COVERED ? 5 : 4));
             }
         }
     }

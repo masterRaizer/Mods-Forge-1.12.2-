@@ -187,7 +187,7 @@ public final class CommandCitadel extends CommandBase {
                 continue;
             }
             style = com.shatteredcitadels.worldgen.bridge.BridgeStyle.byId(args[i].toLowerCase(Locale.ROOT));
-            if (style == null || i != 2) {
+            if (style == null) {
                 throw new CommandException("Unknown bridge style '" + args[i] + "'. Use: "
                         + String.join(", ", bridgeStyles()) + " and optionally fortified");
             }
