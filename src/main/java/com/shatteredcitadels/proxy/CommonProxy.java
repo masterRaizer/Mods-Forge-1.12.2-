@@ -76,6 +76,7 @@ public class CommonProxy {
 
     public void loadComplete(FMLLoadCompleteEvent event) {
         ModPaletteRegistry.init();
+        com.shatteredcitadels.worldgen.dims.DimensionMobs.warnAboutUnknown(ShatteredCitadelsMod.LOGGER);
         if (ModItems.CROWN_SHARD != null) {
             boolean bauble = false;
             for (Class<?> iface : ModItems.CROWN_SHARD.getClass().getInterfaces()) {
