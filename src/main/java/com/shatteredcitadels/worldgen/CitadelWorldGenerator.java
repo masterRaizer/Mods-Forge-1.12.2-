@@ -105,7 +105,8 @@ public final class CitadelWorldGenerator implements IWorldGenerator {
             } else {
                 plan = planCrypt(world, (chunkX << 4) + 1, (chunkZ << 4) + 1, new Random(buildSeed ^ 0x9E3779B97F4A7C15L), false);
             }
-            if (plan != null && isAreaFree(world, plan.footprint())) {
+            if (plan != null && isAreaFree(world, plan.footprint())
+                    && !com.shatteredcitadels.compat.ForeignZones.blocks(world, plan.footprint())) {
                 jobs.submit(plan);
             }
         } catch (RuntimeException e) {

@@ -80,7 +80,8 @@ public final class BridgeGenerator implements IWorldGenerator {
             if (plan == null) {
                 return;
             }
-            if (!CitadelWorldGenerator.isAreaFree(world, plan.footprint())) {
+            if (!CitadelWorldGenerator.isAreaFree(world, plan.footprint())
+                    || com.shatteredcitadels.compat.ForeignZones.blocks(world, plan.footprint())) {
                 return;
             }
             jobs.submit(plan);

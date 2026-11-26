@@ -136,7 +136,8 @@ public class ScatteredFeatureGen extends MapGenScatteredFeature {
             ShatteredCitadelsMod.LOGGER.info("Jungle site {},{} is too wet or steep for a temple", chunkCoord.x, chunkCoord.z);
         } else if (hasLegacyStartIn(plan.footprint())) {
             ShatteredCitadelsMod.LOGGER.info("Temple site {},{} keeps the temple started before", chunkCoord.x, chunkCoord.z);
-        } else if (CitadelWorldGenerator.isAreaFree(worldIn, plan.footprint())) {
+        } else if (CitadelWorldGenerator.isAreaFree(worldIn, plan.footprint())
+                && !com.shatteredcitadels.compat.ForeignZones.blocks(worldIn, plan.footprint())) {
             StructureJobs.get(worldIn).submit(plan);
         }
         return generated;
