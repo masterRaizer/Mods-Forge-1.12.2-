@@ -374,6 +374,7 @@ config.shatteredcitadels.herobrine.apparitions=Apparitions near lairs
 config.shatteredcitadels.herobrine.whispers=Whispers near lairs
 config.shatteredcitadels.herobrine.apparitionIntervalMinutes=Apparition interval (minutes)
 config.shatteredcitadels.herobrine.apparitionChance=Apparition chance
+config.shatteredcitadels.herobrine.manorBossChance=Chance that a manor boss is Herobrine
 config.shatteredcitadels.herobrine.apparitionRadiusBlocks=Apparition radius around a lair (blocks)
 # Part: other dimensions and the Nether fortress
 config.shatteredcitadels.dimensions=Other Dimensions

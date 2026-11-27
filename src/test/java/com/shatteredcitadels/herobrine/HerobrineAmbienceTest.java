@@ -12,10 +12,10 @@ import static org.junit.Assert.assertTrue;
 /** How rare the watching figure is and how the lair whispers. */
 public class HerobrineAmbienceTest {
 
-    /** The owner asked for about 0.03 % per attempt. */
+    /** The figure shows up as often as in 1.11.0: the "rare" wish was about the manor boss. */
     @Test
-    public void apparitionIsVeryRareByDefault() {
-        assertEquals(0.0003D, new ModConfig.Herobrine().apparitionChance, 1.0e-9D);
+    public void apparitionChanceIsBackToItsFirstValue() {
+        assertEquals(0.35D, new ModConfig.Herobrine().apparitionChance, 1.0e-9D);
     }
 
     @Test

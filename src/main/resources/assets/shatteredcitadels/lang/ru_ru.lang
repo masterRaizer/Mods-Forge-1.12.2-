@@ -374,6 +374,7 @@ config.shatteredcitadels.herobrine.apparitions=Видения возле лог�
 config.shatteredcitadels.herobrine.whispers=Шёпот возле логов
 config.shatteredcitadels.herobrine.apparitionIntervalMinutes=Интервал видений (минуты)
 config.shatteredcitadels.herobrine.apparitionChance=Шанс видения
+config.shatteredcitadels.herobrine.manorBossChance=Шанс, что босс особняка — Херобрин
 config.shatteredcitadels.herobrine.apparitionRadiusBlocks=Радиус видений вокруг логова (блоки)
 # Part: other dimensions and the Nether fortress
 config.shatteredcitadels.dimensions=Другие измерения

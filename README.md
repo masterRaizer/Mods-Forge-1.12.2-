@@ -1,7 +1,7 @@
 # Citadels of the Shattered Crown
 
 Мод подземелий для Minecraft 1.12.2 (Forge 14.23.5.2860, Java 8, MixinBooter).
-modid: `shatteredcitadels`, версия 1.11.1.
+modid: `shatteredcitadels`, версия 1.11.2.
 
 ## Что добавляет мод
 - Многоэтажные цитадели пяти архетипов (Цитадель Хранителей, Обсидиановая Бастилия, Техно-арканный Шпиль,
@@ -86,10 +86,10 @@ modid: `shatteredcitadels`, версия 1.11.1.
   слепота. Не боится огня, падения и молний; блоки не ломает (`herobrineGriefing`). С него падает реликвия
   Око Херобрина и алмазы. Видения (`apparitions`): ночью, в грозу или под землёй вдалеке (30–60 блоков) может
   показаться неподвижная фигура — только в `apparitionRadiusBlocks` (256) блоках от логова, чей хозяин ещё не
-  побеждён; проверка раз в `apparitionIntervalMinutes` (8) минут с шансом `apparitionChance` (0.0003, то есть
-  0,03 %). Фигура безвредна и исчезает, если подойти на 12 блоков, посмотреть на неё около секунды, ударить
+  побеждён; проверка раз в `apparitionIntervalMinutes` (8) минут с шансом `apparitionChance` (0.35). Фигура безвредна и исчезает, если подойти на 12 блоков, посмотреть на неё около секунды, ударить
   или через 30 секунд. Логова не защищены. `/citadel spawn herobrine_lair [keep|tower|shrine]`,
-  `/citadel summon herobrine` (босс рядом с вами, без логова).
+  `/citadel summon herobrine` (босс рядом с вами, без логова). С шансом `manorBossChance` (0.03, то есть 3 %)
+  боссом готического особняка вместо обычного стража оказывается сам Херобрин (со своими обычными силами).
   У Херобрина восемь своих звуков с субтитрами (появление у алтаря, телепорт, предупреждение о молнии, призыв
   слуг, смена фазы, гибель, далёкое явление и тихий шёпот в 48 блоках от живого логова). Они собраны из
   ванильных файлов в `sounds.json`, своих `.ogg` в моде нет, ресурс-пак может их заменить. Явление и шёпот
@@ -166,5 +166,5 @@ modid: `shatteredcitadels`, версия 1.11.1.
 - `/shatteredcitadels` (`/scitadels`) — расширенная диагностика: list, info, status, spawners, boss, relics, lore и др.
 
 ## Сборка из исходников
-`./gradlew build` → `build/libs/shatteredcitadels-1.11.1.jar` (refmap миксинов включён в jar).
+`./gradlew build` → `build/libs/shatteredcitadels-1.11.2.jar` (refmap миксинов включён в jar).
 Для тестов с Castle Dungeons/Baubles: `./gradlew runServer -PwithCastleDungeons -PwithBaubles`.

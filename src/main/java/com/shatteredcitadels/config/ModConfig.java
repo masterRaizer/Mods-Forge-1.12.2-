@@ -718,7 +718,13 @@ public final class ModConfig {
         @Config.LangKey("config.shatteredcitadels.herobrine.apparitionChance")
         @Config.Comment("Chance that a due attempt really shows the figure.")
         @Config.RangeDouble(min = 0.0D, max = 1.0D)
-        public double apparitionChance = 0.0003D;
+        public double apparitionChance = 0.35D;
+
+        @Config.Name("manorBossChance")
+        @Config.LangKey("config.shatteredcitadels.herobrine.manorBossChance")
+        @Config.Comment("Chance that the boss of a gothic manor is Herobrine himself instead of the usual guardian. 0 = never.")
+        @Config.RangeDouble(min = 0.0D, max = 1.0D)
+        public double manorBossChance = 0.03D;
 
         @Config.Name("apparitionRadiusBlocks")
         @Config.LangKey("config.shatteredcitadels.herobrine.apparitionRadiusBlocks")

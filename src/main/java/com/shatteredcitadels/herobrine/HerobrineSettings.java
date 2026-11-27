@@ -1,6 +1,9 @@
 package com.shatteredcitadels.herobrine;
 
 import com.shatteredcitadels.config.ModConfig;
+import com.shatteredcitadels.structure.StructureType;
+
+import java.util.Random;
 
 /**
  * The Herobrine options, read straight from {@link ModConfig#HEROBRINE} and clamped here: a config
@@ -76,6 +79,19 @@ public final class HerobrineSettings {
 
     public static boolean griefing() {
         return config().herobrineGriefing;
+    }
+
+    public static double manorBossChance() {
+        return clamp(config().manorBossChance, 0.0D, 1.0D);
+    }
+
+    /** Whether Herobrine himself answers the boss altar of this structure instead of its usual guardian. */
+    public static boolean takesThrone(StructureType type, Random random) {
+        return takesThrone(type, enabled(), config().manorBossChance, random);
+    }
+
+    static boolean takesThrone(StructureType type, boolean enabled, double chance, Random random) {
+        return enabled && type == StructureType.MANOR && random.nextDouble() < clamp(chance, 0.0D, 1.0D);
     }
 
     public static boolean whispers() {

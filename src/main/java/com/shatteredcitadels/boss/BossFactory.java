@@ -4,6 +4,8 @@ import com.shatteredcitadels.ShatteredCitadelsMod;
 import com.shatteredcitadels.config.BuiltInModBosses;
 import com.shatteredcitadels.config.ConfigCache;
 import com.shatteredcitadels.config.MobTiers;
+import com.shatteredcitadels.herobrine.EntityHerobrine;
+import com.shatteredcitadels.herobrine.HerobrineSettings;
 import com.shatteredcitadels.structure.CitadelInstance;
 import com.shatteredcitadels.structure.CitadelNameGenerator;
 import com.shatteredcitadels.structure.FloorData;
@@ -69,6 +71,13 @@ public final class BossFactory {
             return null;
         }
         int tier = bossTier(citadel);
+        if (HerobrineSettings.takesThrone(citadel.getType(), random)) {
+            // Rarely the master of a manor is Herobrine himself; no room for him means the usual guardian.
+            EntityLiving herobrine = new EntityHerobrine(world);
+            if (place(world, herobrine, arena, altarPos, random)) {
+                return finish(world, herobrine, citadel, altarPos, tier, false);
+            }
+        }
         ConfigCache.Snapshot config = ConfigCache.get();
         List<ResourceLocation> candidates = candidateOrder(citadel.getPreferredBoss(),
                 BuiltInModBosses.orderForSpawn(config.getBossCandidates(tier), config.isPreferModdedBosses(), random));
@@ -159,6 +168,10 @@ public final class BossFactory {
         int floors = Math.max(1, citadel.getSurfaceFloorCount()); // scaling is capped at MAX_SCALING_FLOOR
         boolean uber = citadel.isSkyCitadel();
         // Frostmaw, Pharaoh & co. already have boss-grade stats: only floor scaling applies to them.
+        if (boss instanceof EntityHerobrine) {
+            // His strength is set in his own options and is the same in a manor as at his altar.
+            return spawn(world, boss, citadel, tier, uber);
+        }
         boolean nativeBoss = isNativeBoss(boss);
         double healthFactor = nativeBoss ? 1.0D : BASE_HEALTH_FACTOR;
         double damageFactor = nativeBoss ? 1.0D : BASE_DAMAGE_FACTOR;
@@ -168,7 +181,10 @@ public final class BossFactory {
         modify(boss, SharedMonsterAttributes.KNOCKBACK_RESISTANCE, KNOCKBACK, 0.7D, 0);
         modify(boss, SharedMonsterAttributes.FOLLOW_RANGE, FOLLOW, 24.0D, 0);
         boss.setHealth(boss.getMaxHealth());
+        return spawn(world, boss, citadel, tier, uber);
+    }
 
+    private static EntityLiving spawn(WorldServer world, EntityLiving boss, CitadelInstance citadel, int tier, boolean uber) {
         if (!world.spawnEntity(boss)) {
             return null;
         }
