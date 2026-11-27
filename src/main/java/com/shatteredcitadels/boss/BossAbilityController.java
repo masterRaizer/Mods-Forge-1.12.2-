@@ -60,6 +60,14 @@ public final class BossAbilityController {
         phase = Math.max(1, boss.getEntityData().getInteger(BossTags.PHASE));
     }
 
+    /**
+     * Whether the altar runs its guardian kit (phases, Strength, shockwave, blink, summons) on this boss. Herobrine
+     * brings his own phases and spells, so in a manor he fights exactly as at his own altar.
+     */
+    public static boolean usesAltarAbilities(Class<? extends Entity> type) {
+        return !com.shatteredcitadels.herobrine.EntityHerobrine.class.isAssignableFrom(type);
+    }
+
     public void reset() {
         pending = null;
         telegraph = 0;
@@ -77,6 +85,9 @@ public final class BossAbilityController {
             attach(boss);
         }
         returnToCenterIfOutside(world, boss, arena, altar);
+        if (!usesAltarAbilities(boss.getClass())) {
+            return;
+        }
         if (players.isEmpty()) {
             return;
         }

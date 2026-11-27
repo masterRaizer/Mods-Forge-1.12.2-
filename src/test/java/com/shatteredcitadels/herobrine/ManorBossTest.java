@@ -18,6 +18,14 @@ import static org.junit.Assert.assertTrue;
 public class ManorBossTest {
 
     @Test
+    public void herobrineKeepsHisOwnFightOnAManorAltar() {
+        // His own phases and spells run in his entity; the altar's guardian kit on top made him twice as strong.
+        assertFalse(com.shatteredcitadels.boss.BossAbilityController.usesAltarAbilities(EntityHerobrine.class));
+        assertTrue(com.shatteredcitadels.boss.BossAbilityController.usesAltarAbilities(net.minecraft.entity.monster.EntityZombie.class));
+        assertTrue(com.shatteredcitadels.boss.BossAbilityController.usesAltarAbilities(net.minecraft.entity.monster.EntityWitherSkeleton.class));
+    }
+
+    @Test
     public void defaultChanceIsSmall() {
         assertEquals(0.03D, new ModConfig.Herobrine().manorBossChance, 1.0e-9D);
     }
