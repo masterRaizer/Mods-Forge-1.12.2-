@@ -307,6 +307,12 @@ public final class CitadelInstance {
     /** @return the floor that holds the boss arena (crypt bosses live on their deepest level). */
     public FloorData getBossFloor() {
         if (bossArenaBounds != null) {
+            // Manor rooms share one height: the room around the arena is the boss floor, not the first one.
+            FloorData room = floorAt(new BlockPos((bossArenaBounds.minX + bossArenaBounds.maxX) / 2,
+                    bossArenaBounds.minY + 1, (bossArenaBounds.minZ + bossArenaBounds.maxZ) / 2));
+            if (room != null && room.isBossFloor()) {
+                return room;
+            }
             FloorData floor = floorAt(bossArenaBounds.minY + 1);
             if (floor != null) {
                 return floor;
